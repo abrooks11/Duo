@@ -1,0 +1,40 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Quicksand', sans-serif;
+}
+
+// VERTICAL LAYOUT
+.app-wrapper {
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.main-container {
+  // border: 1px solid red;
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.main-footer-container {
+  // border: 1px solid red;
+  height: 5%;
+}
+
+// HORIZONTAL LAYOUT
+.main-left-container {
+  // border: 1px solid red;
+  min-width: 13%;
+
+}
+
+.main-right-container {
+  // border: 1px solid red;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

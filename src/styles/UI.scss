@@ -1,0 +1,187 @@
+// $primary-background-color: #3f7893;
+// $primary-background-color: #c4d3dc;
+$primary-background-color: #249f9c;
+$secondary-background-color-dark: #037a76;
+$secondary-background-color-light: #a8e3e0; // light blue green
+
+// $secondary-background-color: #333333;
+// $secondary-background-color: #474545;
+// $secondary-background-color: #65b9ae;
+$secondary-font-color-dark: #037a76; // dark blue green
+
+
+
+$footer-background-color: #249f9c;
+$footer-text-color: #ffffff;
+
+
+
+
+$border-color: #dbd4d8; // 
+// $border-color: #DBB12A; // yellow
+$main-background-color: #c4d3dc;
+
+// TOP NAV & UTILITIES
+.top-nav-wrapper {
+  background-color: $primary-background-color;
+  border-bottom: 2px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+// LOGO
+.logo-wrapper {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+  img {
+    width: 65px;
+  }
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffffff;
+    letter-spacing: 1.5px;
+  }
+}
+
+// Has Active Page Styling
+.nav-wrapper {
+  ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+    a {
+      text-decoration: none;
+      color: #ffffff;
+      &.active-page {
+        background-color: $secondary-background-color-dark;
+        border-radius: 5px;
+      }
+      li {
+      padding: 5px 20px;
+      margin: 0 10px;
+      &:hover {
+        background-color: $secondary-background-color-dark;
+        border-radius: 5px;
+      }
+
+      }
+    }
+
+  }
+}
+
+.action-menu-wrapper {
+  // border: 1px solid blue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  button {
+    border: 1px solid $border-color;
+    margin: 0 10px;
+    padding: 10px 15px;
+    // border-radius: 5px
+    border-radius: 30px;
+  }
+}
+
+
+// DROP ZONE
+.dropzone-wrapper {
+  background-color: #ffffff;
+  border: 1px solid $border-color;
+  width: 200px;
+  position: absolute;
+  border-radius: 5px;
+  margin-right: 5px;
+  right: 0;
+  padding: 10px 15px; // TODO: padding visible when modal hidden when background is defined
+}
+
+// SIDEBAR
+.sidebar-wrapper {
+  background-color: $secondary-background-color-light;
+  border-right: 1px solid $border-color;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  padding: 20px 10px;
+  gap: 20px;
+  color: $secondary-font-color-dark;
+  font-size: .9rem;
+}
+
+.status-list-wrapper, 
+.header-selector-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  justify-content: space-between;
+  h2 {
+    text-align: left;
+    margin-left: 10px;
+    font-size: 1rem;
+  }
+}
+
+.status-list-wrapper {
+  div {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 10px;
+    &:hover, &.selected-filter {
+      background-color: $secondary-background-color-dark;
+      color: $secondary-background-color-light;
+      border-radius: 5px;
+      }
+    }
+  }
+
+
+
+.header-selector-item {
+  padding: 5px 10px;
+  input, label {
+    cursor: pointer;
+    padding: 5px 10px;
+    align-items: center;
+  }
+}
+
+// MAIN CONTENT
+.main-content-wrapper {
+// border: 1px solid blue;
+margin-top: 20px;
+padding: 20px;
+font-size: .8rem;
+flex: 1;
+}
+
+.data-table {
+  tr {
+    td { 
+      padding: 5px 5px;
+    }
+  }
+}
+
+// FOOTER
+.main-footer-container {
+  background-color: $footer-background-color;
+  border-top: 1px solid $border-color;
+  color: #ffffff;
+  height: 30px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
