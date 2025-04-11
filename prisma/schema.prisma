@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Appointment {
+  id                 Int      @id @unique @default(autoincrement())
+  createdDate        DateTime @default(now())
+  lastModifiedDate   DateTime
+  appointmentReason  String
+  confirmationStatus String
+  patientCaseName    String?
+  startDate          DateTime
+  notes              String?
+  // RELATED FIELDS
+  patientId          Int
+  patient            Patient  @relation(fields: [patientId], references: [id])
+
+  @@index([patientId]) // Add an index on the foreign key  to optimize foreign key lookups
+}
+
+model Charge {
+  id                             Int      @id @unique @default(autoincrement())
+  createdDate                    DateTime @default(now())
+  lastModifiedDate               DateTime
+  encounterId                    Int
+  patientId                      Int
+  patientName                    String
+  patientDateOfBirth             DateTime
+  serviceStartDate               DateTime
+  procedureCode                  String
+  procedureName                  String
+  procedureModifier1             String?
+  encounterDiagnosisId1          Int?
+  unitCharge                     Float
+  primaryInsuranceCompanyName    String
+  status                         String
+  appointmentId                  Int?
+  primaryInsuranceAddressLine1   String
+  secondaryInsuranceAddressLine1 String?
+}
+
+model Patient {
+  id               Int      @id @unique @default(autoincrement())
+  createdDate      DateTime @default(now())
+  lastModifiedDate DateTime
+  patientFullName  String
+  dob              DateTime
+  mobilePhone      String?
+
+  primaryInsurancePolicyCompanyId        Int?
+  primaryInsurancePolicyCompanyName      String?
+  primaryInsurancePolicyPlanId           Int?
+  primaryInsurancePolicyPlanName         String?
+  primaryInsurancePolicyPlanAddressLine1 String?
+  primaryInsurancePolicyPlanCity         String?
+  primaryInsurancePolicyPlanState        String?
+  primaryInsurancePolicyPlanZipCode      String?
+  primaryInsurancePolicyNumber           String?
+
+  secondaryInsurancePolicyCompanyId        Int?
+  secondaryInsurancePolicyCompanyName      String?
+  secondaryInsurancePolicyPlanId           Int?
+  secondaryInsurancePolicyPlanName         String?
+  secondaryInsurancePolicyPlanAddressLine1 String?
+  secondaryInsurancePolicyPlanCity         String?
+  secondaryInsurancePolicyPlanState        String?
+  secondaryInsurancePolicyPlanZipCode      String?
+  secondaryInsurancePolicyNumber           String?
+  alertMessage                             String?
+  lastAppointmentDate                      DateTime?
+  lastEncounterDate                        DateTime?
+  lastStatementDate                        DateTime?
+  insuranceBalance                         Float?
+  patientBalance                           Float?
+  totalBalance                             Float?
+  // RELATED FIELDS
+  appointments                             Appointment[]
+}
