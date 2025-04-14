@@ -31,8 +31,6 @@ const useApi = () => {
         console.error(`Error fetching ${endpoint}: `, error);
       }
     },
-
-    // getById: async () => {},
   };
 
   return api;

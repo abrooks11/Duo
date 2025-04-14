@@ -1,5 +1,5 @@
 // import react hooks 
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 // import state
 import useGlobalContext from "../../hooks/useGlobalContext";
 

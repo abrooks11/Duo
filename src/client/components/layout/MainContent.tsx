@@ -5,6 +5,8 @@ import Home from "../pages/Home";
 import Appointments from "../pages/Appointments";
 import Claims from "../pages/Claims";
 import Patients from "../pages/Patients";
+import Voicemail from "../pages/Voicemail";
+
 
 function MainContent() {
   return (
@@ -16,6 +18,7 @@ function MainContent() {
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/claims" element={<Claims />} />
         <Route path="/patients" element={<Patients />} />
+        <Route path="/voicemail" element={<Voicemail />} />
       </Routes>
     </div>
   );

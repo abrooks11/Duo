@@ -1,5 +1,4 @@
-import React from "react";
-import { Link , NavLink} from "react-router-dom";
+import { NavLink} from "react-router-dom";
 
 function Nav() {
   const activePage = window.location.pathname;
@@ -22,6 +21,9 @@ function Nav() {
         
           <NavLink to="/patients" 
           className={({ isActive }) => (isActive ? 'active-page' : '')}><li>Patients</li></NavLink>
+
+          <NavLink to="/voicemail" 
+          className={({ isActive }) => (isActive ? 'active-page' : '')}><li>Voicemail</li></NavLink>
         
       </ul>
     </nav>

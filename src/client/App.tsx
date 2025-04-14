@@ -1,4 +1,3 @@
-import React from "react";
 // import main components
 import TopNav from "./components/layout/TopNav";
 import FileUploadDropZone from "./components/ui/FileUploadDropZone";

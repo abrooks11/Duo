@@ -1,8 +1,10 @@
-// ??? WHAT IS USEREF FOR?
-
-import React, { createContext, useEffect, useReducer, useRef } from "react";
+// import React, { createContext, useEffect, useReducer, useRef } from "react";
 // import helper function for fetching appointments from the database
-import api from "../hooks/useApi";
+// import api from "../hooks/useApi";
+
+// import react hooks
+import React, { createContext, useReducer } from "react";
+
 // import immer for state management
 import { produce } from "immer";
 
@@ -21,29 +23,17 @@ interface GlobalContextType {
 interface GlobalStateActions {
   DISPLAY_UPLOAD_MODAL: string;
   GET_DATA: string;
-  SET_DATA_COLUMNS: string;
+  SET_COLUMN_LIST: string;
   SET_ROW_FILTER_LIST: string;
   SET_DATA_SORT: string;
-
-  // SET_APPOINTMENT_COLUMNS: string;
-  // SET_APPOINTMENT_FILTERS: string;
-  // SET_APPOINTMENT_SORT: string;
-  // GET_CLAIMS: string;
 }
 
 const ActionTypes: GlobalStateActions = {
   DISPLAY_UPLOAD_MODAL: "DISPLAY_UPLOAD_MODAL",
   GET_DATA: "GET_DATA",
-  SET_DATA_COLUMNS: "SET_DATA_COLUMNS",
+  SET_COLUMN_LIST: "SET_COLUMN_LIST",
   SET_ROW_FILTER_LIST: "SET_ROW_FILTER_LIST",
   SET_DATA_SORT: "SET_DATA_SORT",
-  // SET_APPOINTMENT_COLUMNS: "SET_APPOINTMENT_COLUMNS",
-  // SET_APPOINTMENT_FILTERS: "SET_APPOINTMENT_FILTERS",
-  // SET_APPOINTMENT_SORT: "SET_APPOINTMENT_SORT",
-  // GET_CLAIMS: "GET_CLAIMS",
-  // SET_PATIENT_COLUMNS: "SET_PATIENT_COLUMNS",
-  // SET_PATIENT_FILTERS: "SET_PATIENT_FILTERS",
-  // SET_PATIENT_SORT: "SET_PATIENT_SORT",
 };
 
 // TYPE ASSERTIONS AND LABELS FOR STATE
@@ -52,6 +42,7 @@ interface GlobalState {
   appointments: DataObject;
   claims: DataObject;
   patients: DataObject;
+  voicemail: DataObject;
 }
 
 interface DataObject {
@@ -142,6 +133,27 @@ const initialState: GlobalState = {
       sortOrder: "",
     },
   },
+  voicemail: {
+    data: [], // data from database
+    filteredData: [],
+    // TABLE COLUMN NAMES
+    allColumnHeaders: [], // all keys from first object in data array
+    selectedColumnHeaders: [], // default to all columns
+    // TABLE FILTERS
+    allFilters: [
+      { label: "Scheduled", isSelected: false, data: [] },
+      { label: "Completed", isSelected: false, data: [] },
+      { label: "Cancelled", isSelected: false, data: [] },
+      { label: "No Show", isSelected: false, data: [] },
+      { label: "Total", isSelected: false, data: [] },
+    ],
+    selectedFilters: [], // default to 0 filters
+    // TABLE SORT
+    selectedSort: {
+      column: "",
+      sortOrder: "",
+    },
+  }
 };
 
 // define reducer function and action handlers
