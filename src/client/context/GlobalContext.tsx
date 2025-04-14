@@ -139,11 +139,13 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: 'Scheduled', isSelected: false, data: [] },
-      { label: 'Completed', isSelected: false, data: [] },
-      { label: 'Cancelled', isSelected: false, data: [] },
-      { label: 'No Show', isSelected: false, data: [] },
-      { label: 'Total', isSelected: false, data: [] },
+      { label: 'Admin', isSelected: false, data: [] },
+      { label: 'Appointment', isSelected: false, data: [] },
+      { label: 'Memo', isSelected: false, data: [] },
+      { label: 'Misc', isSelected: false, data: [] },
+      { label: 'Prescription', isSelected: false, data: [] },
+      { label: 'Referral', isSelected: false, data: [] },
+      { label: 'Record Request', isSelected: false, data: [] },
     ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT

@@ -1,16 +1,16 @@
-// import react hooks
-import { useEffect, useMemo } from 'react';
+// import react hooks 
+import { useEffect, useMemo } from "react";
 // import state
-import useGlobalContext from '../../hooks/useGlobalContext';
+import useGlobalContext from "../../hooks/useGlobalContext";
 
-// import custom components
-import Table from '../ui/Table';
+// import custom components 
+import Table from "../ui/Table";
 
-// import custom hooks
-import useApi from '../../hooks/useApi';
+// import custom hooks 
+import useApi from "../../hooks/useApi";
 
 // import custom hooks/utilities
-import dataTransformers from '../../utils/dataTransformers';
+import dataTransformers from "../../utils/dataTransformers";
 
 const Appointments = () => {
   // get global state from context
@@ -20,15 +20,16 @@ const Appointments = () => {
   const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
     state.appointments;
 
-  // extract utils
-  const { formatDate, filterAndSort } = dataTransformers;
+  // extract utils 
+  const {formatDate, filterAndSort} = dataTransformers 
 
   // use custom hook
-  const api = useApi();
+  const api = useApi()
 
-  useEffect(() => {
-    api.getAll('appointments');
-  }, []);
+  useEffect(()=>{
+    api.getAll('appointments')
+  }, [])
+
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {
@@ -54,6 +55,6 @@ const Appointments = () => {
       )}
     </div>
   );
-};
+}
 
-export default Appointments;
+export default Appointments 

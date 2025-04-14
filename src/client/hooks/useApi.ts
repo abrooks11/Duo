@@ -18,9 +18,9 @@ const useApi = () => {
       try {
         const response = await fetch(`${BASE_URL}/${endpoint}`);
         const data = await response.json();
-        console.log('ENDPOINT', endpoint);
+        // console.log('FETCHING', endpoint);
         if (data) {
-          // console.log(`Request for ${endpoint} successful`)
+          // console.log(`REQUEST FOR ${endpoint} successful`)
           dispatch({
             type: ActionTypes.GET_DATA,
             payload: { dataType: endpoint, data: data },
