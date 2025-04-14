@@ -146,6 +146,22 @@ const initialState: GlobalState = {
 
 // define reducer function and action handlers
 const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
+  const flattenObject = (obj: {[key:string]: any}) => {
+    const flattened: {[key:string]: any} = {}
+  
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key]
+  
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        Object.assign(flattened, flattenObject(value))
+      } else {
+        flattened[key] = value
+      }
+    })
+  
+    return flattened
+  }
+
   return produce(state, (draft) => {
 
     switch (action.type) {
@@ -162,7 +178,10 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         // generate filter list table
         if (Array.isArray(data) && data.length > 0) {
           // ALL COLUMNS
-          const allColumnHeaders = Object.keys(data[0]).map((header) => ({
+          const flatSingleRow = flattenObject(data[0])
+          console.log("FLAT DATA:", flatSingleRow)
+          const allColumnHeaders = Object.keys(flatSingleRow).map((header) => (
+            {
             label: header,
             value: header,
             isSelected: true,
@@ -170,7 +189,8 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             // isSelected:
             //   state.appointments.allColumns.find((h) => h.value === header)
             //     ?.isSelected || true,
-          }));
+          }
+        ));
 
 
           if (dataType === "patients") {
@@ -181,7 +201,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               (column) => column.isSelected
             );
           } else if (dataType === "appointments") {
-            draft.appointments.data = data;
+            draft.appointments.data = data.map((row)=>flattenObject(row));
             // ALL AND SELECTED COLUMNS
             draft.appointments.allColumnHeaders = allColumnHeaders;
             draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
@@ -234,4 +254,5 @@ const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
 // export the GlobalProvider for use in the main App component, wrapping the component tree that needs access to the context
 // export the ActionTypes for use in other components
 // export custom types for use in other components
-export { GlobalProvider, GlobalContext, ActionTypes, GlobalState, TableColumn, TableFilter };
+export { GlobalProvider, GlobalContext, ActionTypes };
+export type { GlobalState, TableColumn, TableFilter };
