@@ -43,7 +43,7 @@ const userActionsController = {
     // IF NO MATCHING APPOINTMENT, CREATE A NEW ONE
     // IF MATCHING APPOINTMENT, CHECK IF THE ROW IN THE FILE IS MORE RECENT THAN THE DATABASE RECORD AND UPDATE IF FILE DATE IS MORE RECENT
     try {
-      switch (dataType) {
+      switch (resourceType) {
         case 'appointment':
           fileData = fileData.filter((row) => row.Type === 'Patient');
           fileData.forEach(async (fileAppointment) => {

@@ -23,7 +23,7 @@ const useApi = () => {
           // console.log(`REQUEST FOR ${endpoint} successful`)
           dispatch({
             type: ActionTypes.GET_DATA,
-            payload: { dataType: endpoint, data: data },
+            payload: { resourceType: endpoint, data: data },
           });
         }
         return data;

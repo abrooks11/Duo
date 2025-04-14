@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const excelServices = {
-  readFile: async (file, dataType, sheetName) => {
+  readFile: async (file, resourceType, sheetName) => {
     try {
       // READ THE UPLOADED EXCEL FILE
       // const workbook = xlsx.read(file.data, { type: "buffer" }); // for browser
@@ -31,8 +31,8 @@ const excelServices = {
       // console.log("RESULT POST TRANSFORM: ", result[0]);
 
       // USE UPSERT TO UPDATE OR CREATE PATIENT RECORD
-      console.log('DATA TYPE', dataType);
-      if (dataType === 'patient') {
+      console.log('DATA TYPE', resourceType);
+      if (resourceType === 'patient') {
         console.log('UPSERTING PATIENTS. . . ');
         for (const patientObj of result) {
           const { id, ...patientData } = patientObj;
@@ -45,7 +45,7 @@ const excelServices = {
             update: patientData,
           });
         }
-      } else if (dataType === 'appointment') {
+      } else if (resourceType === 'appointment') {
         console.log('UPSERTING APPOINTMENTS. . . ');
         for (const appointmentObj of result) {
           // seperate key fields from rest of appointment data

@@ -11,7 +11,7 @@ import excelServices from '../services/excelServices.js';
 const uploadRouter = express.Router();
 
 uploadRouter.post(
-  '/:dataType/:sheetName',
+  '/:resourceType/:sheetName',
   upload.single('file'),
   async (req, res, next) => {
     try {
@@ -23,10 +23,10 @@ uploadRouter.post(
         });
       }
       console.log('UPLOAD ROUTER req.params', req.params);
-      const { dataType, sheetName } = req.params;
+      const { resourceType, sheetName } = req.params;
       // console.log("UPLOAD ROUTER req.file", req.file);
       // const { file } = req.file; // for browser
-      await excelServices.readFile(req.file.buffer, dataType, sheetName);
+      await excelServices.readFile(req.file.buffer, resourceType, sheetName);
       // console.log('UPLOAD ROUTER result', result);
       return res
         .status(200)

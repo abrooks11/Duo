@@ -21,7 +21,7 @@ function FileUploadDropZone() {
   const [files, setFiles] = useState([]);
   const [sheets, setSheets] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>('');
-  const [dataType, setDataType] = useState<'appointment' | 'claim' | 'patient'>(
+  const [resourceType, setResourceType] = useState<'appointment' | 'claim' | 'patient'>(
     'appointment'
   );
 
@@ -98,7 +98,7 @@ function FileUploadDropZone() {
             label="Drag'n drop files here or click to browse"
             // fakeUpload={true}
             uploadConfig={{
-              url: `http://localhost:3000/api/upload/${dataType}/${selectedSheet}`,
+              url: `http://localhost:3000/api/upload/${resourceType}/${selectedSheet}`,
               method: 'POST',
               cleanOnUpload: true,
             }}
@@ -135,20 +135,20 @@ function FileUploadDropZone() {
         {/* <!-- Now setup your input fields --> */}
         <input
           type="radio"
-          name="dataType"
+          name="resourceType"
           id="patient"
           value="patient"
-          onChange={(e) => setDataType(e.target.value as 'patient')}
+          onChange={(e) => setResourceType(e.target.value as 'patient')}
         />
         <label htmlFor="patient">Patient</label>
         <br />
 
         <input
           type="radio"
-          name="dataType"
+          name="resourceType"
           id="appointment"
           value="appointment"
-          onChange={(e) => setDataType(e.target.value as 'appointment')}
+          onChange={(e) => setResourceType(e.target.value as 'appointment')}
         />
 
         <label htmlFor="appointment">Appointment</label>

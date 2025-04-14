@@ -7,7 +7,7 @@ const uploadController = {
     try {
       // console.log("Incoming files: ", req.files);
       //  console.log("params: ", req.params);
-      const { dataType, sheetName } = req.params; // using params because DropZone.body not found
+      const { resourceType, sheetName } = req.params; // using params because DropZone.body not found
       const file = req.files.file;
       const fileData = await excelServices.readFile(file, sheetName);
 
@@ -21,7 +21,7 @@ const uploadController = {
       } else {
         // get the file from the request
         const file = req.files.file;
-        const { dataType, sheetName } = req.params;
+        const { resourceType, sheetName } = req.params;
         // console.log("File: ", file);
         // use helper function to process the request file to get the data
         const fileData = await processExcelFile(file, sheetName);

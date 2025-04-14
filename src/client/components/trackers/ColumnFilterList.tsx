@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';  // Add this import
 import useGlobalContext from '../../hooks/useGlobalContext';
 import type { GlobalState, TableColumn } from '../../context/GlobalContext';
@@ -8,7 +8,6 @@ function ColumnFilterList() {
   // get state and dispatch from global context
   const { state, dispatch } = useGlobalContext();
   // get all columns from state
-  const { allColumnHeaders } = state.appointments;
   const [allColumnLabels, setAllColumnLabels] = useState<TableColumn[]>([]);
 
   const location = useLocation();  // Add this hook
@@ -31,8 +30,6 @@ const currentPath = location.pathname.slice(1);
 const stateProperty = PATH_TO_STATE_MAP[currentPath];
 
 const columnHeaders = state[stateProperty]?.allColumnHeaders || []
-console.log(columnHeaders.length);
-
 
 if (columnHeaders.length) {
   setAllColumnLabels(columnHeaders);

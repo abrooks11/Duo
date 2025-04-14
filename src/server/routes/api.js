@@ -12,7 +12,7 @@ import authRouter from './authRouter.js';
 import voicemailRouter from './voicemailRouter.js';
 import openAiRouter from './openAiRouter.js';
 
-// apiRouter.post("/upload/:dataType/:sheetName", userActionsController.uploadFile, (req, res) => {
+// apiRouter.post("/upload/:resourceType/:sheetName", userActionsController.uploadFile, (req, res) => {
 //   res.status(200).send("File was uploaded successfully");
 // });
 
