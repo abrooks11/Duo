@@ -1,17 +1,12 @@
 import express from "express";
+import appointmentController from "../controllers/appointmentController.js";
+
 const appointmentRouter = express.Router();
 
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+const {getAppointments} = appointmentController
 
-appointmentRouter.get("/", async (req, res) => {
-  // get appointments from the database
-  const appointments = await prisma.appointment.findMany({
-    take: 100,
-    orderBy: {
-      startDate: 'desc'
-    }
-  });
+appointmentRouter.get("/", getAppointments, (req, res) => {
+  const appointments = res.locals.appointments
   return res.status(200).json(appointments);
 });
 
