@@ -10,11 +10,11 @@ import "./styles/UI.scss";
 
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  // <StrictMode>
   <BrowserRouter>
       <GlobalProvider>
         <App />
       </GlobalProvider>
     </BrowserRouter>
-  </StrictMode>,
+  // </StrictMode>,
 )

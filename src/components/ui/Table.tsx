@@ -7,6 +7,8 @@ interface TableProps {
 
 function Table({ columns, data }: TableProps) {
   const { dispatch } = useGlobalContext();
+  // console.log("data",data[0]);
+  // console.log("columns", columns[0]);
 
   const handleSort = (column: string) => {
     // dispatch({
@@ -16,7 +18,6 @@ function Table({ columns, data }: TableProps) {
     //   },
     // });
   };
-// console.log("PROP DATA:", data)
   return (
     <div>
       <table className="data-table">
@@ -34,7 +35,7 @@ function Table({ columns, data }: TableProps) {
         <tbody>
           {data.map((row) => (
             <tr key={row.id} className="data-table-row">
-              {columns.map((column) => (
+              {columns.map((column) => (                
                 <td key={column.value}>{row[column.value]}</td>
               ))}
             </tr>
