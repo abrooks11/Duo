@@ -1,6 +1,6 @@
-import VoicemailRow from './VoicemailRow'
+import VoicemailRow from './VoicemailRow';
 
-const VoicemailTable = ({voicemailList}) => {
+const VoicemailTable = ({ voicemailList }) => {
   return (
     <table>
       {/* HEADER ROW */}
@@ -16,30 +16,30 @@ const VoicemailTable = ({voicemailList}) => {
       </thead>
       <tbody>
         {voicemailList &&
-            voicemailList.map(element => {
-              const {
-                id,
-                caller, // phone number
-                caller_name,
-                created_at,
-                duration,
-                transcription,
-              } = element;
-              return (
-                <VoicemailRow
-                  key={id}
-                  id={id}
-                  phone={caller}
-                  name={caller_name}
-                  date={created_at}
-                  duration={duration}
-                  transcript={transcription}
-                />
-              );
-            })}
+          voicemailList.map((element) => {
+            const {
+              id,
+              caller, // phone number
+              caller_name,
+              created_at,
+              duration,
+              transcription,
+            } = element;
+            return (
+              <VoicemailRow
+                key={id}
+                id={id}
+                phone={caller}
+                name={caller_name}
+                date={created_at}
+                duration={duration}
+                transcript={transcription}
+              />
+            );
+          })}
       </tbody>
     </table>
-  )
-}
+  );
+};
 
-export default VoicemailTable
+export default VoicemailTable;

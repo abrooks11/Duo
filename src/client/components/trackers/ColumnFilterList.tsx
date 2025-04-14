@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import useGlobalContext from "../../hooks/useGlobalContext";
-import { ActionTypes } from "../../context/GlobalContext";
+import React, { useState } from 'react';
+import useGlobalContext from '../../hooks/useGlobalContext';
+import { ActionTypes } from '../../context/GlobalContext';
 
 function ColumnFilterList() {
   // get state and dispatch from global context

@@ -23,11 +23,11 @@ export const requestAiResponse = async (type: string, transcript: string) => {
   try {
     // console.log({type, transcript})
     const response = await fetch(`${baseURL}/openai`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type, transcript }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type, transcript }),
     });
 
     const data = await response.json();

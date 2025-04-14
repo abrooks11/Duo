@@ -2,27 +2,27 @@
 // ! multer in uploadRouter for postman
 
 // import express
-import express from "express";
-import multer from "multer";
+import express from 'express';
+import multer from 'multer';
 const upload = multer();
 
-import excelServices from "../services/excelServices.js";
+import excelServices from '../services/excelServices.js';
 // create a router
 const uploadRouter = express.Router();
 
 uploadRouter.post(
-  "/:dataType/:sheetName",
-  upload.single("file"),
+  '/:dataType/:sheetName',
+  upload.single('file'),
   async (req, res, next) => {
     try {
       if (!req.file) {
         return next({
           log: 'Error in uploadRouter: No file received',
           status: 400,
-          message: { err: 'Please upload a file' }
+          message: { err: 'Please upload a file' },
         });
       }
-      console.log("UPLOAD ROUTER req.params", req.params);
+      console.log('UPLOAD ROUTER req.params', req.params);
       const { dataType, sheetName } = req.params;
       // console.log("UPLOAD ROUTER req.file", req.file);
       // const { file } = req.file; // for browser
@@ -30,13 +30,13 @@ uploadRouter.post(
       // console.log('UPLOAD ROUTER result', result);
       return res
         .status(200)
-        .json({ message: "File was uploaded successfully" });
+        .json({ message: 'File was uploaded successfully' });
     } catch (error) {
-      console.error("UPLOAD ROUTER error", error);
+      console.error('UPLOAD ROUTER error', error);
       // pass the error to the global error handler
       next({
         status: 501,
-        message: { err: "Error uploading file" },
+        message: { err: 'Error uploading file' },
         log: `Error in uploadRouter: ${error}`,
       });
     }

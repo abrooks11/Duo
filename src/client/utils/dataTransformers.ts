@@ -1,4 +1,4 @@
-import { TableFilter } from "../context/GlobalContext";
+import { TableFilter } from '../context/GlobalContext';
 
 interface dataTransformers {
   formatDate: (date: string) => string;
@@ -13,27 +13,27 @@ const dataTransformers: dataTransformers = {
   // helper function that formats the date
   formatDate: (date) => {
     type ShortDateOptions = {
-      year: "numeric";
-      month: "2-digit" | "numeric";
-      day: "2-digit" | "numeric";
+      year: 'numeric';
+      month: '2-digit' | 'numeric';
+      day: '2-digit' | 'numeric';
     };
 
     const options = {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: false,
     };
 
     const shortOptions: ShortDateOptions = {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     };
 
-    return new Date(date).toLocaleDateString("en-US", shortOptions);
+    return new Date(date).toLocaleDateString('en-US', shortOptions);
   },
   filterAndSort: (data, selectedFilters, selectedSort) => {
     // init result to store processed data
@@ -43,7 +43,7 @@ const dataTransformers: dataTransformers = {
     //   console.log("selectedSort", selectedSort);
     //   console.log("sample obj", data[0]);
 
-    // check if any filters are selected 
+    // check if any filters are selected
     if (selectedFilters.length > 0) {
       // define the rules for filtering by status and assert type
       // interface StatusRules {
@@ -62,7 +62,7 @@ const dataTransformers: dataTransformers = {
 
       // iterate through the filters in the array and spread the result of each filter into the result
       selectedFilters.forEach((filter) => {
-        console.log('FILTER',filter)
+        console.log('FILTER', filter);
         // const result = data.filter((row: any) => {
         //   return filter.includes(
         //     row.ConfirmationStatus
@@ -79,8 +79,8 @@ const dataTransformers: dataTransformers = {
       let sortedData = result.sort((a, b) => {
         // if header has number data, sort by number
         if (
-          typeof a[selectedSort.column] === "number" &&
-          typeof b[selectedSort.column] === "number"
+          typeof a[selectedSort.column] === 'number' &&
+          typeof b[selectedSort.column] === 'number'
         ) {
           return a[selectedSort.column] - b[selectedSort.column];
         }
@@ -90,7 +90,7 @@ const dataTransformers: dataTransformers = {
       });
 
       result =
-        selectedSort.sortOrder === "ascending"
+        selectedSort.sortOrder === 'ascending'
           ? sortedData
           : sortedData.reverse();
     }

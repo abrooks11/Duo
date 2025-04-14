@@ -73,44 +73,44 @@
 //   }
 
 const fieldMap = {
-  ID: "id",
-  CreatedDate: "createdDate",
-  LastModifiedDate: "lastModifiedDate",
-  PatientFullName: "patientFullName",
-  DOB: "dob",
-  MobilePhone: "mobilePhone",
+  ID: 'id',
+  CreatedDate: 'createdDate',
+  LastModifiedDate: 'lastModifiedDate',
+  PatientFullName: 'patientFullName',
+  DOB: 'dob',
+  MobilePhone: 'mobilePhone',
 
   // PATIENT HEADERS
-  PrimaryInsurancePolicyCompanyId: "primaryInsurancePolicyCompanyId",
-  PrimaryInsurancePolicyCompanyName: "primaryInsurancePolicyCompanyName",
-  PrimaryInsurancePolicyPlanId: "primaryInsurancePolicyPlanId",
-  PrimaryInsurancePolicyPlanName: "primaryInsurancePolicyPlanName",
+  PrimaryInsurancePolicyCompanyId: 'primaryInsurancePolicyCompanyId',
+  PrimaryInsurancePolicyCompanyName: 'primaryInsurancePolicyCompanyName',
+  PrimaryInsurancePolicyPlanId: 'primaryInsurancePolicyPlanId',
+  PrimaryInsurancePolicyPlanName: 'primaryInsurancePolicyPlanName',
   PrimaryInsurancePolicyPlanAddressLine1:
-    "primaryInsurancePolicyPlanAddressLine1",
-  PrimaryInsurancePolicyPlanCity: "primaryInsurancePolicyPlanCity",
-  PrimaryInsurancePolicyPlanState: "primaryInsurancePolicyPlanState",
-  PrimaryInsurancePolicyPlanZipCode: "primaryInsurancePolicyPlanZipCode",
-  PrimaryInsurancePolicyNumber: "primaryInsurancePolicyNumber",
+    'primaryInsurancePolicyPlanAddressLine1',
+  PrimaryInsurancePolicyPlanCity: 'primaryInsurancePolicyPlanCity',
+  PrimaryInsurancePolicyPlanState: 'primaryInsurancePolicyPlanState',
+  PrimaryInsurancePolicyPlanZipCode: 'primaryInsurancePolicyPlanZipCode',
+  PrimaryInsurancePolicyNumber: 'primaryInsurancePolicyNumber',
 
-  SecondaryInsurancePolicyCompanyId: "secondaryInsurancePolicyCompanyId",
-  SecondaryInsurancePolicyCompanyName: "secondaryInsurancePolicyCompanyName",
-  SecondaryInsurancePolicyPlanId: "secondaryInsurancePolicyPlanId",
-  SecondaryInsurancePolicyPlanName: "secondaryInsurancePolicyPlanName",
+  SecondaryInsurancePolicyCompanyId: 'secondaryInsurancePolicyCompanyId',
+  SecondaryInsurancePolicyCompanyName: 'secondaryInsurancePolicyCompanyName',
+  SecondaryInsurancePolicyPlanId: 'secondaryInsurancePolicyPlanId',
+  SecondaryInsurancePolicyPlanName: 'secondaryInsurancePolicyPlanName',
   SecondaryInsurancePolicyPlanAddressLine1:
-    "secondaryInsurancePolicyPlanAddressLine1",
+    'secondaryInsurancePolicyPlanAddressLine1',
 
-  SecondaryInsurancePolicyPlanCity: "secondaryInsurancePolicyPlanCity",
-  SecondaryInsurancePolicyPlanState: "secondaryInsurancePolicyPlanState",
-  SecondaryInsurancePolicyPlanZipCode: "secondaryInsurancePolicyPlanZipCode",
-  SecondaryInsurancePolicyNumber: "secondaryInsurancePolicyNumber",
+  SecondaryInsurancePolicyPlanCity: 'secondaryInsurancePolicyPlanCity',
+  SecondaryInsurancePolicyPlanState: 'secondaryInsurancePolicyPlanState',
+  SecondaryInsurancePolicyPlanZipCode: 'secondaryInsurancePolicyPlanZipCode',
+  SecondaryInsurancePolicyNumber: 'secondaryInsurancePolicyNumber',
 
-  AlertMessage: "alertMessage",
-  LastAppointmentDate: "lastAppointmentDate",
-  LastEncounterDate: "lastEncounterDate",
-  LastStatementDate: "lastStatementDate",
-  InsuranceBalance: "insuranceBalance",
-  PatientBalance: "patientBalance",
-  TotalBalance: "totalBalance",
+  AlertMessage: 'alertMessage',
+  LastAppointmentDate: 'lastAppointmentDate',
+  LastEncounterDate: 'lastEncounterDate',
+  LastStatementDate: 'lastStatementDate',
+  InsuranceBalance: 'insuranceBalance',
+  PatientBalance: 'patientBalance',
+  TotalBalance: 'totalBalance',
 
   // APPOINTMENT HEADERS
   ConfirmationStatus: 'confirmationStatus',
@@ -119,7 +119,7 @@ const fieldMap = {
   StartDate: 'startDate',
   AppointmentReason1: 'appointmentReason',
   Notes: 'notes',
-  Type: 'type'
+  Type: 'type',
 };
 
 export default fieldMap;

@@ -1,5 +1,5 @@
-import { ActionTypes, TableColumn } from "../../context/GlobalContext";
-import useGlobalContext from "../../hooks/useGlobalContext";
+import { ActionTypes, TableColumn } from '../../context/GlobalContext';
+import useGlobalContext from '../../hooks/useGlobalContext';
 interface TableProps {
   columns: TableColumn[];
   data: any[];
@@ -35,7 +35,7 @@ function Table({ columns, data }: TableProps) {
         <tbody>
           {data.map((row) => (
             <tr key={row.id} className="data-table-row">
-              {columns.map((column) => (                
+              {columns.map((column) => (
                 <td key={column.value}>{row[column.value]}</td>
               ))}
             </tr>

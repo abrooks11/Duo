@@ -7,7 +7,7 @@ export const getVoicemail = async (req, res, next) => {
         message: { err: 'Authentication required' },
         log: 'Missing or invalid ring-token cookie',
       });
-        }
+    }
     const response = await fetch(
       `https://portal.ringrx.com/voicemails?message_folder=inbox`,
       {
@@ -27,6 +27,6 @@ export const getVoicemail = async (req, res, next) => {
       status: 500,
       message: { err: 'Error fetching voicemail' }, // message to client
       log: `Error in voicemailController: ${error}`, // log to server
-    }); 
-    }
+    });
+  }
 };

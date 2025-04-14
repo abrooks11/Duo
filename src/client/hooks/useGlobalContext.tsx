@@ -5,20 +5,19 @@ Naming convention: must start with "use"
 : must use other React hooks
 */
 
-
-import { useContext } from "react";
-import { GlobalContext } from "../context/GlobalContext";
+import { useContext } from 'react';
+import { GlobalContext } from '../context/GlobalContext';
 
 // Custom hook to use the GlobalContext
 const useGlobalContext = () => {
-    // call useContext hook to get the context and store in variable
-    const context = useContext(GlobalContext);
-    // if context is null, throw an error
-    if (!context) {
-      throw new Error("useGlobalContext must be used within a GlobalProvider");
-    }
-    // return the context value which contains the global state and dispatch function
-    return context;
-  };
+  // call useContext hook to get the context and store in variable
+  const context = useContext(GlobalContext);
+  // if context is null, throw an error
+  if (!context) {
+    throw new Error('useGlobalContext must be used within a GlobalProvider');
+  }
+  // return the context value which contains the global state and dispatch function
+  return context;
+};
 
-  export default useGlobalContext
+export default useGlobalContext;

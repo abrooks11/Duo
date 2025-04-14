@@ -1,6 +1,6 @@
-import React from "react";
-import useGlobalContext from "../../hooks/useGlobalContext";
-import { ActionTypes } from "../../context/GlobalContext";
+import React from 'react';
+import useGlobalContext from '../../hooks/useGlobalContext';
+import { ActionTypes } from '../../context/GlobalContext';
 
 function ActionMenu() {
   // GLOBAL STATE:

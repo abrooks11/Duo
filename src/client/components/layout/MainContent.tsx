@@ -1,12 +1,11 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from 'react-router-dom';
 
 // import pages
-import Home from "../pages/Home";
-import Appointments from "../pages/Appointments";
-import Claims from "../pages/Claims";
-import Patients from "../pages/Patients";
-import Voicemail from "../pages/Voicemail";
-
+import Home from '../pages/Home';
+import Appointments from '../pages/Appointments';
+import Claims from '../pages/Claims';
+import Patients from '../pages/Patients';
+import Voicemail from '../pages/Voicemail';
 
 function MainContent() {
   return (

@@ -1,9 +1,9 @@
 // import main components
-import TopNav from "./components/layout/TopNav";
-import FileUploadDropZone from "./components/ui/FileUploadDropZone";
-import Sidebar from "./components/layout/Sidebar";
-import MainContent from "./components/layout/MainContent";
-import Footer from "./components/layout/Footer";
+import TopNav from './components/layout/TopNav';
+import FileUploadDropZone from './components/ui/FileUploadDropZone';
+import Sidebar from './components/layout/Sidebar';
+import MainContent from './components/layout/MainContent';
+import Footer from './components/layout/Footer';
 
 function App() {
   return (

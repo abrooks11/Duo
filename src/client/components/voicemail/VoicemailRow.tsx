@@ -28,7 +28,7 @@ const formatDuration = (duration: string) => {
   return `${seconds}s`;
 };
 
-const assignCategory = (str :string) => {
+const assignCategory = (str: string) => {
   const appointmentKeywords = [
     'appointment',
     'schedule',
@@ -44,15 +44,15 @@ const assignCategory = (str :string) => {
   const lowerStr = str.toLowerCase();
   // console.log('Input string:', lowerStr);
 
-  if (appointmentKeywords.some(keyword => lowerStr.includes(keyword))) {
+  if (appointmentKeywords.some((keyword) => lowerStr.includes(keyword))) {
     // console.log('Found appointment keyword');
     return 'appointment';
   }
-  if (prescriptionKeywords.some(keyword => lowerStr.includes(keyword))) {
+  if (prescriptionKeywords.some((keyword) => lowerStr.includes(keyword))) {
     // console.log('Found prescription keyword');
     return 'prescription';
   }
-  if (referralKeywords.some(keyword => lowerStr.includes(keyword))) {
+  if (referralKeywords.some((keyword) => lowerStr.includes(keyword))) {
     // console.log('Found referral keyword');
     return 'referral-pt';
   }
@@ -69,7 +69,7 @@ const VoicemailRow = ({
   duration,
   transcript,
 }: VoicemailRowProps) => {
-  const [category, setCategory] = useState( assignCategory(transcript))
+  const [category, setCategory] = useState(assignCategory(transcript));
 
   const formattedDate = format(new Date(date), 'MMM dd');
   const formattedPhone = formatPhoneNumber(phone);

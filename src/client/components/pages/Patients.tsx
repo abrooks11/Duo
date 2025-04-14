@@ -1,16 +1,16 @@
-// import react hooks 
-import { useEffect, useMemo } from "react";
+// import react hooks
+import { useEffect, useMemo } from 'react';
 // import context and action types
-import useGlobalContext from "../../hooks/useGlobalContext";
+import useGlobalContext from '../../hooks/useGlobalContext';
 
-// import custom components 
-import Table from "../ui/Table";
+// import custom components
+import Table from '../ui/Table';
 
-// import custom hooks 
-import useApi from "../../hooks/useApi";
+// import custom hooks
+import useApi from '../../hooks/useApi';
 
 // import custom utilities
-import dataTransformers from "../../utils/dataTransformers";
+import dataTransformers from '../../utils/dataTransformers';
 
 function Patients() {
   // get global state from context
@@ -20,15 +20,15 @@ function Patients() {
   const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
     state.patients;
 
-  // extract utils 
-  const {formatDate, filterAndSort} = dataTransformers 
+  // extract utils
+  const { formatDate, filterAndSort } = dataTransformers;
 
   // use custom hook
-  const api = useApi()
+  const api = useApi();
 
-  useEffect(()=>{
-    api.getAll('patients')
-  }, [])
+  useEffect(() => {
+    api.getAll('patients');
+  }, []);
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {
@@ -37,7 +37,7 @@ function Patients() {
       createdDate: formatDate(row.createdDate),
       lastModifiedDate: formatDate(row.lastModifiedDate),
       startDate: formatDate(row.startDate),
-      dob: formatDate(row.dob)
+      dob: formatDate(row.dob),
     };
   });
 

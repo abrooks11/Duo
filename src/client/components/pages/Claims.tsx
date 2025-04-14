@@ -1,12 +1,13 @@
-import { useEffect, useMemo } from "react";
-import useGlobalContext from "../../hooks/useGlobalContext";
-import Table from "../ui/Table";
-import useApi from "../../hooks/useApi";
-import dataTransformers from "../../utils/dataTransformers";
+import { useEffect, useMemo } from 'react';
+import useGlobalContext from '../../hooks/useGlobalContext';
+import Table from '../ui/Table';
+import useApi from '../../hooks/useApi';
+import dataTransformers from '../../utils/dataTransformers';
 
 function Claims() {
   const { state } = useGlobalContext();
-  const { data, selectedColumnHeaders, selectedFilters, selectedSort } = state.claims;
+  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
+    state.claims;
   const { formatDate, filterAndSort } = dataTransformers;
   const api = useApi();
 
@@ -20,7 +21,7 @@ function Claims() {
       ...row,
       createdDate: formatDate(row.createdDate),
       lastModifiedDate: formatDate(row.lastModifiedDate),
-      serviceStartDate: formatDate(row.serviceStartDate)
+      serviceStartDate: formatDate(row.serviceStartDate),
     };
   });
 

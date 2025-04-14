@@ -1,5 +1,5 @@
 // import prisma client
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const appointmentServices = {
@@ -9,13 +9,18 @@ const appointmentServices = {
     });
   },
 
-updateAppointment : async (fileAppointment, dbAppointment) => {
+  updateAppointment: async (fileAppointment, dbAppointment) => {
     // convert the dates to Date objects
     const dbModifiedDate = new Date(dbAppointment.LastModifiedDate);
     const fileModifiedDate = new Date(fileAppointment.LastModifiedDate);
     // check if the fileModifiedDate is more recent than the dbModifiedDate
     if (dbModifiedDate < fileModifiedDate) {
-      console.log("Updating appointment: ", dbAppointment.id, " with file ID: ", fileAppointment.ID);
+      console.log(
+        'Updating appointment: ',
+        dbAppointment.id,
+        ' with file ID: ',
+        fileAppointment.ID
+      );
       // fileAppointment.id = dbAppointment.id
       await prisma.appointment.update({
         where: {
@@ -25,8 +30,7 @@ updateAppointment : async (fileAppointment, dbAppointment) => {
       });
     }
     return;
-  }
-
+  },
 };
 
 export default appointmentServices;

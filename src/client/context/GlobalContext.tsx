@@ -3,10 +3,10 @@
 // import api from "../hooks/useApi";
 
 // import react hooks
-import React, { createContext, useReducer } from "react";
+import React, { createContext, useReducer } from 'react';
 
 // import immer for state management
-import { produce } from "immer";
+import { produce } from 'immer';
 
 // types for context object
 interface DispatchAction {
@@ -29,11 +29,11 @@ interface GlobalStateActions {
 }
 
 const ActionTypes: GlobalStateActions = {
-  DISPLAY_UPLOAD_MODAL: "DISPLAY_UPLOAD_MODAL",
-  GET_DATA: "GET_DATA",
-  SET_COLUMN_LIST: "SET_COLUMN_LIST",
-  SET_ROW_FILTER_LIST: "SET_ROW_FILTER_LIST",
-  SET_DATA_SORT: "SET_DATA_SORT",
+  DISPLAY_UPLOAD_MODAL: 'DISPLAY_UPLOAD_MODAL',
+  GET_DATA: 'GET_DATA',
+  SET_COLUMN_LIST: 'SET_COLUMN_LIST',
+  SET_ROW_FILTER_LIST: 'SET_ROW_FILTER_LIST',
+  SET_DATA_SORT: 'SET_DATA_SORT',
 };
 
 // TYPE ASSERTIONS AND LABELS FOR STATE
@@ -81,17 +81,17 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: "Scheduled", isSelected: false, data: [] },
-      { label: "Completed", isSelected: false, data: [] },
-      { label: "Cancelled", isSelected: false, data: [] },
-      { label: "No Show", isSelected: false, data: [] },
-      { label: "Total", isSelected: false, data: [] },
+      { label: 'Scheduled', isSelected: false, data: [] },
+      { label: 'Completed', isSelected: false, data: [] },
+      { label: 'Cancelled', isSelected: false, data: [] },
+      { label: 'No Show', isSelected: false, data: [] },
+      { label: 'Total', isSelected: false, data: [] },
     ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
-      column: "",
-      sortOrder: "",
+      column: '',
+      sortOrder: '',
     },
   },
   claims: {
@@ -102,18 +102,18 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: "Missed", isSelected: false, data: [] },
-      { label: "Owes", isSelected: false, data: [] },
-      { label: "Paid", isSelected: false, data: [] },
-      { label: "Processing", isSelected: false, data: [] },
-      { label: "Settled", isSelected: false, data: [] },
-      { label: "X-Fer", isSelected: false, data: [] },
-    ],    
+      { label: 'Missed', isSelected: false, data: [] },
+      { label: 'Owes', isSelected: false, data: [] },
+      { label: 'Paid', isSelected: false, data: [] },
+      { label: 'Processing', isSelected: false, data: [] },
+      { label: 'Settled', isSelected: false, data: [] },
+      { label: 'X-Fer', isSelected: false, data: [] },
+    ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
-      column: "",
-      sortOrder: "",
+      column: '',
+      sortOrder: '',
     },
   },
   patients: {
@@ -123,14 +123,12 @@ const initialState: GlobalState = {
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allFilters: [
-      { label: "Has Balance", isSelected: false, data: [] }
-    ],
+    allFilters: [{ label: 'Has Balance', isSelected: false, data: [] }],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
-      column: "",
-      sortOrder: "",
+      column: '',
+      sortOrder: '',
     },
   },
   voicemail: {
@@ -141,41 +139,44 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: "Scheduled", isSelected: false, data: [] },
-      { label: "Completed", isSelected: false, data: [] },
-      { label: "Cancelled", isSelected: false, data: [] },
-      { label: "No Show", isSelected: false, data: [] },
-      { label: "Total", isSelected: false, data: [] },
+      { label: 'Scheduled', isSelected: false, data: [] },
+      { label: 'Completed', isSelected: false, data: [] },
+      { label: 'Cancelled', isSelected: false, data: [] },
+      { label: 'No Show', isSelected: false, data: [] },
+      { label: 'Total', isSelected: false, data: [] },
     ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
-      column: "",
-      sortOrder: "",
+      column: '',
+      sortOrder: '',
     },
-  }
+  },
 };
 
 // define reducer function and action handlers
 const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
-  const flattenObject = (obj: {[key:string]: any}) => {
-    const flattened: {[key:string]: any} = {}
-  
+  const flattenObject = (obj: { [key: string]: any }) => {
+    const flattened: { [key: string]: any } = {};
+
     Object.keys(obj).forEach((key) => {
-      const value = obj[key]
-  
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        Object.assign(flattened, flattenObject(value))
+      const value = obj[key];
+
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        Object.assign(flattened, flattenObject(value));
       } else {
-        flattened[key] = value
+        flattened[key] = value;
       }
-    })
-  
-    return flattened
-  }
+    });
+
+    return flattened;
+  };
 
   return produce(state, (draft) => {
-
     switch (action.type) {
       case ActionTypes.DISPLAY_UPLOAD_MODAL:
         draft.uploadModal = action.payload;
@@ -190,10 +191,9 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         // generate filter list table
         if (Array.isArray(data) && data.length > 0) {
           // ALL COLUMNS
-          const flatSingleRow = flattenObject(data[0])
+          const flatSingleRow = flattenObject(data[0]);
           // console.log("FLAT DATA:", flatSingleRow)
-          const allColumnHeaders = Object.keys(flatSingleRow).map((header) => (
-            {
+          const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
             label: header,
             value: header,
             isSelected: true,
@@ -201,25 +201,23 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             // isSelected:
             //   state.appointments.allColumns.find((h) => h.value === header)
             //     ?.isSelected || true,
-          }
-        ));
+          }));
 
-
-          if (dataType === "patients") {
+          if (dataType === 'patients') {
             draft.patients.data = data;
             // ALL AND SELECTED COLUMNS
             draft.patients.allColumnHeaders = allColumnHeaders;
             draft.patients.selectedColumnHeaders = allColumnHeaders.filter(
               (column) => column.isSelected
             );
-          } else if (dataType === "appointments") {
-            draft.appointments.data = data.map((row)=>flattenObject(row));
+          } else if (dataType === 'appointments') {
+            draft.appointments.data = data.map((row) => flattenObject(row));
             // ALL AND SELECTED COLUMNS
             draft.appointments.allColumnHeaders = allColumnHeaders;
             draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
               (column) => column.isSelected
             );
-          } else if (dataType === "claims") {
+          } else if (dataType === 'claims') {
             draft.claims.data = data;
             // ALL AND SELECTED COLUMNS
             draft.claims.allColumnHeaders = allColumnHeaders;
@@ -230,17 +228,17 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         }
         break;
       case ActionTypes.SET_ROW_FILTER_LIST:
-      console.log("SET_ROW_FILTER_LIST PAYLOAD: ", action.payload);
-      console.log(state.appointments.allFilters);
+        console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
+        console.log(state.appointments.allFilters);
 
-      // use the path name to know which object to select (appt, claims or patiets)
-      // use the filter name to know this prop to select from allFilters
-      // use the status to toggle the isSelected value
-      
-     // get filter key from payload
-      const { componentFilterName, selectStatus, pathname } = action.payload;
+        // use the path name to know which object to select (appt, claims or patiets)
+        // use the filter name to know this prop to select from allFilters
+        // use the status to toggle the isSelected value
+
+        // get filter key from payload
+        const { componentFilterName, selectStatus, pathname } = action.payload;
         if (pathname.includes('appointments')) {
-          draft.appointments.allFilters
+          draft.appointments.allFilters;
         }
         break;
       // default case returns state

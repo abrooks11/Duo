@@ -1,11 +1,11 @@
 interface Patient {
-    id: string;
-  }
-  interface Appointment {
-    id: string;
-  }
-  interface Claim {
-    id: string;
-  }
+  id: string;
+}
+interface Appointment {
+  id: string;
+}
+interface Claim {
+  id: string;
+}
 
-  export * as types from './types'
+export * as types from './types';

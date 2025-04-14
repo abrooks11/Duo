@@ -1,7 +1,6 @@
 // import prisma client to interact with the database
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-
 
 // // define helper function to process excel file; returns an array of objects
 // const processExcelFile = async (file, sheetName) => {
@@ -25,7 +24,6 @@ const prisma = new PrismaClient();
 //   result = result.map(row => transformExcelRow(row))
 //   console.log("RESULT POST TRANSFORM: ", result[0]);
 
-
 //   // console.log("File Name: ", file.name);
 //   // console.log("Workbook Sheet Names: ", workbook.SheetNames);
 //   // console.log("Target Index: ", targetIndex);
@@ -36,10 +34,8 @@ const prisma = new PrismaClient();
 //     console.error("Transform error:", error);
 //     throw error;
 //   }
-  
+
 // };
-
-
 
 const userActionsController = {
   uploadFile: async (req, res, next) => {
@@ -47,58 +43,49 @@ const userActionsController = {
     // IF NO MATCHING APPOINTMENT, CREATE A NEW ONE
     // IF MATCHING APPOINTMENT, CHECK IF THE ROW IN THE FILE IS MORE RECENT THAN THE DATABASE RECORD AND UPDATE IF FILE DATE IS MORE RECENT
     try {
+      switch (dataType) {
+        case 'appointment':
+          fileData = fileData.filter((row) => row.Type === 'Patient');
+          fileData.forEach(async (fileAppointment) => {
+            const dbAppointment = await prisma.appointment.findUnique({
+              where: {
+                ID: fileAppointment.ID,
+              },
+            });
 
-
-
-  switch (dataType) {
-    case "appointment":
-      fileData = fileData.filter((row) => row.Type === "Patient");
-        fileData.forEach(async (fileAppointment) => {
-          const dbAppointment = await prisma.appointment.findUnique({
-            where: {
-              ID: fileAppointment.ID,
-            },
+            !dbAppointment
+              ? createAppointment(fileAppointment)
+              : updateAppointment(fileAppointment, dbAppointment);
           });
+          break;
+        case 'patient':
+          fileData.forEach(async (filePatient) => {
+            const dbPatient = await prisma.patient.findUnique({
+              where: {
+                id: filePatient.id,
+              },
+            });
 
-          !dbAppointment
-            ? createAppointment(fileAppointment)
-            : updateAppointment(fileAppointment, dbAppointment);
-        });
-      break;
-    case "patient":
-      fileData.forEach(async (filePatient) => {
-        const dbPatient = await prisma.patient.findUnique({
-          where: {
-            id: filePatient.id,
-          },
+            !dbPatient
+              ? createPatient(filePatient)
+              : updatePatient(filePatient, dbPatient);
+          });
+          break;
+        default:
+          console.log('Invalid data type');
+          break;
+      }
 
-        });
+      // // disconnect from the database
+      // await prisma.$disconnect();
 
-        !dbPatient
-          ? createPatient(filePatient)
-          : updatePatient(filePatient, dbPatient);
-
-      });
-      break;
-    default:
-      console.log("Invalid data type");
-      break;
-  }
-
-
-
-
-        // // disconnect from the database
-        // await prisma.$disconnect();
-  
-      
       next();
     } catch (error) {
       next({
         status: 501,
         message: { err: 'Error uploading file' }, // message to client
         log: `Error in userActionsController: ${error}`, // log to server
-      }); 
+      });
     }
   },
 };

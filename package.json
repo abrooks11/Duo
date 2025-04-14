@@ -9,7 +9,9 @@
     "start": "concurrently \"npm run dev\" \"npm run server\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -45,6 +47,7 @@
     "file-loader": "^6.2.0",
     "globals": "^15.15.0",
     "nodemon": "^3.1.9",
+    "prettier": "^3.5.3",
     "prisma": "^6.2.1",
     "sass": "^1.86.3",
     "sass-loader": "^16.0.5",

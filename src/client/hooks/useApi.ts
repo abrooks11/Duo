@@ -1,8 +1,8 @@
 // import context and action types
-import useGlobalContext from "./useGlobalContext";
-import { ActionTypes } from "../context/GlobalContext";
+import useGlobalContext from './useGlobalContext';
+import { ActionTypes } from '../context/GlobalContext';
 
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = 'http://localhost:3000/api';
 // const response = await fetch("http://localhost:3000/api/appointments");
 
 interface apiRequests {
@@ -18,7 +18,7 @@ const useApi = () => {
       try {
         const response = await fetch(`${BASE_URL}/${endpoint}`);
         const data = await response.json();
-        console.log("ENDPOINT", endpoint);
+        console.log('ENDPOINT', endpoint);
         if (data) {
           // console.log(`Request for ${endpoint} successful`)
           dispatch({

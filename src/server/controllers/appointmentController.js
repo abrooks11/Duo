@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const appointmentController = {
@@ -6,32 +6,32 @@ const appointmentController = {
     try {
       // get appointments from the database
       const appointments = await prisma.appointment.findMany({
-        relationLoadStrategy: 'join', 
+        relationLoadStrategy: 'join',
         take: 100,
         orderBy: {
-          startDate: "desc",
+          startDate: 'desc',
         },
         include: {
-            patient: {
-              select: {
-                patientFullName: true,
-                primaryInsurancePolicyNumber: true,
-                alertMessage: true, 
-                patientBalance: true,
-              }
+          patient: {
+            select: {
+              patientFullName: true,
+              primaryInsurancePolicyNumber: true,
+              alertMessage: true,
+              patientBalance: true,
             },
-          }
+          },
+        },
       });
-    //   console.log(appointments);
-      
+      //   console.log(appointments);
+
       res.locals.appointments = appointments;
-      return next()
+      return next();
     } catch (error) {
       next({
         status: 500,
         message: { err: 'Error fetching appointments' }, // message to client
         log: `Error in appointmentController: ${error}`, // log to server
-      }); 
+      });
     }
   },
 };

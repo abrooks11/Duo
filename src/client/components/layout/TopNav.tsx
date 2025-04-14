@@ -1,7 +1,7 @@
-import React from "react";
-import Nav from "./Nav";
-import ActionMenu from "../ui/ActionMenu";
-import duoLogo from "../../assets/images/logo/duo-logo-v2-solo.png";
+import React from 'react';
+import Nav from './Nav';
+import ActionMenu from '../ui/ActionMenu';
+import duoLogo from '../../assets/images/logo/duo-logo-v2-solo.png';
 
 function TopNav() {
   return (

@@ -1,27 +1,21 @@
 // CONTROLLER FUNCTION TO HANDLE UPLOADING FILES
-import excelServices from "../services/excelServices";
-
-
-
+import excelServices from '../services/excelServices';
 
 const uploadController = {
   uploadFile: async (req, res, next) => {
     // CHECK REQUEST.FILES FOR UPLOADED FILES THEN PROCESS DATA FOR DATABASE
     try {
-      
-      
-        // console.log("Incoming files: ", req.files);
-      //  console.log("params: ", req.params); 
+      // console.log("Incoming files: ", req.files);
+      //  console.log("params: ", req.params);
       const { dataType, sheetName } = req.params; // using params because DropZone.body not found
       const file = req.files.file;
       const fileData = await excelServices.readFile(file, sheetName);
-
 
       // if no files, send error
       if (!req.files) {
         res.status(400).send({
           success: false,
-          message: "There was no file found in request",
+          message: 'There was no file found in request',
           payload: {},
         });
       } else {
@@ -41,7 +35,7 @@ const uploadController = {
         status: 501,
         message: { err: 'Error uploading file' }, // message to client
         log: `Error in uploadController: ${error}`, // log to server
-      }); 
+      });
     }
   },
 };

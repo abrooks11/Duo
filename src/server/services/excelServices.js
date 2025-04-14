@@ -1,7 +1,7 @@
 // import xlsx to read excel files and parse data
-import xlsx from "xlsx";
-import fieldMap from "./fieldMap.js";
-import { PrismaClient } from "@prisma/client";
+import xlsx from 'xlsx';
+import fieldMap from './fieldMap.js';
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const excelServices = {
@@ -9,7 +9,7 @@ const excelServices = {
     try {
       // READ THE UPLOADED EXCEL FILE
       // const workbook = xlsx.read(file.data, { type: "buffer" }); // for browser
-      const workbook = xlsx.read(file, { type: "buffer" }); // for postman
+      const workbook = xlsx.read(file, { type: 'buffer' }); // for postman
 
       // FIND THE INDEX OF THE REQUESTED SHEET NAME
       const targetIndex = workbook.SheetNames.indexOf(sheetName);
@@ -31,9 +31,9 @@ const excelServices = {
       // console.log("RESULT POST TRANSFORM: ", result[0]);
 
       // USE UPSERT TO UPDATE OR CREATE PATIENT RECORD
-      console.log("DATA TYPE", dataType);
-      if (dataType === "patient") {
-        console.log("UPSERTING PATIENTS. . . ");
+      console.log('DATA TYPE', dataType);
+      if (dataType === 'patient') {
+        console.log('UPSERTING PATIENTS. . . ');
         for (const patientObj of result) {
           const { id, ...patientData } = patientObj;
           const upsertPatient = await prisma.patient.upsert({
@@ -45,17 +45,17 @@ const excelServices = {
             update: patientData,
           });
         }
-      } else if (dataType === "appointment") {
-        console.log("UPSERTING APPOINTMENTS. . . ");
+      } else if (dataType === 'appointment') {
+        console.log('UPSERTING APPOINTMENTS. . . ');
         for (const appointmentObj of result) {
           // seperate key fields from rest of appointment data
           const { id, type, patientId, patientFullName, ...appointmentData } =
             appointmentObj;
           // validate row data
           if (
-            typeof id === "number" &&
-            type === "Patient" &&
-            appointmentData.appointmentReason !== "OTHER"
+            typeof id === 'number' &&
+            type === 'Patient' &&
+            appointmentData.appointmentReason !== 'OTHER'
           ) {
             console.log(typeof id);
             console.log(type);
@@ -83,7 +83,7 @@ const excelServices = {
             } catch (error) {
               next({
                 status: 501,
-                message: { err: "Error updating appointment" },
+                message: { err: 'Error updating appointment' },
                 log: `Error in excelservices: ${error}`,
               });
             }
@@ -102,7 +102,7 @@ const excelServices = {
         status: 500,
         message: { err: 'Error reading excel file' }, // message to client
         log: `Error in excelServices: ${error}`, // log to server
-      });    
+      });
     }
   },
 };
@@ -114,10 +114,10 @@ const transformKeys = (row) => {
       if (prismaKey) {
         // if key contains 'Date' then convert to date to ISO string? (.toISOString())
         // if key is dob then convert to date to ISO string? (.toISOString())
-        if (prismaKey.includes("Date") || prismaKey === "dob" ) {
+        if (prismaKey.includes('Date') || prismaKey === 'dob') {
           if (value) {
             // Handle Excel date format
-            if (typeof value === "number") {
+            if (typeof value === 'number') {
               // Convert Excel serial number to JavaScript date
               const excelDate = new Date((value - 25569) * 86400 * 1000);
               acc[prismaKey] = excelDate.toISOString();
@@ -126,29 +126,29 @@ const transformKeys = (row) => {
               acc[prismaKey] = new Date(value).toISOString();
             }
           }
-        // } else if (prismaKey === "dob") {
-        //   // Handle various string date formats
-        //   console.log({value})
-        //   const [month, day, year] = value.split("/");
-        //   if (month && day && year) {
-        //     // Handle M/D/YYYY format
-        //     const date = new Date(year, month - 1, day);
-        //     acc[prismaKey] = date.toISOString();
-        //   } else {
-        //     // Fallback for other string formats
-        //     acc[prismaKey] = new Date(value).toISOString();
-        //   }
-        } else if (prismaKey.includes("PolicyNumber")) {
+          // } else if (prismaKey === "dob") {
+          //   // Handle various string date formats
+          //   console.log({value})
+          //   const [month, day, year] = value.split("/");
+          //   if (month && day && year) {
+          //     // Handle M/D/YYYY format
+          //     const date = new Date(year, month - 1, day);
+          //     acc[prismaKey] = date.toISOString();
+          //   } else {
+          //     // Fallback for other string formats
+          //     acc[prismaKey] = new Date(value).toISOString();
+          //   }
+        } else if (prismaKey.includes('PolicyNumber')) {
           acc[prismaKey] = value ? String(value) : null;
         } else if (
-          ["insuranceBalance", "patientBalance", "totalBalance"].includes(
+          ['insuranceBalance', 'patientBalance', 'totalBalance'].includes(
             prismaKey
           )
         ) {
           acc[prismaKey] = value ? parseFloat(value) : null;
-        } else if (prismaKey.includes("ZipCode")) {
+        } else if (prismaKey.includes('ZipCode')) {
           acc[prismaKey] =
-            value && typeof value === "string" ? value.slice(0, 5) : null;
+            value && typeof value === 'string' ? value.slice(0, 5) : null;
         } else {
           acc[prismaKey] = value;
         }
@@ -158,9 +158,9 @@ const transformKeys = (row) => {
   } catch (error) {
     next({
       status: 500,
-      message: { err: 'Error transforming keys'},
+      message: { err: 'Error transforming keys' },
       log: `Error in excelServices: ${error}`, // log to server
-    });    
+    });
   }
 };
 
