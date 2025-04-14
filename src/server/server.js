@@ -1,5 +1,7 @@
 import express from "express"; // Import the Express framework to create a web server
 import cors from "cors"; // Import the CORS middleware
+import cookieParser from 'cookie-parser';
+
 // import fileUpload from "express-fileupload";
 import path from "path"; // Import the path module to handle file and directory paths
 
@@ -19,6 +21,8 @@ const app = express();
 
 // Enable CORS for all routes
 app.use(cors()); // Add this line to enable CORS
+
+app.use(cookieParser());
 
 // Enable file upload middleware
 // app.use(fileUpload());
@@ -54,11 +58,11 @@ app.use((err, req, res, next) => {
   const defaultErr = {
     log: "DEFAULT ERROR: Express error handler caught unknown middleware error",
     status: 500,
-    message: { err: "An error occurred" },
+    message: { err: "Internal Server Error" },
   };
 
   const errorObj = Object.assign({}, defaultErr, err);
-  console.error('ERROR: ', {
+  console.error('GLOBAL ERROR HANDLER: ', {
     log: errorObj.log,
     status: errorObj.status,
     message: errorObj.message,
