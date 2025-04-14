@@ -20,6 +20,7 @@
     "@mui/system": "^6.4.3",
     "@prisma/client": "^6.2.1",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-fileupload": "^1.5.1",
