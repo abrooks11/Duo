@@ -37,8 +37,11 @@ const uploadController = {
         // iterate over the fileData and create a new appointment or update an existing appointment
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      throw error;
+      next({
+        status: 501,
+        message: { err: 'Error uploading file' }, // message to client
+        log: `Error in uploadController: ${error}`, // log to server
+      }); 
     }
   },
 };

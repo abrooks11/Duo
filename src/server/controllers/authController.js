@@ -30,7 +30,11 @@ try {
 
     return next()
 } catch (error) {
-    console.error('Error in authController: ', error)
-    res.status(500).json({ error: 'Failed to authenticate with Ring API' });
+  next({
+    status: 500,
+    message: { err: 'Error authorizing Ring API' }, // message to client
+    log: `Error in authController: ${error}`, // log to server
+  }); 
+    // res.status(500).json({ error: 'Failed to authenticate with Ring API' });
 }
 }

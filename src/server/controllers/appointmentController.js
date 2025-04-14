@@ -27,8 +27,11 @@ const appointmentController = {
       res.locals.appointments = appointments;
       return next()
     } catch (error) {
-      console.error(error);
-      return next(error)
+      next({
+        status: 500,
+        message: { err: 'Error fetching appointments' }, // message to client
+        log: `Error in appointmentController: ${error}`, // log to server
+      }); 
     }
   },
 };

@@ -5,7 +5,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const excelServices = {
-// 
   readFile: async (file, dataType, sheetName) => {
     try {
       // READ THE UPLOADED EXCEL FILE
@@ -81,8 +80,12 @@ const excelServices = {
                 create: { ...appointmentData, patientId: patientId },
                 update: { ...appointmentData, patientId: patientId },
               });
-            } catch (err) {
-              console.error(`Error updating appointment ${id}: `, err);
+            } catch (error) {
+              next({
+                status: 501,
+                message: { err: "Error updating appointment" },
+                log: `Error in excelservices: ${error}`,
+              });
             }
           }
         }
@@ -95,8 +98,11 @@ const excelServices = {
       // console.log("Target Index: ", targetIndex);
       return;
     } catch (error) {
-      console.error("Transform error:", error);
-      throw error;
+      next({
+        status: 500,
+        message: { err: 'Error reading excel file' }, // message to client
+        log: `Error in excelServices: ${error}`, // log to server
+      });    
     }
   },
 };
@@ -150,8 +156,11 @@ const transformKeys = (row) => {
       return acc;
     }, {});
   } catch (error) {
-    console.log("ERROR: ", error);
-    return {};
+    next({
+      status: 500,
+      message: { err: 'Error transforming keys'},
+      log: `Error in excelServices: ${error}`, // log to server
+    });    
   }
 };
 

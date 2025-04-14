@@ -35,11 +35,10 @@ uploadRouter.post(
       console.error("UPLOAD ROUTER error", error);
       // pass the error to the global error handler
       next({
-        log: `Error in uploadMiddleware: ${error.message}`,
-        status: 500,
-        message: { err: "An error occurred while processing the upload" },
+        status: 501,
+        message: { err: "Error uploading file" },
+        log: `Error in uploadRouter: ${error}`,
       });
-      // return res.status(500).json({error: error.message});
     }
   }
 );
