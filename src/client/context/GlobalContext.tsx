@@ -8,6 +8,8 @@ import React, { createContext, useReducer } from 'react';
 // import immer for state management
 import { produce } from 'immer';
 
+import { appointmentMap, claimMap } from '../utils/rowFilterMap';
+
 // types for context object
 interface DispatchAction {
   type: string;
@@ -65,6 +67,7 @@ interface TableColumn {
 }
 
 interface TableFilter {
+  key: string;
   label: string;
   isSelected: boolean;
   data: any[];
@@ -81,11 +84,11 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: 'Scheduled', isSelected: false, data: [] },
-      { label: 'Completed', isSelected: false, data: [] },
-      { label: 'Cancelled', isSelected: false, data: [] },
-      { label: 'No Show', isSelected: false, data: [] },
-      { label: 'Total', isSelected: false, data: [] },
+      { key: 'scheduled', label: 'Scheduled', isSelected: false, data: [] },
+      { key: 'completed', label: 'Completed', isSelected: false, data: [] },
+      { key: 'cancelled', label: 'Cancelled', isSelected: false, data: [] },
+      { key: 'noShow', label: 'No Show', isSelected: false, data: [] },
+      { key: 'total', label: 'Total', isSelected: false, data: [] },
     ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
@@ -102,12 +105,12 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: 'Missed', isSelected: false, data: [] },
-      { label: 'Owes', isSelected: false, data: [] },
-      { label: 'Paid', isSelected: false, data: [] },
-      { label: 'Processing', isSelected: false, data: [] },
-      { label: 'Settled', isSelected: false, data: [] },
-      { label: 'X-Fer', isSelected: false, data: [] },
+      { key: 'missed', label: 'Missed', isSelected: false, data: [] },
+      { key: 'owes', label: 'Owes', isSelected: false, data: [] },
+      { key: 'paid', label: 'Paid', isSelected: false, data: [] },
+      { key: 'processing', label: 'Processing', isSelected: false, data: [] },
+      { key: 'settled', label: 'Settled', isSelected: false, data: [] },
+      { key: 'transferred', label: 'Transferred', isSelected: false, data: [] },
     ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
@@ -139,13 +142,23 @@ const initialState: GlobalState = {
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allFilters: [
-      { label: 'Admin', isSelected: false, data: [] },
-      { label: 'Appointment', isSelected: false, data: [] },
-      { label: 'Memo', isSelected: false, data: [] },
-      { label: 'Misc', isSelected: false, data: [] },
-      { label: 'Prescription', isSelected: false, data: [] },
-      { label: 'Referral', isSelected: false, data: [] },
-      { label: 'Record Request', isSelected: false, data: [] },
+      { key: 'admin', label: 'Admin', isSelected: false, data: [] },
+      { key: 'appointment', label: 'Appointment', isSelected: false, data: [] },
+      { key: 'memo', label: 'Memo', isSelected: false, data: [] },
+      { key: 'misc', label: 'Misc', isSelected: false, data: [] },
+      {
+        key: 'prescription',
+        label: 'Prescription',
+        isSelected: false,
+        data: [],
+      },
+      { key: 'referral', label: 'Referral', isSelected: false, data: [] },
+      {
+        key: 'recordRequest',
+        label: 'Record Request',
+        isSelected: false,
+        data: [],
+      },
     ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
@@ -184,17 +197,12 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         draft.uploadModal = action.payload;
         break;
       case ActionTypes.GET_DATA:
-        // extract data and dataType from payload
-        const { dataType, data } = action.payload;
+        // extract data and resourceType from payload
+        const { resourceType, data } = action.payload;
 
-        // if the data is an array and has length, check the dataType
-        // generate allColumns from  keys of first object in data array,
-        // generate selectedColumns from allColumns,
-        // generate filter list table
         if (Array.isArray(data) && data.length > 0) {
-          // ALL COLUMNS
+          // generate list of column labels from  keys of first object in response array then filter into categories
           const flatSingleRow = flattenObject(data[0]);
-          // console.log("FLAT DATA:", flatSingleRow)
           const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
             label: header,
             value: header,
@@ -205,21 +213,41 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             //     ?.isSelected || true,
           }));
 
-          if (dataType === 'patients') {
+          if (resourceType === 'patients') {
+            // assign database response, column labels to
             draft.patients.data = data;
             // ALL AND SELECTED COLUMNS
             draft.patients.allColumnHeaders = allColumnHeaders;
             draft.patients.selectedColumnHeaders = allColumnHeaders.filter(
               (column) => column.isSelected
             );
-          } else if (dataType === 'appointments') {
+          } else if (resourceType === 'appointments') {
             draft.appointments.data = data.map((row) => flattenObject(row));
             // ALL AND SELECTED COLUMNS
             draft.appointments.allColumnHeaders = allColumnHeaders;
             draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
               (column) => column.isSelected
             );
-          } else if (dataType === 'claims') {
+
+            const filteredData = data.reduce((acc, currentRow, index) => {
+              const { confirmationStatus } = currentRow;
+              for (const key in appointmentMap) {
+                if (appointmentMap[key].includes(confirmationStatus)) {
+                  // find index of acc array 
+                  const targetIndex = acc.findIndex(element => element.key === key)    
+                  const totalIndex = acc.findIndex(element => element.key === 'total')    
+                  if (targetIndex === -1) {
+                    console.log('key not found for ', confirmationStatus);
+                    return acc
+                  }
+                  acc[targetIndex].data.push(currentRow)
+                  acc[totalIndex].data.push(currentRow)
+                }
+              }
+              return acc;
+            }, state.appointments.allFilters);
+
+          } else if (resourceType === 'claims') {
             draft.claims.data = data;
             // ALL AND SELECTED COLUMNS
             draft.claims.allColumnHeaders = allColumnHeaders;

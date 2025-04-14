@@ -27,8 +27,10 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   // Get the corresponding state property from the map
   const stateProperty = PATH_TO_STATE_MAP[currentPath];
 
-  if (stateProperty && stateProperty !== 'home' ) {
-    setRowFilters((state[stateProperty] as TableFilter).allFilters);
+  const filterList = state[stateProperty]?.allFilters || []
+
+  if (filterList.length) {
+    setRowFilters(filterList);
   } else {
     setRowFilters([]);
   }
@@ -37,6 +39,7 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   /*
    * function for selecting/deselecting a single filter from the list of filters
    */
+
   // const handleFilterClick = (statusFilter: TableFilter) => {
   //   console.log('FILTER CLICKED: ', statusFilter);
   //   console.log('FILTER STATUS:', statusFilter.isSelected);
