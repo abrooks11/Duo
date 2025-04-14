@@ -22,7 +22,7 @@ interface GlobalStateActions {
   DISPLAY_UPLOAD_MODAL: string;
   GET_DATA: string;
   SET_DATA_COLUMNS: string;
-  SET_ROW_FILTERS: string;
+  SET_ROW_FILTER_LIST: string;
   SET_DATA_SORT: string;
 
   // SET_APPOINTMENT_COLUMNS: string;
@@ -35,7 +35,7 @@ const ActionTypes: GlobalStateActions = {
   DISPLAY_UPLOAD_MODAL: "DISPLAY_UPLOAD_MODAL",
   GET_DATA: "GET_DATA",
   SET_DATA_COLUMNS: "SET_DATA_COLUMNS",
-  SET_ROW_FILTERS: "SET_ROW_FILTERS",
+  SET_ROW_FILTER_LIST: "SET_ROW_FILTER_LIST",
   SET_DATA_SORT: "SET_DATA_SORT",
   // SET_APPOINTMENT_COLUMNS: "SET_APPOINTMENT_COLUMNS",
   // SET_APPOINTMENT_FILTERS: "SET_APPOINTMENT_FILTERS",
@@ -179,7 +179,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         if (Array.isArray(data) && data.length > 0) {
           // ALL COLUMNS
           const flatSingleRow = flattenObject(data[0])
-          console.log("FLAT DATA:", flatSingleRow)
+          // console.log("FLAT DATA:", flatSingleRow)
           const allColumnHeaders = Object.keys(flatSingleRow).map((header) => (
             {
             label: header,
@@ -217,13 +217,19 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
           }
         }
         break;
-      case ActionTypes.SET_ROW_FILTERS:
-      console.log("SET_ROW_FILTERS PAYLOAD: ", action.payload);
+      case ActionTypes.SET_ROW_FILTER_LIST:
+      console.log("SET_ROW_FILTER_LIST PAYLOAD: ", action.payload);
+      console.log(state.appointments.allFilters);
+
+      // use the path name to know which object to select (appt, claims or patiets)
+      // use the filter name to know this prop to select from allFilters
+      // use the status to toggle the isSelected value
+      
      // get filter key from payload
       const { componentFilterName, selectStatus, pathname } = action.payload;
-        // if (pathname.includes('appointments')) {
-          
-        // }
+        if (pathname.includes('appointments')) {
+          draft.appointments.allFilters
+        }
         break;
       // default case returns state
       default:

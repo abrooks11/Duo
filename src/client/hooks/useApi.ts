@@ -1,5 +1,5 @@
 // import context and action types
-import useGlobalContext from "../hooks/useGlobalContext";
+import useGlobalContext from "./useGlobalContext";
 import { ActionTypes } from "../context/GlobalContext";
 
 const BASE_URL = "http://localhost:3000/api";

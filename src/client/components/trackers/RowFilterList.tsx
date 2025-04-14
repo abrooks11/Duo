@@ -46,11 +46,11 @@ function RowFilterList() {
     console.log("FILTER STATUS:", statusFilter.isSelected);
 
     dispatch({
-      type: ActionTypes.SET_ROW_FILTERS,
+      type: ActionTypes.SET_ROW_FILTER_LIST,
       payload: {
+        pathname: currentPath,
         componentFilterName: statusFilter,
         selectStatus: !statusFilter.isSelected,
-        pathname: currentPath,
       },
     });
   };
