@@ -2,6 +2,7 @@ import VoicemailRow from './VoicemailRow';
 
 const VoicemailTable = ({ voicemailList }) => {
   return (
+
     <table>
       {/* HEADER ROW */}
       <thead>
