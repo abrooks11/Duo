@@ -5,20 +5,28 @@ import { requestVoicemail } from '../../utils/voicemailApi';
 const Voicemail = () => {
   const [inbox, setInbox] = useState([]);
 
-  const handleGetVoicemail = async () => {
-    const voicemail = await requestVoicemail();
+  const handleGetVoicemail = async (folder:string ) => {
+    console.log('FOLDER: ', folder);
+    const voicemail = await requestVoicemail(folder);
     setInbox(voicemail);
   };
 
   return (
     <div>
       {/* TOP BUTTON WRAPPER */}
+      <div>need button for unread emails and button for read voicemails </div>
       <div className="h-[100px] border border-red-100 flex justify-center gap-4">
         <button
           className="bg-rose-400 h-[50px] w-[100px] hover:bg-rose-600"
-          onClick={handleGetVoicemail}
+          onClick={() => handleGetVoicemail('inbox')}
         >
-          Get Voicemail
+          Unread
+        </button>
+        <button
+          className="bg-rose-400 h-[50px] w-[100px] hover:bg-rose-600"
+          onClick={() => handleGetVoicemail('trash')}
+        >
+          Read
         </button>
       </div>
 

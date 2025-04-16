@@ -1,6 +1,8 @@
 export const getVoicemail = async (req, res, next) => {
   try {
     const token = req.cookies['ring-token']; // Get the token from cookies
+    const folder = req.body.folder
+
     if (!token) {
       return next({
         status: 401,
@@ -9,7 +11,7 @@ export const getVoicemail = async (req, res, next) => {
       });
     }
     const response = await fetch(
-      `https://portal.ringrx.com/voicemails?message_folder=inbox`,
+      `https://portal.ringrx.com/voicemails?message_folder=${folder}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -22,7 +24,6 @@ export const getVoicemail = async (req, res, next) => {
     res.locals.voicemail = data;
     return next();
   } catch (error) {
-    // console.error('ERROR: getVoicemail middleware', error);
     next({
       status: 500,
       message: { err: 'Error fetching voicemail' }, // message to client
