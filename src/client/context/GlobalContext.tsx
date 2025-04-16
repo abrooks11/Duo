@@ -203,6 +203,8 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         if (Array.isArray(data) && data.length > 0) {
           // generate list of column labels from  keys of first object in response array then filter into categories
           const flatSingleRow = flattenObject(data[0]);
+          // console.log(flatSingleRow);
+                    
           const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
             label: header,
             value: header,
@@ -252,6 +254,17 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             // ALL AND SELECTED COLUMNS
             draft.claims.allColumnHeaders = allColumnHeaders;
             draft.claims.selectedColumnHeaders = allColumnHeaders.filter(
+              (column) => column.isSelected
+            );
+          } else if (resourceType === 'voicemail') {
+            // console.log('DISPATCHED TO VOICEMAIL');
+            draft.voicemail.data = data;
+            // console.log(allColumnHeaders)
+            const neededKeys = ['caller', "caller_name", 'created_at', 'duration', 'id', "message_folder", "notes", "transcription", "voicemail" ]
+            const neededColumns = allColumnHeaders.filter(header => neededKeys.includes(header.label))
+            draft.voicemail.allColumnHeaders = neededColumns
+            // console.log(neededColumns);
+            draft.voicemail.selectedColumnHeaders = neededColumns.filter(
               (column) => column.isSelected
             );
           }
