@@ -27,7 +27,9 @@ const Appointments = () => {
   const api = useApi()
 
   useEffect(()=>{
+    // if (!data.length) {
     api.getAll('appointments')
+    // }
   }, [])
 
 
