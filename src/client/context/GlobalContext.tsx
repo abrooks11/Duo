@@ -204,7 +204,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
           // generate list of column labels from  keys of first object in response array then filter into categories
           const flatSingleRow = flattenObject(data[0]);
           // console.log(flatSingleRow);
-                    
+
           const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
             label: header,
             value: header,
@@ -224,30 +224,49 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               (column) => column.isSelected
             );
           } else if (resourceType === 'appointments') {
+            // Flatten and map the raw appointment data through the flattenObject function; assign to global
             draft.appointments.data = data.map((row) => flattenObject(row));
-            // ALL AND SELECTED COLUMNS
+            // All columns are initially marked as selected (isSelected: true)
             draft.appointments.allColumnHeaders = allColumnHeaders;
+            // Filter to only keep the selected columns
             draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
               (column) => column.isSelected
             );
 
+            // Process and categorize appointments based on their confirmation status
+            // Uses reduce to build filtered lists for each status category
             const filteredData = data.reduce((acc, currentRow, index) => {
+              // Extract the confirmation status from the current appointment
               const { confirmationStatus } = currentRow;
+
+              // For each category in the appointmentMap (scheduled, completed, cancelled, etc.)
               for (const key in appointmentMap) {
+                // Check if current appointment's status matches this category
                 if (appointmentMap[key].includes(confirmationStatus)) {
-                  // find index of acc array 
-                  const targetIndex = acc.findIndex(element => element.key === key)    
-                  const totalIndex = acc.findIndex(element => element.key === 'total')    
+                  // Find the index of the current category in our accumulator array
+                  const targetIndex = acc.findIndex(
+                    (element) => element.key === key
+                  );
+                  // Find the index of the 'total' category which tracks all appointments
+                  const totalIndex = acc.findIndex(
+                    (element) => element.key === 'total'
+                  );
+
+                  // If category not found in accumulator (shouldn't happen, but safety check)
                   if (targetIndex === -1) {
                     console.log('key not found for ', confirmationStatus);
-                    return acc
+                    return acc;
                   }
-                  acc[targetIndex].data.push(currentRow)
-                  acc[totalIndex].data.push(currentRow)
+
+                  // Add the appointment to its specific category
+                  acc[targetIndex].data.push(currentRow);
+                  // Also add it to the 'total' category which tracks all appointments
+                  acc[totalIndex].data.push(currentRow);
                 }
               }
+              // Return the updated accumulator for the next iteration
               return acc;
-            }, state.appointments.allFilters);
+            }, draft.appointments.allFilters);
 
           } else if (resourceType === 'claims') {
             draft.claims.data = data;
@@ -260,9 +279,21 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             // console.log('DISPATCHED TO VOICEMAIL');
             draft.voicemail.data = data;
             // console.log(allColumnHeaders)
-            const neededKeys = ['caller', "caller_name", 'created_at', 'duration', 'id', "message_folder", "notes", "transcription", "voicemail" ]
-            const neededColumns = allColumnHeaders.filter(header => neededKeys.includes(header.label))
-            draft.voicemail.allColumnHeaders = neededColumns
+            const neededKeys = [
+              'caller',
+              'caller_name',
+              'created_at',
+              'duration',
+              'id',
+              'message_folder',
+              'notes',
+              'transcription',
+              'voicemail',
+            ];
+            const neededColumns = allColumnHeaders.filter((header) =>
+              neededKeys.includes(header.label)
+            );
+            draft.voicemail.allColumnHeaders = neededColumns;
             // console.log(neededColumns);
             draft.voicemail.selectedColumnHeaders = neededColumns.filter(
               (column) => column.isSelected
