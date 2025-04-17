@@ -8,7 +8,7 @@ import React, { createContext, useReducer } from 'react';
 // import immer for state management
 import { produce } from 'immer';
 
-import { appointmentMap, claimMap } from '../utils/rowFilterMap';
+import { appointmentMap, claimMap } from '../utils/keyMappings';
 
 // types for context object
 interface DispatchAction {
@@ -44,7 +44,7 @@ interface GlobalState {
   appointments: DataObject;
   claims: DataObject;
   patients: DataObject;
-  voicemail: DataObject;
+  voicemail: VoicemailState;
 }
 
 interface DataObject {
@@ -52,11 +52,22 @@ interface DataObject {
   filteredData: any[];
   allColumnHeaders: TableColumn[]; // get from keys of first object in data array
   selectedColumnHeaders: TableColumn[];
-  allFilters: TableFilter[]; // defined in reducer
+  allRowFilters: TableFilter[]; // defined in reducer
   selectedFilters: TableFilter[];
   selectedSort: {
     column: string;
     sortOrder: string;
+  };
+}
+
+interface VoicemailState extends DataObject {
+  inbox: {
+    data: any[];
+    filteredData: any[];
+  };
+  trash: {
+    data: any[];
+    filteredData: any[];
   };
 }
 
@@ -83,7 +94,7 @@ const initialState: GlobalState = {
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allFilters: [
+    allRowFilters: [
       { key: 'scheduled', label: 'Scheduled', isSelected: false, data: [] },
       { key: 'completed', label: 'Completed', isSelected: false, data: [] },
       { key: 'cancelled', label: 'Cancelled', isSelected: false, data: [] },
@@ -104,7 +115,7 @@ const initialState: GlobalState = {
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allFilters: [
+    allRowFilters: [
       { key: 'missed', label: 'Missed', isSelected: false, data: [] },
       { key: 'owes', label: 'Owes', isSelected: false, data: [] },
       { key: 'paid', label: 'Paid', isSelected: false, data: [] },
@@ -126,7 +137,7 @@ const initialState: GlobalState = {
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allFilters: [{ label: 'Has Balance', isSelected: false, data: [] }],
+    allRowFilters: [{ label: 'Has Balance', isSelected: false, data: [] }],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
@@ -137,11 +148,19 @@ const initialState: GlobalState = {
   voicemail: {
     data: [], // data from database
     filteredData: [],
+    inbox: {
+      data: [], // read voicemails from API
+      filteredData: [], // filtered read voicemails
+    },
+    trash: {
+      data: [], // unread voicemails from API
+      filteredData: [], // filtered unread voicemails
+    },
     // TABLE COLUMN NAMES
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allFilters: [
+    allRowFilters: [
       { key: 'admin', label: 'Admin', isSelected: false, data: [] },
       { key: 'appointment', label: 'Appointment', isSelected: false, data: [] },
       { key: 'memo', label: 'Memo', isSelected: false, data: [] },
@@ -266,7 +285,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               }
               // Return the updated accumulator for the next iteration
               return acc;
-            }, draft.appointments.allFilters);
+            }, draft.appointments.allRowFilters);
 
           } else if (resourceType === 'claims') {
             draft.claims.data = data;
@@ -277,18 +296,24 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             );
           } else if (resourceType === 'voicemail') {
             // console.log('DISPATCHED TO VOICEMAIL');
+            // console.log(data);
+            const inbox = data.filter(row => row.message_folder === 'inbox')
+            const trash = data.filter(row => row.message_folder === 'trash')
+            
             draft.voicemail.data = data;
+            draft.voicemail.inbox.data = inbox
+            draft.voicemail.trash.data = trash
             // console.log(allColumnHeaders)
             const neededKeys = [
               'caller',
               'caller_name',
               'created_at',
               'duration',
-              'id',
-              'message_folder',
+              // 'id',
+              // 'message_folder', // inbox or trash
               'notes',
-              'transcription',
-              'voicemail',
+              'transcription', // transcript of audio
+              // 'voicemail', // .wav filename
             ];
             const neededColumns = allColumnHeaders.filter((header) =>
               neededKeys.includes(header.label)
@@ -303,16 +328,16 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         break;
       case ActionTypes.SET_ROW_FILTER_LIST:
         console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
-        console.log(state.appointments.allFilters);
+        console.log(state.appointments.allRowFilters);
 
         // use the path name to know which object to select (appt, claims or patiets)
-        // use the filter name to know this prop to select from allFilters
+        // use the filter name to know this prop to select from allRowFilters
         // use the status to toggle the isSelected value
 
         // get filter key from payload
         const { componentFilterName, selectStatus, pathname } = action.payload;
         if (pathname.includes('appointments')) {
-          draft.appointments.allFilters;
+          draft.appointments.allRowFilters;
         }
         break;
       // default case returns state

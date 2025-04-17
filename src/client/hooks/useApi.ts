@@ -21,7 +21,12 @@ const useApi = () => {
         let serverData = {}
 
         if (endpoint === 'voicemail') {
-          serverData = await requestVoicemail('inbox')
+    const inbox = await requestVoicemail("inbox");
+    const trash = await requestVoicemail('trash');
+    
+
+
+          serverData = [...inbox, ...trash]
         } else { 
           const response = await fetch(`${BASE_URL}/${endpoint}`);
           // const data = await response.json();
