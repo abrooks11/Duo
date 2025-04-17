@@ -1,45 +1,35 @@
-import VoicemailRow from './VoicemailRow';
+interface Props {
+  columns: any[];
+  data: any[];
+  className: string;
+}
 
-const VoicemailTable = ({ voicemailList }) => {
+const VoicemailTable = ({ columns, data, className }: Props) => {
   return (
-
-    <table>
-      {/* HEADER ROW */}
+    <div className={className}>
+      <table>
+      {/* SELECTED TABLE HEADERS FROM PROPS*/}
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Phone Number</th>
-          <th>Name</th>
-          <th>Reason</th>
-          <th>Duration</th>
-          <th>Transcription</th>
+          {columns.map((column) => (
+            <th key={column.value}>
+              {column.label}
+            </th>
+          ))}
         </tr>
       </thead>
+      {/* TABLE BODY */}
       <tbody>
-        {voicemailList &&
-          voicemailList.map((element) => {
-            const {
-              id,
-              caller, // phone number
-              caller_name,
-              created_at,
-              duration,
-              transcription,
-            } = element;
-            return (
-              <VoicemailRow
-                key={id}
-                id={id}
-                phone={caller}
-                name={caller_name}
-                date={created_at}
-                duration={duration}
-                transcript={transcription}
-              />
-            );
-          })}
+        {data.map((row) => (
+          <tr key={row.id}>
+            {columns.map((column) => (
+              <td key={column.value}>{row[column.value]}</td>
+            ))}
+          </tr>
+        ))}
       </tbody>
-    </table>
+        </table>
+    </div>
   );
 };
 
