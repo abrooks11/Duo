@@ -1,7 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["relationJoins"]
-  output   = "../node_modules/.prisma/client"    
+  output          = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -82,4 +82,45 @@ model Patient {
   totalBalance                             Float?
   // RELATED FIELDS
   appointments                             Appointment[]
+  PatientVoicemail                         PatientVoicemail[]
+}
+
+model Voicemail {
+  id            String      @id @unique // id: "4cbda5b4-4d14-48dc-a82e-aed957e788cf"
+  callerNumber  String // caller: "18177342041"
+  callerName    String // caller_name: "+18177342041"
+  createdDate   DateTime @default(now()) // created_at: "2025-04-21T12:24:18.431-05:00"
+  duration      Int // duration: 14260
+  messageFolder String // message_folder: "inbox"
+  status        String // status: "new"
+  transcription String // transcription: "Hello."
+  // CUSTOM KEYS
+  callerType    String? // ex: 'patient', 'clinic', 'pharmacy', 'insurance'
+  reason String? // ex: appointment, prescription, etc
+  officeId       String?  // Optional ID if caller is another office
+  officeName     String?  // Name of the office if applicable
+  // RELATED FIELDS
+    patientVoicemails PatientVoicemail[] // Many-to-many relationship
+  // EXTRA KEYS 
+  // voicemail: "b82ea82c-5086-41de-9403-cce701ef7b35.wav"
+  // called: "18174404338"; inbound RingRX number 
+  // contact: null
+  // fax: null
+  // history: [{…}]
+  // mailbox: "abrooks@jenniferbrooksmd.ringrx.com"
+  // message: null
+  // message_type: "voicemail"
+  // notes: null
+  // persist_oc: null
+}
+
+// Junction table for many-to-many relationship
+model PatientVoicemail {
+  id Int @id @default(autoincrement())
+  patient Patient @relation(fields:[patientId], references:[id])
+  patientId Int
+  voicemail Voicemail @relation(fields: [voicemailId] , references:[id])
+  voicemailId String
+  @@unique([patientId, voicemailId]) // Prevent duplicate associations
+
 }
