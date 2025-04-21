@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 // import state
 import useGlobalContext from '../../hooks/useGlobalContext';
@@ -8,7 +8,7 @@ import VoicemailTable from '../voicemail/VoicemailTable';
 
 // import custom hooks
 import useApi from '../../hooks/useApi';
-import { requestVoicemail } from '../../utils/voicemailApi';
+import {formatDate, formatDuration} from '../../utils/dataTransformers'
 
 const Voicemail = () => {
   // get global state from context
@@ -24,33 +24,49 @@ const Voicemail = () => {
     }
   }, []);
 
+  const formattedInboxData = inbox.data.map((row) => {
+    return {
+      ...row,
+      created_at: formatDate(row.created_at),
+      duration: formatDuration(row.duration),
+      // duration: formatDuration(row.duration),
+    };
+  });
+
+  const formattedTrashData = trash.data.map((row) => {
+    return {
+      ...row,
+      created_at: formatDate(row.created_at),
+      duration: formatDuration(row.duration),
+    };
+  });
 
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-        <h1>Unread</h1>
+    <div className="voicemail-container">
+      <div className="voicemail-section">
+        <h1>({inbox.data.length || 0}) Unread</h1>
         {inbox.data.length > 0 && (
-          <div className='flex-1'>
+          <div className="table-container">
             <VoicemailTable
               columns={selectedColumnHeaders}
-              data={inbox.data}
-              className="w-full h-full overflow-auto"
-              />
-              </div>
-            )}
+              data={formattedInboxData}
+              className="w-full h-full"
+            />
+          </div>
+        )}
       </div>
-      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-        <h1>Read</h1>
+      <div className="voicemail-section">
+        <h1>({trash.data.length}) Read</h1>
         {trash.data.length > 0 && (
-          <div className='flex-1'>
+          <div className="table-container">
             <VoicemailTable
               columns={selectedColumnHeaders}
-              data={trash.data}
-              className="w-full h-full overflow-auto"
-              />
-              </div>
-            )}
+              data={formattedTrashData}
+              className="w-full h-full"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
