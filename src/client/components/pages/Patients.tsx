@@ -10,7 +10,7 @@ import Table from '../ui/Table';
 import useApi from '../../hooks/useApi';
 
 // import custom utilities
-import dataTransformers from '../../utils/dataTransformers';
+import dataTransformers, {formatDate} from '../../utils/dataTransformers';
 
 function Patients() {
   // get global state from context
@@ -21,7 +21,7 @@ function Patients() {
     state.patients;
 
   // extract utils
-  const { formatDate, filterAndSort } = dataTransformers;
+  const { filterAndSort } = dataTransformers;
 
   // use custom hook
   const api = useApi();

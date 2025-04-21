@@ -296,7 +296,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             );
           } else if (resourceType === 'voicemail') {
             // console.log('DISPATCHED TO VOICEMAIL');
-            // console.log(data);
+            console.log(data[0]);
             const inbox = data.filter(row => row.message_folder === 'inbox')
             const trash = data.filter(row => row.message_folder === 'trash')
             

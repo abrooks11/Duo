@@ -27,7 +27,7 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   // Get the corresponding state property from the map
   const stateProperty = PATH_TO_STATE_MAP[currentPath];
 
-  const filterList = state[stateProperty]?.allFilters || []
+  const filterList = state[stateProperty]?.allRowFilters || []
 
   if (filterList.length) {
     setRowFilters(filterList);
@@ -56,7 +56,7 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
 
   return (
     <div className="status-list-wrapper">
-      <h2>Filter by Status</h2>
+      <h2>Filter Rows</h2>
       {rowFilters &&
         rowFilters.map((filter: any) => (
           <div

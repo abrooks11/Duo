@@ -1,7 +1,6 @@
 import { TableFilter } from '../context/GlobalContext';
 
 interface dataTransformers {
-  formatDate: (date: string) => string;
   filterAndSort: (
     data: any[],
     selectedFilters: TableFilter[],
@@ -9,32 +8,43 @@ interface dataTransformers {
   ) => any[];
 }
 
+export const formatDate = (date:string):string => {
+  type ShortDateOptions = {
+    year: 'numeric';
+    month: '2-digit' | 'numeric';
+    day: '2-digit' | 'numeric';
+  };
+
+  const options = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
+
+  const shortOptions: ShortDateOptions = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  };
+
+  return new Date(date).toLocaleDateString('en-US', shortOptions);
+}
+
+export const formatDuration = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
+  // Pad with leading zeros if needed
+  const formattedMinutes = minutes.toString().padStart(2, '0');
+  const formattedSeconds = remainingSeconds.toString().padStart(2, '0');
+  
+  return `${formattedMinutes}:${formattedSeconds}`;
+}
+
 const dataTransformers: dataTransformers = {
-  // helper function that formats the date
-  formatDate: (date) => {
-    type ShortDateOptions = {
-      year: 'numeric';
-      month: '2-digit' | 'numeric';
-      day: '2-digit' | 'numeric';
-    };
-
-    const options = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    };
-
-    const shortOptions: ShortDateOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    };
-
-    return new Date(date).toLocaleDateString('en-US', shortOptions);
-  },
   filterAndSort: (data, selectedFilters, selectedSort) => {
     // init result to store processed data
     let result: any[] = data;
