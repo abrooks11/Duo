@@ -4,37 +4,28 @@
     "target": "ES2022",
     "lib": ["ES2023"],
     "module": "ESNext",
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    // "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
-    "moduleResolution": "node",
-    "esModuleInterop": true,
     "allowJs": true,
     "checkJs": false,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "noImplicitAny": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "skipLibCheck": true,
+    "outDir": "./dist/",
+    "sourceMap": true
   },
   "ts-node": {
     "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "transpileOnly": true
   },
-  "include": ["src/server/**/*"],
+  "include": ["src/server/**/*.ts", "src/server/**/*.js"],
   "exclude": ["node_modules"]
 }

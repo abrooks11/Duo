@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "nodemon --exec \"node --loader ts-node/esm\" src/server/server.js",
+    "server": "nodemon --watch src/server --ext ts,js --exec tsx src/server/server.js",
     "start": "concurrently \"npm run dev\" \"npm run server\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -55,6 +55,7 @@
     "sass-loader": "^16.0.5",
     "tailwindcss": "^4.1.4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0"
