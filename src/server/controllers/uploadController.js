@@ -1,5 +1,5 @@
 // CONTROLLER FUNCTION TO HANDLE UPLOADING FILES
-import excelServices from '../services/excelServices';
+import excelServices from '../services/excelServices.js';
 
 const uploadController = {
   uploadFile: async (req, res, next) => {

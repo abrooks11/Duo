@@ -1,3 +1,4 @@
+import {createVoicemail} from "../services/voicemailServices.ts";
 
 export const getVoicemail = async (req, res, next) => {
   try {
@@ -24,6 +25,10 @@ export const getVoicemail = async (req, res, next) => {
       }
     );
     const data = await response.json();
+
+    if (data.length > 0) {
+        await Promise.all(data.map(voicemail => createVoicemail(voicemail)));
+    }
     
     // console.log('MESSAGE DATA', data);
     res.locals.voicemail = data;
