@@ -8,26 +8,8 @@ import VoicemailTable from '../voicemail/VoicemailTable';
 
 // import custom hooks
 import useApi from '../../hooks/useApi';
-import {formatDate, formatDuration} from '../../utils/dataTransformers'
 
 const Voicemail = () => {
-  // get global state from context
-  const { state } = useGlobalContext();
-  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
-    state.voicemail;
-
-    const formattedVoicemailData = data.map((row) => {
-      return {
-        ...row,
-        created_at: formatDate(row.created_at),
-        duration: formatDuration(row.duration),
-        // duration: formatDuration(row.duration),
-      };
-    });
-  
-
-    const inbox = formattedVoicemailData.filter((row) => row.messageFolder === 'inbox');
-    const trash = formattedVoicemailData.filter((row) => row.messageFolder === 'trash');
 
   const api = useApi();
 
@@ -37,6 +19,20 @@ const Voicemail = () => {
     }
   }, []);
 
+  // get global state from context
+  const { state } = useGlobalContext();
+  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
+    state.voicemail;
+
+    const formattedVoicemailData = data.map((row) => {
+            return {
+        ...row,
+        duration: Math.floor(row.duration/1000)
+      };
+    });
+    
+    const inbox = formattedVoicemailData.filter((row) => row.messageFolder === 'inbox');
+    const trash = formattedVoicemailData.filter((row) => row.messageFolder === 'trash');
 
   return (
     <div className="voicemail-container">

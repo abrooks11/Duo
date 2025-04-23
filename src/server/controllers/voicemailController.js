@@ -1,14 +1,13 @@
 import {
   createVoicemail,
   getDbVoicemail,
+  changeFolder
 } from '../services/voicemailServices.ts';
 
 export const getVoicemail = async (req, res, next) => {
   try {
     // ACQUIRE AUTH
     const token = req.cookies['ring-token']; // Get the token from cookies
-    const folder = req.body.folder;
-
     if (!token) {
       return next({
         status: 401,
@@ -38,6 +37,7 @@ export const getVoicemail = async (req, res, next) => {
     );
     const inboxData = await inboxResponse.json();
     const trashData = await trashResponse.json();
+    console.log('Ring :', inboxData[5]);
     console.log('Ring Inbox:', inboxData.length);
     console.log('Ring Trash:', trashData.length);
 
@@ -65,3 +65,41 @@ export const getVoicemail = async (req, res, next) => {
     });
   }
 };
+
+export const deleteVoicemail = async (req, res, next) => {
+  try {
+        // ACQUIRE AUTH
+        const token = req.cookies['ring-token']; // Get the token from cookies
+        if (!token) {
+          return next({
+            status: 401,
+            message: { err: 'Authentication required' },
+            log: 'Missing or invalid ring-token cookie',
+          });
+        }
+
+    const id = req.params.vmId;
+    console.log('Voicemail id:', id)
+
+    const deleted = await fetch(
+      `https://portal.ringrx.com/voicemails/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    await changeFolder(id)
+
+    return next()
+  } catch (error) {
+    next({
+      status: 500,
+      message: { err: 'Error deleting voicemail' }, // message to client
+      log: `Error in voicemailController: ${error}`, // log to server
+    });
+  }
+}

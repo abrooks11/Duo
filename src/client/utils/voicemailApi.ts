@@ -24,6 +24,23 @@ export const requestVoicemail = async () => {
   return data.data;
 };
 
+export const deleteVoicemail = async (id: string) => {
+  console.log('sending to server');
+  
+  const response = await fetch(`${baseURL}/voicemail/${id}`, {
+    method: 'DELETE', 
+    headers: {
+      'Content-Type': 'application/json'
+    }, 
+    credentials: 'include'
+  }
+  )
+
+  const data = await response.json()
+  console.log(data);
+  return 
+}
+
 export const requestAiResponse = async (type: string, transcript: string) => {
   try {
     // console.log({type, transcript})
@@ -42,3 +59,4 @@ export const requestAiResponse = async (type: string, transcript: string) => {
     console.error('Error requesting AI response:', error);
   }
 };
+

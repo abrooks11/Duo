@@ -33,17 +33,6 @@ export const formatDate = (date:string):string => {
   return new Date(date).toLocaleDateString('en-US', shortOptions);
 }
 
-export const formatDuration = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  
-  // Pad with leading zeros if needed
-  const formattedMinutes = minutes.toString().padStart(2, '0');
-  const formattedSeconds = remainingSeconds.toString().padStart(2, '0');
-  
-  return `${formattedMinutes}:${formattedSeconds}`;
-}
-
 const dataTransformers: dataTransformers = {
   filterAndSort: (data, selectedFilters, selectedSort) => {
     // init result to store processed data

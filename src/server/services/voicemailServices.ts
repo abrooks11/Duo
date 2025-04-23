@@ -108,6 +108,7 @@ export const getDbVoicemail = async () => {
   
   const trash = await prisma.voicemail.findMany({
     take: 100, 
+    where: { messageFolder: 'trash' },
     orderBy: {
       createdDate: 'desc'
     }
@@ -117,3 +118,14 @@ export const getDbVoicemail = async () => {
   console.log('Total Messages:', [...inbox, ...trash].length)
   return [...inbox, ...trash]
 };
+
+export const changeFolder = async (vmId : string) => {
+  await prisma.voicemail.update({
+    where: {
+      id: vmId
+    }, 
+    data:{
+      messageFolder: 'trash'
+    }
+  })
+}
