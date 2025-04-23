@@ -13,56 +13,52 @@ import {formatDate, formatDuration} from '../../utils/dataTransformers'
 const Voicemail = () => {
   // get global state from context
   const { state } = useGlobalContext();
-  const { inbox, trash, selectedColumnHeaders, selectedFilters, selectedSort } =
+  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
     state.voicemail;
+
+    const formattedVoicemailData = data.map((row) => {
+      return {
+        ...row,
+        created_at: formatDate(row.created_at),
+        duration: formatDuration(row.duration),
+        // duration: formatDuration(row.duration),
+      };
+    });
+  
+
+    const inbox = formattedVoicemailData.filter((row) => row.messageFolder === 'inbox');
+    const trash = formattedVoicemailData.filter((row) => row.messageFolder === 'trash');
 
   const api = useApi();
 
   useEffect(() => {
-    if (!inbox.data.length && !trash.data.length) {
+    if (!inbox.length && !trash.length) {
       api.getAll('voicemail');
     }
   }, []);
-
-  const formattedInboxData = inbox.data.map((row) => {
-    return {
-      ...row,
-      created_at: formatDate(row.created_at),
-      duration: formatDuration(row.duration),
-      // duration: formatDuration(row.duration),
-    };
-  });
-
-  const formattedTrashData = trash.data.map((row) => {
-    return {
-      ...row,
-      created_at: formatDate(row.created_at),
-      duration: formatDuration(row.duration),
-    };
-  });
 
 
   return (
     <div className="voicemail-container">
       <div className="voicemail-section">
-        <h1>({inbox.data.length || 0}) Unread</h1>
-        {inbox.data.length > 0 && (
+        <h1>({inbox.length || 0}) Unread</h1>
+        {inbox.length > 0 && (
           <div className="table-container">
             <VoicemailTable
               columns={selectedColumnHeaders}
-              data={formattedInboxData}
+              data={inbox}
               className="w-full h-full"
             />
           </div>
         )}
       </div>
       <div className="voicemail-section">
-        <h1>({trash.data.length}) Read</h1>
-        {trash.data.length > 0 && (
+        <h1>({trash.length}) Read</h1>
+        {trash.length > 0 && (
           <div className="table-container">
             <VoicemailTable
               columns={selectedColumnHeaders}
-              data={formattedTrashData}
+              data={trash}
               className="w-full h-full"
             />
           </div>

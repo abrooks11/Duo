@@ -1,6 +1,6 @@
 const baseURL = 'http://localhost:3000/api';
 
-export const requestVoicemail = async (folder: string) => {
+export const requestVoicemail = async () => {
   // get auth cookie
   const getAuthToken = await fetch(`${baseURL}/login`, {
     method: 'POST',
@@ -9,16 +9,14 @@ export const requestVoicemail = async (folder: string) => {
     },
     credentials: 'include',
   });
-  const authData = await getAuthToken.json();
-  console.log('FOLDER: ', folder);
 
+  await getAuthToken.json();
   // get voicemail 
   const getVoicemail = await fetch(`${baseURL}/voicemail`, {
     method: "POST", 
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({folder: folder}),
     credentials: 'include',
   });
   const data = await getVoicemail.json();

@@ -3,18 +3,11 @@ const prisma = new PrismaClient();
 
 // UPLOAD SINGLE VOICEMAIL TO DATABASE
 export const createVoicemail = async (voicemailObj: any): Promise<void> => {
-// extract values from voicemail object. add custom properties and format phone number. upload to voicemail table. query patient table by phone number for matching patient.
-  const {
-    id,
-    created_at,
-    duration,
-    message_folder,
-    status,
-    transcription,
-  } = voicemailObj;
+  // extract values from voicemail object. add custom properties and format phone number. upload to voicemail table. query patient table by phone number for matching patient.
+  const { id, created_at, duration, message_folder, status, transcription } =
+    voicemailObj;
 
-  let {caller, caller_name} = voicemailObj
-
+  let { caller, caller_name } = voicemailObj;
 
   const callDetails = {
     callerType: 'other',
@@ -24,9 +17,9 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
   function formatPhoneNumber(input: string): void {
     // Extract the last 10 digits if the number has country code
     const digits = input.slice(-10);
-    
+
     // Format as (XXX) XXX-XXXX
-    caller = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    caller = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   }
 
   const determineReason = (transcription: String): void => {
@@ -65,43 +58,62 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
 
   const determineCallerName = async (phoneNumber: string): Promise<void> => {
     const matchingPatients = await prisma.patient.findMany({
-      where:{ 
-        mobilePhone: phoneNumber
-      }
-    })
-    console.log({matchingPatients})
+      where: {
+        mobilePhone: phoneNumber,
+      },
+    });
+    // console.log({matchingPatients})
 
     if (matchingPatients.length > 0) {
-      callDetails.callerType = 'patient'
-      caller_name = matchingPatients[0].patientFullName
+      callDetails.callerType = 'patient';
+      caller_name = matchingPatients[0].patientFullName;
     }
-  }
+  };
 
-  
+  formatPhoneNumber(caller);
   determineReason(transcription);
-  formatPhoneNumber(caller)
-  await determineCallerName(caller)
+  await determineCallerName(caller);
 
   await prisma.voicemail.upsert({
     where: {
-      id: id
-    }, 
+      id: id,
+    },
     update: {
       messageFolder: message_folder,
       status: status,
-    }, 
+    },
     create: {
       id: id, // e.g. "4cbda5b4-4d14-48dc-a82e-aed957e788cf"
       callerNumber: caller,
-      callerName: caller_name,
+      callerName: caller_name || '',
       createdDate: created_at,
-      duration: duration,
+      duration: duration || 0,
       messageFolder: message_folder,
       status: status,
-      transcription: transcription,
+      transcription: transcription || '',
       callerType: callDetails.callerType,
       reason: callDetails.reason,
     },
   });
+};
 
+export const getDbVoicemail = async () => {
+  const inbox = await prisma.voicemail.findMany({
+    where: { messageFolder: 'inbox' },
+    orderBy: {
+      createdDate: 'desc',
+    },
+  });
+
+  
+  const trash = await prisma.voicemail.findMany({
+    take: 100, 
+    orderBy: {
+      createdDate: 'desc'
+    }
+  })
+  console.log('Database Inbox', inbox.length)
+  console.log('Database Trash', trash.length)
+  console.log('Total Messages:', [...inbox, ...trash].length)
+  return [...inbox, ...trash]
 };

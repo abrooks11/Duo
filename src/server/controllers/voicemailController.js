@@ -1,10 +1,13 @@
-import {createVoicemail} from "../services/voicemailServices.ts";
+import {
+  createVoicemail,
+  getDbVoicemail,
+} from '../services/voicemailServices.ts';
 
 export const getVoicemail = async (req, res, next) => {
   try {
-    // ACQUIRE AUTH 
+    // ACQUIRE AUTH
     const token = req.cookies['ring-token']; // Get the token from cookies
-    const folder = req.body.folder
+    const folder = req.body.folder;
 
     if (!token) {
       return next({
@@ -15,8 +18,8 @@ export const getVoicemail = async (req, res, next) => {
     }
 
     // FETCH VOICEMAIL FROM RINGRX
-    const response = await fetch(
-      `https://portal.ringrx.com/voicemails?message_folder=${folder}`,
+    const inboxResponse = await fetch(
+      `https://portal.ringrx.com/voicemails?message_folder=inbox`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -24,14 +27,35 @@ export const getVoicemail = async (req, res, next) => {
         },
       }
     );
-    const data = await response.json();
+    const trashResponse = await fetch(
+      `https://portal.ringrx.com/voicemails?message_folder=trash`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    const inboxData = await inboxResponse.json();
+    const trashData = await trashResponse.json();
+    console.log('Ring Inbox:', inboxData.length);
+    console.log('Ring Trash:', trashData.length);
 
-    if (data.length > 0) {
-        await Promise.all(data.map(voicemail => createVoicemail(voicemail)));
+    // UPLOAD VOICEMAIL TO DATABASE
+    if (inboxData.length > 0) {
+      await Promise.all(
+        inboxData.map((voicemail) => createVoicemail(voicemail))
+      );
     }
-    
-    // console.log('MESSAGE DATA', data);
-    res.locals.voicemail = data;
+    if (trashData.length > 0) {
+      await Promise.all(
+        trashData.map((voicemail) => createVoicemail(voicemail))
+      );
+    }
+
+    // FETCH VOICEMAIL FROM DB
+    const voicemail = await getDbVoicemail();
+    res.locals.voicemail = voicemail;
     return next();
   } catch (error) {
     next({
@@ -41,15 +65,3 @@ export const getVoicemail = async (req, res, next) => {
     });
   }
 };
-
-export const uploadVoicemail =  async (req, res, next) => {
-  try {
-    
-  } catch (error) {
-    next({
-      status: 500,
-      message: {err: 'Internal database error on upload'},
-      log: `Error in voicemailController: ${error}`
-    })
-  }
-}
