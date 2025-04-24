@@ -32,6 +32,7 @@
     "multer": "^1.4.5-lts.1",
     "openai": "^4.94.0",
     "react": "^18.2.0",
+    "react-date-range": "^2.0.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.1.1",
     "xlsx": "^0.18.5"
@@ -41,6 +42,7 @@
     "@tailwindcss/vite": "^4.1.4",
     "@types/express": "^5.0.1",
     "@types/react": "^18.2.0",
+    "@types/react-date-range": "^1.4.10",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react-swc": "^3.8.0",
     "concurrently": "^9.1.2",
