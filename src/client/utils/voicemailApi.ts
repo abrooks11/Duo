@@ -1,6 +1,6 @@
 const baseURL = 'http://localhost:3000/api';
 
-export const requestVoicemail = async (folder: string) => {
+export const requestVoicemail = async () => {
   // get auth cookie
   const getAuthToken = await fetch(`${baseURL}/login`, {
     method: 'POST',
@@ -9,22 +9,37 @@ export const requestVoicemail = async (folder: string) => {
     },
     credentials: 'include',
   });
-  const authData = await getAuthToken.json();
-  console.log('FOLDER: ', folder);
 
+  await getAuthToken.json();
   // get voicemail 
   const getVoicemail = await fetch(`${baseURL}/voicemail`, {
     method: "POST", 
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({folder: folder}),
     credentials: 'include',
   });
   const data = await getVoicemail.json();
   // console.log('message data:', data.data);
   return data.data;
 };
+
+export const deleteVoicemail = async (id: string) => {
+  console.log('sending to server');
+  
+  const response = await fetch(`${baseURL}/voicemail/${id}`, {
+    method: 'DELETE', 
+    headers: {
+      'Content-Type': 'application/json'
+    }, 
+    credentials: 'include'
+  }
+  )
+
+  const data = await response.json()
+  console.log(data);
+  return 
+}
 
 export const requestAiResponse = async (type: string, transcript: string) => {
   try {
@@ -44,3 +59,4 @@ export const requestAiResponse = async (type: string, transcript: string) => {
     console.error('Error requesting AI response:', error);
   }
 };
+

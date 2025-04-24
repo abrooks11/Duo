@@ -1,10 +1,13 @@
+import {
+  createVoicemail,
+  getDbVoicemail,
+  changeFolder
+} from '../services/voicemailServices.ts';
 
 export const getVoicemail = async (req, res, next) => {
   try {
-    // ACQUIRE AUTH 
+    // ACQUIRE AUTH
     const token = req.cookies['ring-token']; // Get the token from cookies
-    const folder = req.body.folder
-
     if (!token) {
       return next({
         status: 401,
@@ -14,8 +17,8 @@ export const getVoicemail = async (req, res, next) => {
     }
 
     // FETCH VOICEMAIL FROM RINGRX
-    const response = await fetch(
-      `https://portal.ringrx.com/voicemails?message_folder=${folder}`,
+    const inboxResponse = await fetch(
+      `https://portal.ringrx.com/voicemails?message_folder=inbox`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -23,10 +26,34 @@ export const getVoicemail = async (req, res, next) => {
         },
       }
     );
-    const data = await response.json();
-    
-    // console.log('MESSAGE DATA', data);
-    res.locals.voicemail = data;
+    const trashResponse = await fetch(
+      `https://portal.ringrx.com/voicemails?message_folder=trash`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    const inboxData = await inboxResponse.json();
+    const trashData = await trashResponse.json();
+
+
+    // UPLOAD VOICEMAIL TO DATABASE
+    if (inboxData.length > 0) {
+      await Promise.all(
+        inboxData.map((voicemail) => createVoicemail(voicemail))
+      );
+    }
+    if (trashData.length > 0) {
+      await Promise.all(
+        trashData.map((voicemail) => createVoicemail(voicemail))
+      );
+    }
+
+    // FETCH VOICEMAIL FROM DB
+    const voicemail = await getDbVoicemail();
+    res.locals.voicemail = voicemail;
     return next();
   } catch (error) {
     next({
@@ -37,14 +64,39 @@ export const getVoicemail = async (req, res, next) => {
   }
 };
 
-export const uploadVoicemail =  async (req, res, next) => {
+export const deleteVoicemail = async (req, res, next) => {
   try {
-    
+        // ACQUIRE AUTH
+        const token = req.cookies['ring-token']; // Get the token from cookies
+        if (!token) {
+          return next({
+            status: 401,
+            message: { err: 'Authentication required' },
+            log: 'Missing or invalid ring-token cookie',
+          });
+        }
+
+    const id = req.params.vmId;
+
+    const deleted = await fetch(
+      `https://portal.ringrx.com/voicemails/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    await changeFolder(id)
+
+    return next()
   } catch (error) {
     next({
       status: 500,
-      message: {err: 'Internal database error on upload'},
-      log: `Error in voicemailController: ${error}`
-    })
+      message: { err: 'Error deleting voicemail' }, // message to client
+      log: `Error in voicemailController: ${error}`, // log to server
+    });
   }
 }

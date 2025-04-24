@@ -18,20 +18,19 @@ const useApi = () => {
   const api: apiRequests = {
     getAll: async (endpoint) => {
       try {
-        let serverData = {}
+        let serverData = {};
 
         if (endpoint === 'voicemail') {
-    const inbox = await requestVoicemail("inbox");
-    const trash = await requestVoicemail('trash');
-    
-
-
-          serverData = [...inbox, ...trash]
-        } else { 
+          // const inbox = await requestVoicemail('inbox');
+          // const trash = await requestVoicemail('trash');
+          // serverData = [...inbox, ...trash];
+          serverData = await requestVoicemail();
+        } else {
           const response = await fetch(`${BASE_URL}/${endpoint}`);
           // const data = await response.json();
-          serverData = await response.json()
+          serverData = await response.json();
         }
+
         if (serverData) {
           // console.log(`REQUEST FOR ${endpoint} successful`)
           dispatch({

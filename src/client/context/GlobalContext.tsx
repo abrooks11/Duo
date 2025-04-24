@@ -28,6 +28,7 @@ interface GlobalStateActions {
   SET_COLUMN_LIST: string;
   SET_ROW_FILTER_LIST: string;
   SET_DATA_SORT: string;
+  DELETE_VOICEMAIL: string;
 }
 
 const ActionTypes: GlobalStateActions = {
@@ -36,6 +37,7 @@ const ActionTypes: GlobalStateActions = {
   SET_COLUMN_LIST: 'SET_COLUMN_LIST',
   SET_ROW_FILTER_LIST: 'SET_ROW_FILTER_LIST',
   SET_DATA_SORT: 'SET_DATA_SORT',
+  DELETE_VOICEMAIL: 'DELETE_VOICEMAIL'
 };
 
 // TYPE ASSERTIONS AND LABELS FOR STATE
@@ -44,7 +46,7 @@ interface GlobalState {
   appointments: DataObject;
   claims: DataObject;
   patients: DataObject;
-  voicemail: VoicemailState;
+  voicemail: DataObject;
 }
 
 interface DataObject {
@@ -57,17 +59,6 @@ interface DataObject {
   selectedSort: {
     column: string;
     sortOrder: string;
-  };
-}
-
-interface VoicemailState extends DataObject {
-  inbox: {
-    data: any[];
-    filteredData: any[];
-  };
-  trash: {
-    data: any[];
-    filteredData: any[];
   };
 }
 
@@ -148,14 +139,6 @@ const initialState: GlobalState = {
   voicemail: {
     data: [], // data from database
     filteredData: [],
-    inbox: {
-      data: [], // read voicemails from API
-      filteredData: [], // filtered read voicemails
-    },
-    trash: {
-      data: [], // unread voicemails from API
-      filteredData: [], // filtered unread voicemails
-    },
     // TABLE COLUMN NAMES
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
@@ -286,7 +269,6 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               // Return the updated accumulator for the next iteration
               return acc;
             }, draft.appointments.allRowFilters);
-
           } else if (resourceType === 'claims') {
             draft.claims.data = data;
             // ALL AND SELECTED COLUMNS
@@ -295,25 +277,21 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               (column) => column.isSelected
             );
           } else if (resourceType === 'voicemail') {
-            // console.log('DISPATCHED TO VOICEMAIL');
-            console.log(data[0]);
-            const inbox = data.filter(row => row.message_folder === 'inbox')
-            const trash = data.filter(row => row.message_folder === 'trash')
-            
+
             draft.voicemail.data = data;
-            draft.voicemail.inbox.data = inbox
-            draft.voicemail.trash.data = trash
-            // console.log(allColumnHeaders)
             const neededKeys = [
-              'caller',
-              'caller_name',
-              'created_at',
+              'callerName',
+              'callerNumber',
+              'callerType',
+              'createdDate',
               'duration',
-              // 'id',
-              // 'message_folder', // inbox or trash
-              'notes',
-              'transcription', // transcript of audio
-              // 'voicemail', // .wav filename
+              'id',
+              'messageFolder',
+              'officeId',
+              'officeName',
+              'reason',
+              'status',
+              'transcription',
             ];
             const neededColumns = allColumnHeaders.filter((header) =>
               neededKeys.includes(header.label)
@@ -341,6 +319,15 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         }
         break;
       // default case returns state
+      case ActionTypes.DELETE_VOICEMAIL:
+        const id = action.payload
+        console.log('DISPATCHED ID', id);
+        const target = draft.voicemail.data.find(message => message.id === id)
+        target.messageFolder = 'trash'
+        console.log({target});
+        
+    
+      break
       default:
         break;
     }

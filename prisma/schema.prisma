@@ -10,7 +10,7 @@ datasource db {
 }
 
 model Appointment {
-  id                 Int      @id @unique @default(autoincrement())
+  id                 Int      @id @unique
   createdDate        DateTime @default(now())
   lastModifiedDate   DateTime
   appointmentReason  String
@@ -26,7 +26,7 @@ model Appointment {
 }
 
 model Charge {
-  id                             Int      @id @unique @default(autoincrement())
+  id                             Int      @id @unique
   createdDate                    DateTime @default(now())
   lastModifiedDate               DateTime
   encounterId                    Int
@@ -47,7 +47,7 @@ model Charge {
 }
 
 model Patient {
-  id               Int      @id @unique @default(autoincrement())
+  id               Int      @id @unique
   createdDate      DateTime @default(now())
   lastModifiedDate DateTime
   patientFullName  String
@@ -86,21 +86,21 @@ model Patient {
 }
 
 model Voicemail {
-  id            String      @id @unique // id: "4cbda5b4-4d14-48dc-a82e-aed957e788cf"
-  callerNumber  String // caller: "18177342041"
-  callerName    String // caller_name: "+18177342041"
-  createdDate   DateTime @default(now()) // created_at: "2025-04-21T12:24:18.431-05:00"
-  duration      Int // duration: 14260
-  messageFolder String // message_folder: "inbox"
-  status        String // status: "new"
-  transcription String // transcription: "Hello."
+  id                String             @id @unique // id: "4cbda5b4-4d14-48dc-a82e-aed957e788cf"
+  callerNumber      String // caller: "18177342041"
+  callerName        String // caller_name: "+18177342041"
+  createdDate       DateTime           @default(now()) // created_at: "2025-04-21T12:24:18.431-05:00"
+  duration          Int // duration: 14260
+  messageFolder     String // message_folder: "inbox"
+  status            String // status: "new"
+  transcription     String // transcription: "Hello."
   // CUSTOM KEYS
-  callerType    String? // ex: 'patient', 'clinic', 'pharmacy', 'insurance'
-  reason String? // ex: appointment, prescription, etc
-  officeId       String?  // Optional ID if caller is another office
-  officeName     String?  // Name of the office if applicable
+  callerType        String? // ex: 'patient', 'clinic', 'pharmacy', 'insurance'
+  reason            String? // ex: appointment, prescription, etc
+  officeId          String? // Optional ID if caller is another office
+  officeName        String? // Name of the office if applicable
   // RELATED FIELDS
-    patientVoicemails PatientVoicemail[] // Many-to-many relationship
+  patientVoicemails PatientVoicemail[] // Many-to-many relationship
   // EXTRA KEYS 
   // voicemail: "b82ea82c-5086-41de-9403-cce701ef7b35.wav"
   // called: "18174404338"; inbound RingRX number 
@@ -116,11 +116,11 @@ model Voicemail {
 
 // Junction table for many-to-many relationship
 model PatientVoicemail {
-  id Int @id @default(autoincrement())
-  patient Patient @relation(fields:[patientId], references:[id])
-  patientId Int
-  voicemail Voicemail @relation(fields: [voicemailId] , references:[id])
+  id          Int       @id @default(autoincrement())
+  patient     Patient   @relation(fields: [patientId], references: [id])
+  patientId   Int
+  voicemail   Voicemail @relation(fields: [voicemailId], references: [id])
   voicemailId String
-  @@unique([patientId, voicemailId]) // Prevent duplicate associations
 
+  @@unique([patientId, voicemailId]) // Prevent duplicate associations
 }
