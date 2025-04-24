@@ -37,9 +37,7 @@ export const getVoicemail = async (req, res, next) => {
     );
     const inboxData = await inboxResponse.json();
     const trashData = await trashResponse.json();
-    console.log('Ring :', inboxData[5]);
-    console.log('Ring Inbox:', inboxData.length);
-    console.log('Ring Trash:', trashData.length);
+
 
     // UPLOAD VOICEMAIL TO DATABASE
     if (inboxData.length > 0) {
@@ -79,7 +77,6 @@ export const deleteVoicemail = async (req, res, next) => {
         }
 
     const id = req.params.vmId;
-    console.log('Voicemail id:', id)
 
     const deleted = await fetch(
       `https://portal.ringrx.com/voicemails/${id}`,

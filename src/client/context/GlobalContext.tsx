@@ -28,6 +28,7 @@ interface GlobalStateActions {
   SET_COLUMN_LIST: string;
   SET_ROW_FILTER_LIST: string;
   SET_DATA_SORT: string;
+  DELETE_VOICEMAIL: string;
 }
 
 const ActionTypes: GlobalStateActions = {
@@ -36,6 +37,7 @@ const ActionTypes: GlobalStateActions = {
   SET_COLUMN_LIST: 'SET_COLUMN_LIST',
   SET_ROW_FILTER_LIST: 'SET_ROW_FILTER_LIST',
   SET_DATA_SORT: 'SET_DATA_SORT',
+  DELETE_VOICEMAIL: 'DELETE_VOICEMAIL'
 };
 
 // TYPE ASSERTIONS AND LABELS FOR STATE
@@ -317,6 +319,15 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         }
         break;
       // default case returns state
+      case ActionTypes.DELETE_VOICEMAIL:
+        const id = action.payload
+        console.log('DISPATCHED ID', id);
+        const target = draft.voicemail.data.find(message => message.id === id)
+        target.messageFolder = 'trash'
+        console.log({target});
+        
+    
+      break
       default:
         break;
     }

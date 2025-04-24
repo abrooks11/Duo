@@ -1,3 +1,6 @@
+
+import useGlobalContext from '../../hooks/useGlobalContext';
+import { ActionTypes } from '../../context/GlobalContext';
 import textBubble from '../../assets/text-bubble.svg';
 import { deleteVoicemail } from '../../utils/voicemailApi';
 
@@ -6,9 +9,15 @@ interface Props {
 }
 
 const VoicemailActions = ({vmId}: Props) => {
+  const {dispatch} = useGlobalContext()
+
 // NEED BUTTONS FOR: DELETE, REPLY 
 const handleDelete = async () => {
   await deleteVoicemail(vmId)
+  dispatch({
+    type: ActionTypes.DELETE_VOICEMAIL,
+    payload: vmId
+  })
 }
 
 const handleReply = () => {

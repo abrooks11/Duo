@@ -113,9 +113,7 @@ export const getDbVoicemail = async () => {
       createdDate: 'desc'
     }
   })
-  console.log('Database Inbox', inbox.length)
-  console.log('Database Trash', trash.length)
-  console.log('Total Messages:', [...inbox, ...trash].length)
+
   return [...inbox, ...trash]
 };
 
