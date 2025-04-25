@@ -21,7 +21,7 @@ const Voicemail = () => {
 
   // get global state from context
   const { state } = useGlobalContext();
-  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
+  const { data, allColumnHeaders, selectedColumnHeaders, selectedFilters, selectedSort } =
     state.voicemail;
 
     const formattedVoicemailData = data.map((row) => {
@@ -41,7 +41,7 @@ const Voicemail = () => {
         {inbox.length > 0 && (
           <div className="table-container">
             <VoicemailTable
-              columns={selectedColumnHeaders}
+              columns={allColumnHeaders}
               data={inbox}
               className="w-full h-full"
             />
@@ -53,7 +53,7 @@ const Voicemail = () => {
         {trash.length > 0 && (
           <div className="table-container">
             <VoicemailTable
-              columns={selectedColumnHeaders}
+              columns={allColumnHeaders}
               data={trash}
               className="w-full h-full"
             />

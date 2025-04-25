@@ -8,7 +8,13 @@ import React, { createContext, useReducer } from 'react';
 // import immer for state management
 import { produce } from 'immer';
 
-import { appointmentMap, claimMap } from '../utils/keyMappings';
+import {
+  appointmentMap,
+  appointmentColumnOrder,
+  appointmentColumnNames,
+  voicemailColumnOrder,
+  voicemailColumnNames,
+} from '../utils/keyMappings';
 
 // types for context object
 interface DispatchAction {
@@ -37,7 +43,7 @@ const ActionTypes: GlobalStateActions = {
   SET_COLUMN_LIST: 'SET_COLUMN_LIST',
   SET_ROW_FILTER_LIST: 'SET_ROW_FILTER_LIST',
   SET_DATA_SORT: 'SET_DATA_SORT',
-  DELETE_VOICEMAIL: 'DELETE_VOICEMAIL'
+  DELETE_VOICEMAIL: 'DELETE_VOICEMAIL',
 };
 
 // TYPE ASSERTIONS AND LABELS FOR STATE
@@ -59,6 +65,14 @@ interface DataObject {
   selectedSort: {
     column: string;
     sortOrder: string;
+  };
+  // Add column configuration
+  columnConfig: {
+    orderMap: Record<string, number>;
+    displayNames?: Record<string, string>;
+    widths?: Record<string, number>;
+    // Additional column properties as needed
+    additionalProps?: Record<string, any>;
   };
 }
 
@@ -98,6 +112,13 @@ const initialState: GlobalState = {
       column: '',
       sortOrder: '',
     },
+    columnConfig: {
+      orderMap: appointmentColumnOrder,
+      displayNames: appointmentColumnNames,
+      // widths?: Record<string, number>;
+      // // Additional column properties as needed
+      // additionalProps?: Record<string, any>;
+    },
   },
   claims: {
     data: [], // data from database
@@ -128,7 +149,9 @@ const initialState: GlobalState = {
     allColumnHeaders: [], // all keys from first object in data array
     selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allRowFilters: [{ label: 'Has Balance', isSelected: false, data: [] }],
+    allRowFilters: [
+      { key: 'balance', label: 'Has Balance', isSelected: false, data: [] },
+    ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
@@ -173,6 +196,8 @@ const initialState: GlobalState = {
 
 // define reducer function and action handlers
 const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
+ 
+  // helper function for flattening nested objects from server.json
   const flattenObject = (obj: { [key: string]: any }) => {
     const flattened: { [key: string]: any } = {};
 
@@ -189,9 +214,20 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         flattened[key] = value;
       }
     });
-
     return flattened;
   };
+
+  const generateOrderedColumns = (orderMap :string[], nameMap) => {
+    return orderMap.map((label, index) => {
+      return {
+        key: label, 
+        order: index,
+        displayName: nameMap[label],
+        isVisible: true,
+      }
+    }).sort((a,b) => a.order - b.order)
+  }
+
 
   return produce(state, (draft) => {
     switch (action.type) {
@@ -205,17 +241,20 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         if (Array.isArray(data) && data.length > 0) {
           // generate list of column labels from  keys of first object in response array then filter into categories
           const flatSingleRow = flattenObject(data[0]);
-          // console.log(flatSingleRow);
-
+    
           const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
-            label: header,
+            key: header,
             value: header,
             isSelected: true,
+
             // !TODO: refactor this to maintain selected columns from state
             // isSelected:
             //   state.appointments.allColumns.find((h) => h.value === header)
             //     ?.isSelected || true,
           }));
+
+          const target = generateOrderedColumns(appointmentColumnOrder, appointmentColumnNames)
+          console.log({ target });
 
           if (resourceType === 'patients') {
             // assign database response, column labels to
@@ -229,7 +268,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             // Flatten and map the raw appointment data through the flattenObject function; assign to global
             draft.appointments.data = data.map((row) => flattenObject(row));
             // All columns are initially marked as selected (isSelected: true)
-            draft.appointments.allColumnHeaders = allColumnHeaders;
+            draft.appointments.allColumnHeaders = generateOrderedColumns(appointmentColumnOrder, appointmentColumnNames);
             // Filter to only keep the selected columns
             draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
               (column) => column.isSelected
@@ -277,7 +316,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               (column) => column.isSelected
             );
           } else if (resourceType === 'voicemail') {
-
+            console.log(data[0])
             draft.voicemail.data = data;
             const neededKeys = [
               'callerName',
@@ -296,7 +335,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             const neededColumns = allColumnHeaders.filter((header) =>
               neededKeys.includes(header.label)
             );
-            draft.voicemail.allColumnHeaders = neededColumns;
+            draft.voicemail.allColumnHeaders = generateOrderedColumns(voicemailColumnOrder, voicemailColumnNames);;
             // console.log(neededColumns);
             draft.voicemail.selectedColumnHeaders = neededColumns.filter(
               (column) => column.isSelected
@@ -320,14 +359,15 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         break;
       // default case returns state
       case ActionTypes.DELETE_VOICEMAIL:
-        const id = action.payload
+        const id = action.payload;
         console.log('DISPATCHED ID', id);
-        const target = draft.voicemail.data.find(message => message.id === id)
-        target.messageFolder = 'trash'
-        console.log({target});
-        
-    
-      break
+        const target = draft.voicemail.data.find(
+          (message) => message.id === id
+        );
+        target.messageFolder = 'trash';
+        console.log({ target });
+
+        break;
       default:
         break;
     }
