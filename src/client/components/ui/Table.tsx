@@ -9,7 +9,8 @@ interface Props {
 function Table({ columns, data }: Props) {
   const muiRows: GridRowsProp = data;
   const muiColumns: GridColDef[] = columns.map((column) => {
-    const { key, order, displayName, isVisible } = column;
+    // const { key, order, displayName, isVisible } = column;
+    const { key, displayName } = column;
     
     return {
       field: key,

@@ -10,7 +10,8 @@ interface Props {
 const VoicemailTable = ({ columns, data, className }: Props) => {
   const muiRows: GridRowsProp = data
   const muiColumns: GridColDef[] = columns.map(column => {
-    const { key, order, displayName, isVisible } = column;
+    // const { key, order, displayName, isVisible } = column;
+    const { key, displayName } = column;
 
     // Special handling for the date column to include actions
     if (key === 'createdDate') {

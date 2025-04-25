@@ -20,7 +20,6 @@ const Appointments = () => {
   const {
     data,
     allColumnHeaders,
-    selectedColumnHeaders,
     selectedFilters,
     selectedSort,
   } = state.appointments;

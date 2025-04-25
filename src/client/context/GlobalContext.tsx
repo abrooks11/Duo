@@ -9,6 +9,7 @@ import React, { createContext, useReducer } from 'react';
 import { produce } from 'immer';
 
 import {
+  DisplayNames, 
   appointmentMap,
   appointmentColumnOrder,
   appointmentColumnNames,
@@ -59,27 +60,20 @@ interface DataObject {
   data: any[];
   filteredData: any[];
   allColumnHeaders: TableColumn[]; // get from keys of first object in data array
-  selectedColumnHeaders: TableColumn[];
   allRowFilters: TableFilter[]; // defined in reducer
   selectedFilters: TableFilter[];
   selectedSort: {
     column: string;
     sortOrder: string;
   };
-  // Add column configuration
-  columnConfig: {
-    orderMap: Record<string, number>;
-    displayNames?: Record<string, string>;
-    widths?: Record<string, number>;
-    // Additional column properties as needed
-    additionalProps?: Record<string, any>;
-  };
+  // Add column configuration; columnConfig{orderMap, displayNames, widths, etc . . . }
 }
 
 interface TableColumn {
-  label: string;
-  value: string;
-  isSelected: boolean;
+  key: string; 
+  order: number; 
+  displayName: string;
+  isVisible: boolean;
 }
 
 interface TableFilter {
@@ -97,7 +91,6 @@ const initialState: GlobalState = {
     filteredData: [],
     // TABLE COLUMN NAMES
     allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allRowFilters: [
       { key: 'scheduled', label: 'Scheduled', isSelected: false, data: [] },
@@ -112,20 +105,12 @@ const initialState: GlobalState = {
       column: '',
       sortOrder: '',
     },
-    columnConfig: {
-      orderMap: appointmentColumnOrder,
-      displayNames: appointmentColumnNames,
-      // widths?: Record<string, number>;
-      // // Additional column properties as needed
-      // additionalProps?: Record<string, any>;
-    },
   },
   claims: {
     data: [], // data from database
     filteredData: [],
     // TABLE COLUMN NAMES
     allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
     allRowFilters: [
       { key: 'missed', label: 'Missed', isSelected: false, data: [] },
@@ -145,9 +130,7 @@ const initialState: GlobalState = {
   patients: {
     data: [], // data from database
     filteredData: [],
-    // TABLE COLUMN NAMES
-    allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
+    allColumnHeaders: [], 
     // TABLE FILTERS
     allRowFilters: [
       { key: 'balance', label: 'Has Balance', isSelected: false, data: [] },
@@ -162,10 +145,7 @@ const initialState: GlobalState = {
   voicemail: {
     data: [], // data from database
     filteredData: [],
-    // TABLE COLUMN NAMES
-    allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
-    // TABLE FILTERS
+    allColumnHeaders: [],
     allRowFilters: [
       { key: 'admin', label: 'Admin', isSelected: false, data: [] },
       { key: 'appointment', label: 'Appointment', isSelected: false, data: [] },
@@ -217,7 +197,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
     return flattened;
   };
 
-  const generateOrderedColumns = (orderMap :string[], nameMap) => {
+  const generateOrderedColumns = (orderMap :string[], nameMap:DisplayNames) => {
     return orderMap.map((label, index) => {
       return {
         key: label, 
@@ -225,7 +205,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         displayName: nameMap[label],
         isVisible: true,
       }
-    }).sort((a,b) => a.order - b.order)
+    }).sort((a,b) => a.order - b.order) //### do I need to sort?
   }
 
 
@@ -261,22 +241,15 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             draft.patients.data = data;
             // ALL AND SELECTED COLUMNS
             draft.patients.allColumnHeaders = allColumnHeaders;
-            draft.patients.selectedColumnHeaders = allColumnHeaders.filter(
-              (column) => column.isSelected
-            );
           } else if (resourceType === 'appointments') {
             // Flatten and map the raw appointment data through the flattenObject function; assign to global
             draft.appointments.data = data.map((row) => flattenObject(row));
-            // All columns are initially marked as selected (isSelected: true)
             draft.appointments.allColumnHeaders = generateOrderedColumns(appointmentColumnOrder, appointmentColumnNames);
-            // Filter to only keep the selected columns
-            draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
-              (column) => column.isSelected
-            );
+
 
             // Process and categorize appointments based on their confirmation status
             // Uses reduce to build filtered lists for each status category
-            const filteredData = data.reduce((acc, currentRow, index) => {
+            const filteredData = data.reduce((acc, currentRow) => {
               // Extract the confirmation status from the current appointment
               const { confirmationStatus } = currentRow;
 
@@ -312,34 +285,10 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
             draft.claims.data = data;
             // ALL AND SELECTED COLUMNS
             draft.claims.allColumnHeaders = allColumnHeaders;
-            draft.claims.selectedColumnHeaders = allColumnHeaders.filter(
-              (column) => column.isSelected
-            );
           } else if (resourceType === 'voicemail') {
-            console.log(data[0])
+            // console.log(data[0])
             draft.voicemail.data = data;
-            const neededKeys = [
-              'callerName',
-              'callerNumber',
-              'callerType',
-              'createdDate',
-              'duration',
-              'id',
-              'messageFolder',
-              'officeId',
-              'officeName',
-              'reason',
-              'status',
-              'transcription',
-            ];
-            const neededColumns = allColumnHeaders.filter((header) =>
-              neededKeys.includes(header.label)
-            );
             draft.voicemail.allColumnHeaders = generateOrderedColumns(voicemailColumnOrder, voicemailColumnNames);;
-            // console.log(neededColumns);
-            draft.voicemail.selectedColumnHeaders = neededColumns.filter(
-              (column) => column.isSelected
-            );
           }
         }
         break;
@@ -347,12 +296,12 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
         console.log(state.appointments.allRowFilters);
 
-        // use the path name to know which object to select (appt, claims or patiets)
+        // use the path name to know which object to select
         // use the filter name to know this prop to select from allRowFilters
         // use the status to toggle the isSelected value
 
         // get filter key from payload
-        const { componentFilterName, selectStatus, pathname } = action.payload;
+        const { pathname } = action.payload;
         if (pathname.includes('appointments')) {
           draft.appointments.allRowFilters;
         }
