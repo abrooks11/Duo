@@ -13,7 +13,7 @@ model Appointment {
   id                 Int      @id @unique
   createdDate        DateTime @default(now())
   lastModifiedDate   DateTime
-  appointmentReason  String
+  appointmentReason  String?
   confirmationStatus String
   patientCaseName    String?
   startDate          DateTime

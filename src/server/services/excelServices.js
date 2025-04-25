@@ -34,21 +34,50 @@ const excelServices = {
       console.log('DATA TYPE', resourceType);
       if (resourceType === 'patient') {
         console.log('UPSERTING PATIENTS. . . ');
+
         for (const patientObj of result) {
           const { id, ...patientData } = patientObj;
-          const upsertPatient = await prisma.patient.upsert({
-            where: {
-              id: id,
-              lastModifiedDate: { lt: patientObj.lastModifiedDate },
-            },
-            create: patientData,
-            update: patientData,
+
+          // First check if the record exists and get its current lastModifiedDate
+          const existingPatient = await prisma.patient.findUnique({
+            where: { id: id },
           });
+
+          if (existingPatient) {
+            // Record exists, check if incoming data is more recent
+            const existingDate = new Date(existingPatient.lastModifiedDate);
+            const incomingDate = new Date(patientObj.lastModifiedDate);
+
+            if (incomingDate > existingDate) {
+              // Incoming data is more recent, update the record
+              await prisma.patient.update({
+                where: { id: id },
+                data: patientData,
+              });
+              console.log('Updated patient record with more recent data');
+            } else {
+              // console.log('Skipping update - existing data is more recent');
+            }
+          } else {
+            // Record doesn't exist, create it
+            await prisma.patient.create({
+              data: patientObj,
+            });
+            // console.log('Created new patient record');
+          }
         }
       } else if (resourceType === 'appointment') {
         console.log('UPSERTING APPOINTMENTS. . . ');
+
         for (const appointmentObj of result) {
-          // seperate key fields from rest of appointment data
+
+
+
+
+
+
+
+          // separate key fields from rest of appointment data
           const { id, type, patientId, patientFullName, ...appointmentData } =
             appointmentObj;
           // validate row data
@@ -57,36 +86,46 @@ const excelServices = {
             type === 'Patient' &&
             appointmentData.appointmentReason !== 'OTHER'
           ) {
-            console.log(typeof id);
-            console.log(type);
+
             // check that matching patient exists
-            const patient = await prisma.patient.findUnique({
+            const existingPatient = await prisma.patient.findUnique({
               where: { id: patientId },
             });
 
-            if (!patient) {
+            if (!existingPatient) {
               console.log(
-                `Skipping appointment - Patient ID ${patientId} not found`
+                `Skipping appointment - Patient ${patientFullName} ${patientId} not found`
               );
               continue;
             }
+            const existingAppointment = await prisma.appointment.findUnique({
+              where: { id: id },
+            });
 
-            try {
-              const upsertAppointment = await prisma.appointment.upsert({
-                where: {
-                  id: id,
-                  lastModifiedDate: { lt: appointmentObj.lastModifiedDate },
-                },
-                create: { ...appointmentData, patientId: patientId },
-                update: { ...appointmentData, patientId: patientId },
+            if (existingAppointment) {
+              // Record exists, check if incoming data is more recent
+              const existingDate = new Date(existingAppointment.lastModifiedDate);
+              const incomingDate = new Date(appointmentData.lastModifiedDate);
+  
+              if (incomingDate > existingDate) {
+                // Incoming data is more recent, update the record
+                await prisma.appointment.update({
+                  where: { id: id },
+                  data: {patientId, ...appointmentData},
+                });
+                console.log('Updated patient record with more recent data');
+              } else {
+                // console.log('Skipping update - existing data is more recent');
+              }
+            } else {
+              // Record doesn't exist, create it
+              appointmentData.notes = String(appointmentData.notes) // edge case: only numbers in the notes section
+              await prisma.appointment.create({
+                data: {id, ...appointmentData, patient: {connect: {id: patientId}}},
               });
-            } catch (error) {
-              next({
-                status: 501,
-                message: { err: 'Error updating appointment' },
-                log: `Error in excelservices: ${error}`,
-              });
+              // console.log('Created new appointment record');
             }
+          
           }
         }
       }
@@ -98,11 +137,7 @@ const excelServices = {
       // console.log("Target Index: ", targetIndex);
       return;
     } catch (error) {
-      next({
-        status: 500,
-        message: { err: 'Error reading excel file' }, // message to client
-        log: `Error in excelServices: ${error}`, // log to server
-      });
+      console.error('ERROR', error);
     }
   },
 };
