@@ -13,6 +13,8 @@ import {
   appointmentMap,
   appointmentColumnOrder,
   appointmentColumnNames,
+  patientColumnOrder,
+  patientColumnNames, 
   voicemailColumnOrder,
   voicemailColumnNames,
 } from '../utils/keyMappings';
@@ -237,15 +239,11 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
           console.log({ target });
 
           if (resourceType === 'patients') {
-            // assign database response, column labels to
             draft.patients.data = data;
-            // ALL AND SELECTED COLUMNS
-            draft.patients.allColumnHeaders = allColumnHeaders;
+            draft.patients.allColumnHeaders = generateOrderedColumns(patientColumnOrder, patientColumnNames);
           } else if (resourceType === 'appointments') {
-            // Flatten and map the raw appointment data through the flattenObject function; assign to global
             draft.appointments.data = data.map((row) => flattenObject(row));
             draft.appointments.allColumnHeaders = generateOrderedColumns(appointmentColumnOrder, appointmentColumnNames);
-
 
             // Process and categorize appointments based on their confirmation status
             // Uses reduce to build filtered lists for each status category

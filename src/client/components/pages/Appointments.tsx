@@ -24,7 +24,6 @@ const Appointments = () => {
     selectedSort,
   } = state.appointments;
 
-  console.log({allColumnHeaders });
   // extract utils
   const { filterAndSort } = dataTransformers;
 
@@ -32,19 +31,20 @@ const Appointments = () => {
   const api = useApi();
 
   useEffect(() => {
-    // if (!data.length) {
+    if (!data.length) {
     api.getAll('appointments');
-    // }
+    }
   }, []);
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {
-    // console.log()
+    const {createdDate, lastModifiedDate, startDate} = row
+
     return {
       ...row,
-      createdDate: formatDate(row.createdDate),
-      lastModifiedDate: formatDate(row.lastModifiedDate),
-      startDate: formatDate(row.startDate),
+      createdDate: formatDate(createdDate),
+      lastModifiedDate: formatDate(lastModifiedDate),
+      startDate: formatDate(startDate, true),
     };
   });
 
