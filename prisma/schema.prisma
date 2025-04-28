@@ -97,6 +97,7 @@ model Voicemail {
   // CUSTOM KEYS
   callerType        String? // ex: 'patient', 'clinic', 'pharmacy', 'insurance'
   reason            String? // ex: appointment, prescription, etc
+  notes String?
   officeId          String? // Optional ID if caller is another office
   officeName        String? // Name of the office if applicable
   // RELATED FIELDS
