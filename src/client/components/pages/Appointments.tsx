@@ -19,9 +19,8 @@ const Appointments = () => {
   // destructure appointment object from global state
   const {
     data,
+    rowFilterDetails, 
     allColumnHeaders,
-    selectedFilters,
-    selectedSort,
   } = state.appointments;
 
   // extract utils
@@ -49,15 +48,15 @@ const Appointments = () => {
   });
 
   // process the data (apply filters and sort)
-  const processedData = useMemo(() => {
-    return filterAndSort(formattedDateData, selectedFilters, selectedSort);
-  }, [formattedDateData, selectedFilters, selectedSort]);
+  // const processedData = useMemo(() => {
+  //   return filterAndSort(formattedDateData, selectedFilters, selectedSort);
+  // }, [formattedDateData, selectedFilters, selectedSort]);
 
   return (
     <div>
       <h1>Appointments</h1>
-      {processedData.length > 0 && (
-        <Table columns={allColumnHeaders} data={processedData} />
+      {formattedDateData.length > 0 && (
+        <Table columns={allColumnHeaders} data={formattedDateData} />
       )}
     </div>
   );

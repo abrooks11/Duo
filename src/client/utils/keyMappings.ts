@@ -1,9 +1,13 @@
-export interface DisplayNames {
+export interface ColumnDisplayNames {
   [key: string]: string;
 }
 
+export interface RowFilterMap {
+  [key: string]: string[];
+}
+
 // APPOINTMENTS
-export const appointmentMap = {
+export const appointmentRowFilterMap: RowFilterMap = {
   // values are read; key is returned
   scheduled: ['Scheduled', 'Confirmed'],
   completed: ['Check-out'],
@@ -11,17 +15,33 @@ export const appointmentMap = {
   noShow: ['No-show'],
 };
 
+export const appointmentRowFilterOrder: string[] = [
+  'scheduled',
+  'completed',
+  'cancelled',
+  'noShow',
+  'total',
+];
+
+export const appointmentRowDisplayNames = {
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  noShow: 'No Show',
+  total: 'Total',
+};
+
 export const appointmentColumnOrder: string[] = [
   'insuranceStatus',
   'copay',
   'patientBalance',
+  'startDate',
   'confirmationStatus',
   'patientFullName',
   'patientCaseName',
   'primaryInsurancePolicyNumber',
   'appointmentReason',
   'notes',
-  'startDate',
   'alertMessage',
   'id',
   'createdDate',
@@ -29,7 +49,7 @@ export const appointmentColumnOrder: string[] = [
   'patientId',
 ];
 
-export const appointmentColumnNames: DisplayNames = {
+export const appointmentColumnDisplayNames: ColumnDisplayNames = {
   insuranceStatus: 'Eligibility', // custom
   copay: 'Co-Pay', // custom
   patientBalance: 'Balance',
@@ -49,80 +69,76 @@ export const appointmentColumnNames: DisplayNames = {
 
 // PATIENTS
 export const patientColumnOrder: string[] = [
-    "id",
-    "patientFullName",
-    "dob",
-    "mobilePhone",
-    "primaryInsurancePolicyPlanName",
-    "primaryInsurancePolicyNumber",
-    "primaryInsurancePolicyPlanAddressLine1",
-    "secondaryInsurancePolicyPlanName",
-    "secondaryInsurancePolicyNumber",
-    "secondaryInsurancePolicyPlanAddressLine1",
-    "alertMessage",
-    "lastAppointmentDate",
-    "lastEncounterDate",
-    "lastStatementDate",
-    "insuranceBalance",
-    "patientBalance",
-    "totalBalance", 
+  'id',
+  'patientFullName',
+  'dob',
+  'mobilePhone',
+  'primaryInsurancePolicyPlanName',
+  'primaryInsurancePolicyNumber',
+  'primaryInsurancePolicyPlanAddressLine1',
+  'secondaryInsurancePolicyPlanName',
+  'secondaryInsurancePolicyNumber',
+  'secondaryInsurancePolicyPlanAddressLine1',
+  'alertMessage',
+  'lastAppointmentDate',
+  'lastEncounterDate',
+  'lastStatementDate',
+  'insuranceBalance',
+  'patientBalance',
+  'totalBalance',
 
-    "createdDate",
-    "lastModifiedDate",
-    "primaryInsurancePolicyCompanyName",
-    "primaryInsurancePolicyCompanyId",
-    "primaryInsurancePolicyPlanId",
-    "primaryInsurancePolicyPlanCity",
-    "primaryInsurancePolicyPlanState",
-    "primaryInsurancePolicyPlanZipCode",
-    "secondaryInsurancePolicyCompanyId",
-    "secondaryInsurancePolicyCompanyName",
-    "secondaryInsurancePolicyPlanId",
-    "secondaryInsurancePolicyPlanCity",
-    "secondaryInsurancePolicyPlanState",
-    "secondaryInsurancePolicyPlanZipCode",
-]
-export const patientColumnNames: DisplayNames = {
-  id:"id",
-  patientFullName:"Full Name",
-  dob:"Date of Birth",
-  mobilePhone:"Mobile Phone",
-  primaryInsurancePolicyPlanName:"Primary Insurance",
-  primaryInsurancePolicyPlanAddressLine1:"Primary PO Box",
-  primaryInsurancePolicyNumber:"Primary Policy ID",
-  secondaryInsurancePolicyPlanName:"Secondary Insurance",
-  secondaryInsurancePolicyPlanAddressLine1:"Secondary PO Box",
-  secondaryInsurancePolicyNumber:"Secondary Policy ID",
-  alertMessage:"Alert Message",
-  lastAppointmentDate:"Last Appointment",
-  lastEncounterDate:"Last Encounter",
-  lastStatementDate:"Last Statement Date",
-  insuranceBalance:"Insurance Balance",
-  patientBalance:"Patient Balance",
-  totalBalance:"Total Balance",
+  'createdDate',
+  'lastModifiedDate',
+  'primaryInsurancePolicyCompanyName',
+  'primaryInsurancePolicyCompanyId',
+  'primaryInsurancePolicyPlanId',
+  'primaryInsurancePolicyPlanCity',
+  'primaryInsurancePolicyPlanState',
+  'primaryInsurancePolicyPlanZipCode',
+  'secondaryInsurancePolicyCompanyId',
+  'secondaryInsurancePolicyCompanyName',
+  'secondaryInsurancePolicyPlanId',
+  'secondaryInsurancePolicyPlanCity',
+  'secondaryInsurancePolicyPlanState',
+  'secondaryInsurancePolicyPlanZipCode',
+];
+export const patientColumnNames: ColumnDisplayNames = {
+  id: 'id',
+  patientFullName: 'Full Name',
+  dob: 'Date of Birth',
+  mobilePhone: 'Mobile Phone',
+  primaryInsurancePolicyPlanName: 'Primary Insurance',
+  primaryInsurancePolicyPlanAddressLine1: 'Primary PO Box',
+  primaryInsurancePolicyNumber: 'Primary Policy ID',
+  secondaryInsurancePolicyPlanName: 'Secondary Insurance',
+  secondaryInsurancePolicyPlanAddressLine1: 'Secondary PO Box',
+  secondaryInsurancePolicyNumber: 'Secondary Policy ID',
+  alertMessage: 'Alert Message',
+  lastAppointmentDate: 'Last Appointment',
+  lastEncounterDate: 'Last Encounter',
+  lastStatementDate: 'Last Statement Date',
+  insuranceBalance: 'Insurance Balance',
+  patientBalance: 'Patient Balance',
+  totalBalance: 'Total Balance',
 
-
-  createdDate:"createdDate",
-  lastModifiedDate:"lastModifiedDate",
-  primaryInsurancePolicyPlanCity:"primaryInsurancePolicyPlanCity",
-  primaryInsurancePolicyPlanState:"primaryInsurancePolicyPlanState",
-  primaryInsurancePolicyCompanyId:"primaryInsurancePolicyCompanyId",
-  primaryInsurancePolicyCompanyName:"primaryInsurancePolicyCompanyName",
-  primaryInsurancePolicyPlanId:"primaryInsurancePolicyPlanId",
-  primaryInsurancePolicyPlanZipCode:"primaryInsurancePolicyPlanZipCode",
-  secondaryInsurancePolicyCompanyId:"secondaryInsurancePolicyCompanyId",
-  secondaryInsurancePolicyCompanyName:"secondaryInsurancePolicyCompanyName",
-  secondaryInsurancePolicyPlanId:"secondaryInsurancePolicyPlanId",
-  secondaryInsurancePolicyPlanCity:"secondaryInsurancePolicyPlanCity",
-  secondaryInsurancePolicyPlanState:"secondaryInsurancePolicyPlanState",
-  secondaryInsurancePolicyPlanZipCode:"secondaryInsurancePolicyPlanZipCode",
-}
-
-
-
+  createdDate: 'createdDate',
+  lastModifiedDate: 'lastModifiedDate',
+  primaryInsurancePolicyPlanCity: 'primaryInsurancePolicyPlanCity',
+  primaryInsurancePolicyPlanState: 'primaryInsurancePolicyPlanState',
+  primaryInsurancePolicyCompanyId: 'primaryInsurancePolicyCompanyId',
+  primaryInsurancePolicyCompanyName: 'primaryInsurancePolicyCompanyName',
+  primaryInsurancePolicyPlanId: 'primaryInsurancePolicyPlanId',
+  primaryInsurancePolicyPlanZipCode: 'primaryInsurancePolicyPlanZipCode',
+  secondaryInsurancePolicyCompanyId: 'secondaryInsurancePolicyCompanyId',
+  secondaryInsurancePolicyCompanyName: 'secondaryInsurancePolicyCompanyName',
+  secondaryInsurancePolicyPlanId: 'secondaryInsurancePolicyPlanId',
+  secondaryInsurancePolicyPlanCity: 'secondaryInsurancePolicyPlanCity',
+  secondaryInsurancePolicyPlanState: 'secondaryInsurancePolicyPlanState',
+  secondaryInsurancePolicyPlanZipCode: 'secondaryInsurancePolicyPlanZipCode',
+};
 
 // CLAIMS
-export const claimCategories = [
+export const claimRowDisplayNames = [
   'Missed',
   'Owes',
   'Paid',
@@ -132,15 +148,16 @@ export const claimCategories = [
 ];
 
 // VOICEMAIL
-export const voicemailCategories = [
-  'Appointment',
-  'Labs', // ORDERS; RESULTS;
-  'Memo', // ASSIGN TO MEDICAL STAFF
-  'Miscellaneous', // FMLA; INTAKE; INSURANCE INQUIRIES;
-  'Records', // RECORD REQUESTS
-  'Referrals', // REFERRALS; PATIENT VS CLINIC (CLINIC KEYWORDS: office, nurse, )
-  'Rx,', // PATIENT VS PHARMACY
-];
+export const voicemailRowDisplayNames = {
+  appointment: 'Appointment',
+  lab: "Labs", 
+  memo: 'Memo',
+  misc: 'Misc',
+  prescription: 'Prescription',
+  recordRequest: 'Record Request',
+  referral: 'Referral',
+  total: 'Total'
+};
 
 export const voicemailColumnOrder: string[] = [
   'createdDate',
@@ -150,7 +167,7 @@ export const voicemailColumnOrder: string[] = [
   'duration',
   'reason',
   'transcription',
-  'notes', 
+  'notes',
   'actions',
   // 'status',
   // 'id',
@@ -159,7 +176,7 @@ export const voicemailColumnOrder: string[] = [
   // 'officeName,',
 ];
 
-export const voicemailColumnNames: DisplayNames = {
+export const voicemailColumnDisplayNames: ColumnDisplayNames = {
   actions: 'Actions',
   callerName: 'Caller Name',
   callerNumber: 'Caller Number',
@@ -170,9 +187,8 @@ export const voicemailColumnNames: DisplayNames = {
   messageFolder: 'Message Folder',
   officeId: 'Office id',
   officeName: 'Office name,', // Note: There appears to be a comma in this key
-  notes: "Notes", 
+  notes: 'Notes',
   reason: 'Reason',
   status: 'Status',
   transcription: 'Transcription',
 };
-

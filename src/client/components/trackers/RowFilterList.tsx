@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';  // Add this import
 import useGlobalContext from '../../hooks/useGlobalContext';
-import type { GlobalState, TableFilter } from '../../context/GlobalContext';
+import type { GlobalState, RowFilterDetails } from '../../context/GlobalContext';
 import { ActionTypes } from '../../context/GlobalContext';
 
 
 
 function RowFilterList() {
   const { state, dispatch } = useGlobalContext();
-  const [rowFilters, setRowFilters] = useState<TableFilter[]>([]);
+  // const [rowFilters, setRowFilters] = useState<TableFilter[]>([]);
+  const [rowFilters, setRowFilters] = useState<RowFilterDetails>({});
   const location = useLocation();  // Add this hook
 
 // Map paths to their corresponding state properties
 const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
-  "": 'home', 
   appointments: 'appointments',
   claims: 'claims',
   patients: 'patients',
@@ -26,13 +26,15 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
 
   // Get the corresponding state property from the map
   const stateProperty = PATH_TO_STATE_MAP[currentPath];
+  
+  
+  const filterList = stateProperty ? state[stateProperty]?.rowFilterDetails || {} : {};
+    console.log(filterList);
 
-  const filterList = state[stateProperty]?.allRowFilters || []
-
-  if (filterList.length) {
+  if (filterList) {
     setRowFilters(filterList);
   } else {
-    setRowFilters([]);
+    setRowFilters({});
   }
 }, [location.pathname, state]);
 
@@ -58,16 +60,19 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
     <div className="status-list-wrapper">
       <h2>Filter Rows</h2>
       {rowFilters &&
-        rowFilters.map((filter: any) => (
+        Object.entries(rowFilters).map(([key, details]) =>
+          { 
+            const {displayName, sum, isSelected} = details
+            return (
           <div
-            key={filter.label}
-            className={filter.isSelected ? 'selected-filter' : ''}
+            key={key}
+            className={isSelected ? 'selected-filter' : ''}
             // onClick={() => handleFilterClick(filter)}
           >
-            <p className="status-table-label">{filter.label}</p>
-            <p className="status-table-count">{filter.data.length}</p>
+            <p className="status-table-label">{displayName}</p>
+            <p className="status-table-count">{sum}</p>
           </div>
-        ))}
+        )})}
     </div>
   );
 }
