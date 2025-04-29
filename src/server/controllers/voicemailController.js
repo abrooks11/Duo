@@ -70,7 +70,7 @@ export const getVoicemail = async (req, res, next) => {
  * @param {*} res 
  * @param {*} next 
  */
-export const addNote = async (req, res, next) => {
+export const addNoteToVoicemail = async (req, res, next) => {
   try {
     const { vmId } = req.params;
     const { note } = req.body;

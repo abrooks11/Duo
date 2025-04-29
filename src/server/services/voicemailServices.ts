@@ -119,6 +119,7 @@ export const getDbVoicemail = async () => {
 
 export const updateVoicemailNote = async (vmId: string, content: string) => {
 const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})
+console.log({vmId, content})
 if (!matchingVoicemail) {
   console.error('NO MATCHING VOICEMAIL FOUND')
   return 
@@ -132,8 +133,9 @@ const updateVoicemail = await prisma.voicemail.update({
       notes: content,
     },
   })
-  
-console.log({updateVoicemail});
+  const updatedTarget = await prisma.voicemail.findUnique({where: {id: vmId}})
+
+console.log({updatedTarget});
 return 'Noted Added'
 }
 
