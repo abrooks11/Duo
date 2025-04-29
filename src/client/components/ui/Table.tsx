@@ -9,11 +9,12 @@ interface Props {
 function Table({ columns, data }: Props) {
   const muiRows: GridRowsProp = data;
   const muiColumns: GridColDef[] = columns.map((column) => {
-    const { label, value } = column;
+    // const { key, order, displayName, isVisible } = column;
+    const { key, displayName } = column;
     
     return {
-      field: label,
-      headerName: value,
+      field: key,
+      headerName: displayName,
       width: 200,
     };
   });

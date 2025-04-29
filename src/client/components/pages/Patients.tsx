@@ -10,14 +10,14 @@ import Table from '../ui/Table';
 import useApi from '../../hooks/useApi';
 
 // import custom utilities
-import dataTransformers, {formatDate} from '../../utils/dataTransformers';
+import dataTransformers, { formatDate } from '../../utils/dataTransformers';
 
 function Patients() {
   // get global state from context
   const { state } = useGlobalContext();
 
   // destructure patient object from global state
-  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
+  const { data, allColumnHeaders, selectedFilters, selectedSort } =
     state.patients;
 
   // extract utils
@@ -27,17 +27,20 @@ function Patients() {
   const api = useApi();
 
   useEffect(() => {
-    api.getAll('patients');
+    if (!data.length) {
+      api.getAll('patients');
+    }
   }, []);
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {
+    const {createdDate, lastModifiedDate, dob} = row
+
     return {
       ...row,
-      createdDate: formatDate(row.createdDate),
-      lastModifiedDate: formatDate(row.lastModifiedDate),
-      startDate: formatDate(row.startDate),
-      dob: formatDate(row.dob),
+      createdDate: formatDate(createdDate),
+      lastModifiedDate: formatDate(lastModifiedDate),
+      dob: formatDate(dob),
     };
   });
 
@@ -50,7 +53,7 @@ function Patients() {
     <div>
       <h1>Patients</h1>
       {processedData.length > 0 && (
-        <Table columns={selectedColumnHeaders} data={processedData} />
+        <Table columns={allColumnHeaders} data={processedData} />
       )}
     </div>
   );

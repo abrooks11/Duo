@@ -117,6 +117,28 @@ export const getDbVoicemail = async () => {
   return [...inbox, ...trash]
 };
 
+export const updateVoicemailNote = async (vmId: string, content: string) => {
+const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})
+console.log({vmId, content})
+if (!matchingVoicemail) {
+  console.error('NO MATCHING VOICEMAIL FOUND')
+  return 
+}
+
+const updateVoicemail = await prisma.voicemail.update({
+    where: {
+      id: vmId,
+    },
+    data: {
+      notes: content,
+    },
+  })
+  const updatedTarget = await prisma.voicemail.findUnique({where: {id: vmId}})
+
+console.log({updatedTarget});
+return 'Noted Added'
+}
+
 export const changeFolder = async (vmId : string) => {
   await prisma.voicemail.update({
     where: {

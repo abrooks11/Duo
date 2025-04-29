@@ -1,4 +1,3 @@
-import {useState} from 'react'
 import { Calendar } from 'react-date-range';
 
 import 'react-date-range/dist/styles.css'; // main style file

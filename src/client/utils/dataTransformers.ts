@@ -8,36 +8,39 @@ interface dataTransformers {
   ) => any[];
 }
 
-export const formatDate = (date:string):string => {
-  type ShortDateOptions = {
-    year: 'numeric';
-    month: '2-digit' | 'numeric';
-    day: '2-digit' | 'numeric';
-  };
+export const formatDate = (date: string, includeTime: boolean = false): string => {
+  const dateObj = new Date(date);
 
-  const options = {
+  // Format date as MM/DD/YYYY
+  const dateOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
+    day: '2-digit', 
+    timeZone: 'UTC' // Keep in UTC timezone
+  };
+  
+  // Format time as H:MM AM/PM
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: false,
+    hour12: true, 
+    timeZone: 'UTC' // Keep in UTC timezone
   };
 
-  const shortOptions: ShortDateOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  };
+  const formattedDate = dateObj.toLocaleDateString('en-US', dateOptions);
 
-  return new Date(date).toLocaleDateString('en-US', shortOptions);
+  if (includeTime) {
+    const formattedTime = dateObj.toLocaleTimeString('en-US', timeOptions);
+    return `${formattedDate} ${formattedTime}`;
+  } else {
+    return formattedDate;
+  }
 }
 
 const dataTransformers: dataTransformers = {
   filterAndSort: (data, selectedFilters, selectedSort) => {
     // init result to store processed data
     let result: any[] = data;
-    //   console.log("selectedColumns", selectedColumns);
     //   console.log("selectedFilters", selectedFilters);
     //   console.log("selectedSort", selectedSort);
     //   console.log("sample obj", data[0]);

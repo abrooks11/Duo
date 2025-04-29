@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // import state
 import useGlobalContext from '../../hooks/useGlobalContext';
@@ -10,29 +10,39 @@ import VoicemailTable from '../voicemail/VoicemailTable';
 import useApi from '../../hooks/useApi';
 
 const Voicemail = () => {
-
   const api = useApi();
-
-  useEffect(() => {
-    if (!inbox.length && !trash.length) {
-      api.getAll('voicemail');
-    }
-  }, []);
-
+  
   // get global state from context
   const { state } = useGlobalContext();
-  const { data, selectedColumnHeaders, selectedFilters, selectedSort } =
-    state.voicemail;
+  const { data, allColumnHeaders } = state.voicemail;
+  
+  const [inbox, setInbox] = useState<any[]>([])
+  const [trash, setTrash] = useState<any[]>([])
+  
+  useEffect(() => {
+      if (!data.length) {
+        api.getAll('voicemail');
+      }
+  }, []);
 
-    const formattedVoicemailData = data.map((row) => {
-            return {
-        ...row,
-        duration: Math.floor(row.duration/1000)
-      };
-    });
-    
-    const inbox = formattedVoicemailData.filter((row) => row.messageFolder === 'inbox');
-    const trash = formattedVoicemailData.filter((row) => row.messageFolder === 'trash');
+  // This effect runs when data changes (is fetched from API)
+  useEffect(() => {
+    processVoicemailData();
+  }, [data]);
+
+  const processVoicemailData = () => {
+    if (data.length) {
+      const formattedVoicemailData = data.map((row) => {
+        return {
+          ...row,
+          duration: Math.floor(row.duration/1000)
+        };
+      });
+      
+      setInbox(formattedVoicemailData.filter((row) => row.messageFolder === 'inbox'));
+      setTrash(formattedVoicemailData.filter((row) => row.messageFolder === 'trash'));
+    }
+  };
 
   return (
     <div className="voicemail-container">
@@ -41,9 +51,10 @@ const Voicemail = () => {
         {inbox.length > 0 && (
           <div className="table-container">
             <VoicemailTable
-              columns={selectedColumnHeaders}
+              columns={allColumnHeaders}
               data={inbox}
               className="w-full h-full"
+              dynamicHeight={true}
             />
           </div>
         )}
@@ -53,7 +64,7 @@ const Voicemail = () => {
         {trash.length > 0 && (
           <div className="table-container">
             <VoicemailTable
-              columns={selectedColumnHeaders}
+              columns={allColumnHeaders}
               data={trash}
               className="w-full h-full"
             />

@@ -24,6 +24,21 @@ export const requestVoicemail = async () => {
   return data.data;
 };
 
+export const updateVoicemailNote = async (vmId: string, note: string) => {
+console.log('sending note to server: ', note)
+const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
+  method: "PATCH", 
+  headers: {
+    'Content-Type': 'application/json'
+  }, 
+  body: JSON.stringify({vmId, note}), 
+  credentials: 'include'
+})
+
+const data = await response.json()
+console.log(data);
+}
+
 export const deleteVoicemail = async (id: string) => {
   console.log('sending to server');
   

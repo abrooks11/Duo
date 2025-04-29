@@ -2,6 +2,7 @@
 import useGlobalContext from '../../hooks/useGlobalContext';
 import { ActionTypes } from '../../context/GlobalContext';
 import textBubble from '../../assets/text-bubble.svg';
+import trashCan from '../../assets/trash-can.svg';
 import { deleteVoicemail } from '../../utils/voicemailApi';
 
 interface Props {
@@ -39,7 +40,7 @@ const handleReply = () => {
       className="p-1 rounded-full hover:bg-gray-100"
       title="Delete"
     >
-      <img src={textBubble} alt="Delete" className="w-5 h-5" />
+      <img src={trashCan} alt="Delete" className="w-5 h-5" />
     </button>
   </div>
   );
