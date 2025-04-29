@@ -150,14 +150,17 @@ export const voicemailColumnOrder: string[] = [
   'duration',
   'reason',
   'transcription',
-  'status',
-  'id',
-  'messageFolder',
-  'officeId',
-  'officeName,',
+  'notes', 
+  'actions',
+  // 'status',
+  // 'id',
+  // 'messageFolder',
+  // 'officeId',
+  // 'officeName,',
 ];
 
 export const voicemailColumnNames: DisplayNames = {
+  actions: 'Actions',
   callerName: 'Caller Name',
   callerNumber: 'Caller Number',
   callerType: 'Caller Type',
@@ -167,6 +170,7 @@ export const voicemailColumnNames: DisplayNames = {
   messageFolder: 'Message Folder',
   officeId: 'Office id',
   officeName: 'Office name,', // Note: There appears to be a comma in this key
+  notes: "Notes", 
   reason: 'Reason',
   status: 'Status',
   transcription: 'Transcription',
