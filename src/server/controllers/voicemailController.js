@@ -3,6 +3,7 @@ import {
   getDbVoicemail,
   changeFolder,
   updateVoicemailNote,
+  updateVoicemailReason,
 } from '../services/voicemailServices.ts';
 
 export const getVoicemail = async (req, res, next) => {
@@ -73,12 +74,18 @@ export const getVoicemail = async (req, res, next) => {
 export const addNoteToVoicemail = async (req, res, next) => {
   try {
     const { vmId } = req.params;
-    const { note } = req.body;
+    const { note, reason } = req.body;
     // CHECK DATABASE FOR VOICEMAIL WITH MATCHING ID 
     // IF NO MATCH, RETURN ERROR
     // IF MATCH, UPDATE IN DATABASE 
-    const result = await updateVoicemailNote(vmId, note)
-    console.log({result});
+    if (note) {
+      const result = await updateVoicemailNote(vmId, note)
+      console.log({result});
+    }
+    if (reason) {
+      const result = await updateVoicemailReason(vmId, reason)
+      console.log({result});
+    }
     
     next();
   } catch (error) {

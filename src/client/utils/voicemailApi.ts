@@ -39,6 +39,21 @@ const data = await response.json()
 console.log(data);
 }
 
+export const updateVoicemailReason = async (vmId: string, reason: string) => {
+console.log('sending reason to server: ', reason)
+const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
+  method: "PATCH", 
+  headers: {
+    'Content-Type': 'application/json'
+  }, 
+  body: JSON.stringify({vmId, reason}), 
+  credentials: 'include'
+})
+
+const data = await response.json()
+console.log(data);
+}
+
 export const deleteVoicemail = async (id: string) => {
   console.log('sending to server');
   

@@ -125,12 +125,31 @@ if (!matchingVoicemail) {
   return 
 }
 
-const updateVoicemail = await prisma.voicemail.update({
+await prisma.voicemail.update({
     where: {
       id: vmId,
     },
     data: {
       notes: content,
+    },
+  })
+
+return 'Noted Added'
+}
+export const updateVoicemailReason = async (vmId: string, reason: string) => {
+const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})
+console.log({vmId, reason})
+if (!matchingVoicemail) {
+  console.error('NO MATCHING VOICEMAIL FOUND')
+  return 
+}
+
+await prisma.voicemail.update({
+    where: {
+      id: vmId,
+    },
+    data: {
+      reason: reason,
     },
   })
   const updatedTarget = await prisma.voicemail.findUnique({where: {id: vmId}})
