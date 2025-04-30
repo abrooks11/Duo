@@ -10,14 +10,14 @@ import VoicemailTable from '../tables/VoicemailTable';
 import useApi from '../../hooks/useApi';
 
 const Voicemail = () => {
-  const api = useApi();
-  
   // get global state from context
   const { state } = useGlobalContext();
-  const { data, allColumnHeaders } = state.voicemail;
+  const { data, rowFilterDetails, allColumnHeaders } = state.voicemail;
   
   const [inbox, setInbox] = useState<any[]>([])
   const [trash, setTrash] = useState<any[]>([])
+  
+  const api = useApi();
   
   useEffect(() => {
       if (!data.length) {
@@ -38,12 +38,27 @@ const Voicemail = () => {
           duration: Math.floor(row.duration/1000),
         };
       });
-      
+
       setInbox(formattedVoicemailData.filter((row) => row.messageFolder === 'inbox'));
       setTrash(formattedVoicemailData.filter((row) => row.messageFolder === 'trash'));
     }
   };
 
+  // Get active filters
+const activeFilters = Object.entries(rowFilterDetails)
+.filter(([_, details]) => details.isSelected)
+.map(([key]) => key);
+
+// Filter the data based on active filters
+const filteredInboxData = inbox.filter(row => {
+  // If no filters are selected, show all data
+  if (activeFilters.length === 0) return true;
+  
+  // Check if the row matches any of the selected filters
+  return activeFilters.some(filterKey => {
+      return row.reason === filterKey
+    });
+});
 
   return (
     <div className="voicemail-container">
@@ -53,7 +68,7 @@ const Voicemail = () => {
           <div className="table-container">
             <VoicemailTable
               columns={allColumnHeaders}
-              data={inbox}
+              data={filteredInboxData}
               className="w-full h-full"
               dynamicHeight={true}
             />

@@ -1,18 +1,18 @@
 // import react hooks
 import { useEffect, useMemo } from 'react';
+
 // import state
 import useGlobalContext from '../../hooks/useGlobalContext';
 
 // import custom components
-import Table from '../tables/Table';
 import AppointmentTable from '../tables/AppointmentTable';
-
 
 // import custom hooks
 import useApi from '../../hooks/useApi';
 
 // import custom hooks/utilities
-import dataTransformers, { formatDate } from '../../utils/dataTransformers';
+import { formatDate } from '../../utils/dataTransformers';
+import { appointmentRowFilterMap } from '../../utils/keyMappings';
 
 const Appointments = () => {
   // get global state from context
@@ -24,12 +24,6 @@ const Appointments = () => {
     rowFilterDetails, 
     allColumnHeaders,
   } = state.appointments;
-
-  // console.log({data});
-  
-
-  // extract utils
-  const { filterAndSort } = dataTransformers;
 
   // use custom hook
   const api = useApi();
@@ -52,16 +46,34 @@ const Appointments = () => {
     };
   });
 
-  // process the data (apply filters and sort)
-  // const processedData = useMemo(() => {
-  //   return filterAndSort(formattedDateData, selectedFilters, selectedSort);
-  // }, [formattedDateData, selectedFilters, selectedSort]);
+// Get active filters
+const activeFilters = Object.entries(rowFilterDetails)
+.filter(([_, details]) => details.isSelected)
+.map(([key]) => key);
+
+
+// Filter the data based on active filters
+const filteredData = formattedDateData.filter(row => {
+  // If no filters are selected, show all data
+  if (activeFilters.length === 0) return true;
+  
+  // Check if the row matches any of the selected filters
+  return activeFilters.some(filterKey => {
+    if (appointmentRowFilterMap[filterKey]) {
+      return appointmentRowFilterMap[filterKey].includes(row.confirmationStatus);
+    }
+    return false;
+  });
+});
+
+console.log({activeFilters});
+console.log({filteredData});
 
   return (
     <div>
       <h1>Appointments</h1>
       {formattedDateData.length > 0 && (
-        <AppointmentTable columns={allColumnHeaders} data={formattedDateData} styling="w-full h-full" />
+        <AppointmentTable columns={allColumnHeaders} data={filteredData} styling="w-full h-full" />
       )}
     </div>
   );

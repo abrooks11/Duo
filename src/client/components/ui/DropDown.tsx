@@ -6,9 +6,9 @@ interface Props {
 }
 
 const DropDown = ({ dropDownList, value }:Props) => {
-  const [dropDown, setDropDwon] = useState(value)
+  const [dropDown, setDropDown] = useState(value)
   const handleDropDownChange = (val) => {
-    setDropDwon(val)
+    setDropDown(val)
   }
   // console.log({dropDownList});
   

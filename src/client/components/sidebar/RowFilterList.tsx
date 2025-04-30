@@ -8,8 +8,9 @@ import { ActionTypes } from '../../context/GlobalContext';
 
 function RowFilterList() {
   const { state, dispatch } = useGlobalContext();
-  // const [rowFilters, setRowFilters] = useState<TableFilter[]>([]);
-  const [rowFilters, setRowFilters] = useState<RowFilterDetails>({});
+  // const [rowFilterList, setRowFilterList] = useState<TableFilter[]>([]);
+  const [rowFilterList, setRowFilterList] = useState<RowFilterDetails>({});
+  const [resource, setResource] = useState<string>()
   const location = useLocation();  // Add this hook
 
 // Map paths to their corresponding state properties
@@ -23,6 +24,8 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   useEffect(() => {
       // Remove leading slash and get the path
   const currentPath = location.pathname.slice(1);
+  
+  setResource(currentPath)
 
   // Get the corresponding state property from the map
   const stateProperty = PATH_TO_STATE_MAP[currentPath];
@@ -30,9 +33,9 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   
   const filterList = stateProperty ? state[stateProperty]?.rowFilterDetails || {} : {};
   if (filterList) {
-    setRowFilters(filterList);
+    setRowFilterList(filterList);
   } else {
-    setRowFilters({});
+    setRowFilterList({});
   }
 }, [location.pathname, state]);
 
@@ -40,32 +43,32 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
    * function for selecting/deselecting a single filter from the list of filters
    */
 
-  // const handleFilterClick = (statusFilter: TableFilter) => {
-  //   console.log('FILTER CLICKED: ', statusFilter);
-  //   console.log('FILTER STATUS:', statusFilter.isSelected);
+  const handleFilterClick = (filterKey: string) : void => {
+    // console.log('FILTER CLICKED: ', filterKey);
+    // console.log('RESOURCE: ', resource);
 
-  //   dispatch({
-  //     type: ActionTypes.SET_ROW_FILTER_LIST,
-  //     payload: {
-  //       pathname: currentPath,
-  //       componentFilterName: statusFilter,
-  //       selectStatus: !statusFilter.isSelected,
-  //     },
-  //   });
-  // };
+    dispatch({
+      type: ActionTypes.TOGGLE_FILTER,
+      payload: {
+        filterResource: resource,
+        filterKey: filterKey,
+      },
+    });
+  };
 
   return (
     <div className="status-list-wrapper">
       <h2>Filter Rows</h2>
-      {rowFilters &&
-        Object.entries(rowFilters).map(([key, details]) =>
+      {rowFilterList &&
+        Object.entries(rowFilterList).map(([key, details]) =>
           { 
             const {displayName, sum, isSelected} = details
+            // console.log(key)
             return (
           <div
             key={key}
             className={isSelected ? 'selected-filter' : ''}
-            // onClick={() => handleFilterClick(filter)}
+            onClick={() => handleFilterClick(key)}
           >
             <p className="status-table-label">{displayName}</p>
             <p className="status-table-count">{sum}</p>
