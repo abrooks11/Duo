@@ -1,6 +1,9 @@
 export interface ColumnDisplayNames {
   [key: string]: string;
 }
+export interface RowDisplayNames {
+  [key: string]: string;
+}
 
 export interface RowFilterMap {
   [key: string]: string[];
@@ -23,7 +26,7 @@ export const appointmentRowFilterOrder: string[] = [
   'total',
 ];
 
-export const appointmentRowDisplayNames = {
+export const appointmentRowDisplayNames: RowDisplayNames = {
   scheduled: 'Scheduled',
   completed: 'Completed',
   cancelled: 'Cancelled',
@@ -32,8 +35,9 @@ export const appointmentRowDisplayNames = {
 };
 
 export const appointmentColumnOrder: string[] = [
-  'insuranceStatus',
-  'copay',
+  'actions',
+  'insEligibility',
+  'patientCopay',
   'patientBalance',
   'startDate',
   'confirmationStatus',
@@ -50,8 +54,9 @@ export const appointmentColumnOrder: string[] = [
 ];
 
 export const appointmentColumnDisplayNames: ColumnDisplayNames = {
-  insuranceStatus: 'Eligibility', // custom
-  copay: 'Co-Pay', // custom
+  actions: 'Actions',
+  insEligibility: 'Eligibility', // custom
+  patientCopay: 'Co-Pay', // custom
   patientBalance: 'Balance',
   patientFullName: 'Name',
   patientCaseName: 'Insurance',
@@ -148,15 +153,15 @@ export const claimRowDisplayNames = [
 ];
 
 // VOICEMAIL
-export const voicemailRowDisplayNames = {
+export const voicemailRowDisplayNames: RowDisplayNames = {
   appointment: 'Appointment',
-  lab: "Labs", 
+  lab: 'Labs',
   memo: 'Memo',
   misc: 'Misc',
   prescription: 'Prescription',
   recordRequest: 'Record Request',
   referral: 'Referral',
-  total: 'Total'
+  total: 'Total',
 };
 
 export const voicemailColumnOrder: string[] = [
@@ -185,8 +190,8 @@ export const voicemailColumnDisplayNames: ColumnDisplayNames = {
   duration: 'Duration',
   id: 'Call ID',
   messageFolder: 'Message Folder',
-  officeId: 'Office id',
-  officeName: 'Office name,', // Note: There appears to be a comma in this key
+  officeId: 'Office Id',
+  officeName: 'Office name',
   notes: 'Notes',
   reason: 'Reason',
   status: 'Status',

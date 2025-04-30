@@ -4,7 +4,9 @@ import { useEffect, useMemo } from 'react';
 import useGlobalContext from '../../hooks/useGlobalContext';
 
 // import custom components
-import Table from '../ui/Table';
+import Table from '../tables/Table';
+import AppointmentTable from '../tables/AppointmentTable';
+
 
 // import custom hooks
 import useApi from '../../hooks/useApi';
@@ -22,6 +24,9 @@ const Appointments = () => {
     rowFilterDetails, 
     allColumnHeaders,
   } = state.appointments;
+
+  // console.log({data});
+  
 
   // extract utils
   const { filterAndSort } = dataTransformers;
@@ -56,7 +61,7 @@ const Appointments = () => {
     <div>
       <h1>Appointments</h1>
       {formattedDateData.length > 0 && (
-        <Table columns={allColumnHeaders} data={formattedDateData} />
+        <AppointmentTable columns={allColumnHeaders} data={formattedDateData} styling="w-full h-full" />
       )}
     </div>
   );
