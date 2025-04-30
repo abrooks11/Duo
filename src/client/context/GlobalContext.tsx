@@ -206,9 +206,7 @@ const generateRowFilterDetails = (data: any[], displayNames: ColumnDisplayNames,
     // Create template object from keys in ordered filter list; Initialize with zero counts and not selected
     const filterDetails = Object.fromEntries(
     Object.entries(displayNames).map(([key, _]) => [key, {displayName:displayNames[key],  sum: 0, isSelected: false}])
-  );
-    console.log(filterMap);
-    
+  );    
  // Iterate over data and update counts
  if (filterMap) {
  for (const row of data) {
@@ -273,6 +271,7 @@ return filterDetails;
           // console.log({ target });
 
           if (resourceType === 'appointments') {
+            console.log({data})
             draft.appointments.data = data.map((row) => flattenObject(row));
             draft.appointments.rowFilterDetails = generateRowFilterDetails(data, appointmentRowDisplayNames, 'confirmationStatus', appointmentRowFilterMap);
             draft.appointments.allColumnHeaders = generateOrderedColumns(

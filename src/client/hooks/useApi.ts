@@ -38,6 +38,7 @@ const useApi = () => {
             payload: { resourceType: endpoint, data: serverData },
           });
         }
+        console.log({serverData})
         return serverData;
       } catch (error) {
         console.error(`Error fetching ${endpoint}: `, error);

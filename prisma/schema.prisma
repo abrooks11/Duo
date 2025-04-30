@@ -18,6 +18,9 @@ model Appointment {
   patientCaseName    String?
   startDate          DateTime
   notes              String?
+  // CUSTOM FIELDS
+  insEligibility  String?
+  patientCopay Int?
   // RELATED FIELDS
   patientId          Int
   patient            Patient  @relation(fields: [patientId], references: [id])
