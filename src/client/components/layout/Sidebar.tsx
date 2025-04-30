@@ -1,7 +1,7 @@
 // import custom tracker components for Appointments, Claims, and Patients
-import RowFilterList from '../trackers/RowFilterList';
-import ColumnFilterList from '../trackers/ColumnFilterList';
-import FullCalendar from '../trackers/FullCalendar';
+import RowFilterList from '../sidebar/RowFilterList';
+import ColumnFilterList from '../sidebar/ColumnFilterList';
+import FullCalendar from '../sidebar/FullCalendar';
 
 function Sidebar() {
   return (
@@ -9,7 +9,7 @@ function Sidebar() {
       {/* <h1>--Sidebar--</h1> */}
       <FullCalendar />
       <RowFilterList />
-      <ColumnFilterList />
+      {/* <ColumnFilterList /> */}
     </div>
   );
 }

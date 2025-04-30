@@ -29,8 +29,6 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   
   
   const filterList = stateProperty ? state[stateProperty]?.rowFilterDetails || {} : {};
-    console.log(filterList);
-
   if (filterList) {
     setRowFilters(filterList);
   } else {

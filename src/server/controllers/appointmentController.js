@@ -22,7 +22,6 @@ const appointmentController = {
           },
         },
       });
-      //   console.log(appointments);
 
       res.locals.appointments = appointments;
       return next();

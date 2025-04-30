@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import useGlobalContext from '../../hooks/useGlobalContext';
 
 // import custom components
-import Table from '../ui/Table';
+import Table from '../tables/Table';
 
 // import custom hooks
 import useApi from '../../hooks/useApi';

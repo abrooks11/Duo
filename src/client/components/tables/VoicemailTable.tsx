@@ -1,6 +1,8 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-import VoicemailActions from './VoicemailActions';
-import { updateVoicemailNote } from '../../utils/voicemailApi';
+import VoicemailActions from '../ui/VoicemailActions';
+import DropDown from '../ui/DropDown'
+import {voicemailRowDisplayNames} from "../../utils/keyMappings"
+import { updateVoicemailNote, updateVoicemailReason } from '../../utils/voicemailApi';
 
 interface Props {
   columns: any[];
@@ -67,6 +69,18 @@ const VoicemailTable = ({
         editable: true,
       };
     }
+    // Special handling for the notes column to include editable text field
+    if (key === 'reason') {
+      return {
+        field: key,
+        headerName: displayName,
+        width: 200,
+        // editable: true,
+        renderCell: (params) => {
+          return <DropDown dropDownList={voicemailRowDisplayNames} value={params.row.reason}/>;
+        },
+      };
+    }
     // Special handling for the transcription column to show overflow
     if (key === 'transcription') {
       return {
@@ -89,6 +103,10 @@ const VoicemailTable = ({
     console.log('Row information: ', { updatedRow, originalRow });
     if (updatedRow.notes !== originalRow.notes) {
       updateVoicemailNote(originalRow.id, updatedRow.notes);
+      return updatedRow;
+    }
+    if (updatedRow.reason !== originalRow.reason) {
+      updateVoicemailReason(originalRow.id, updatedRow.reason);
       return updatedRow;
     }
     return originalRow;

@@ -12,7 +12,6 @@ interface Props {
 const VoicemailActions = ({vmId}: Props) => {
   const {dispatch} = useGlobalContext()
 
-// NEED BUTTONS FOR: DELETE, REPLY 
 const handleDelete = async () => {
   await deleteVoicemail(vmId)
   dispatch({
