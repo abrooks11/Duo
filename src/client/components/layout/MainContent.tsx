@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 
 // import pages
 import Home from '../pages/Home';
@@ -11,6 +12,7 @@ function MainContent() {
   return (
     <div className="main-content-wrapper">
       {/* <h1>--MainContent--</h1> */}
+      <ToastContainer />
       <Routes>
         {/* <Route path="/" exact element={<Home />} /> */}
         <Route path="/" element={<Home />} />

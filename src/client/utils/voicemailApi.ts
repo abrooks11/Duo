@@ -1,3 +1,5 @@
+import { toast } from "react-toastify";
+
 const baseURL = 'http://localhost:3000/api';
 
 export const requestVoicemail = async () => {
@@ -25,8 +27,8 @@ export const requestVoicemail = async () => {
 };
 
 export const updateVoicemailNote = async (vmId: string, note: string) => {
-console.log('sending note to server: ', note)
-const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
+  // console.log('Attempting to update note to ', note)
+  const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
   method: "PATCH", 
   headers: {
     'Content-Type': 'application/json'
@@ -35,12 +37,16 @@ const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
   credentials: 'include'
 })
 
-const data = await response.json()
-console.log(data);
+await response.json()
+if (response.status === 200) {
+  toast.success("Message note successfully updated")
+}
+return {status: response.status}
 }
 
 export const updateVoicemailReason = async (vmId: string, reason: string) => {
-console.log('sending reason to server: ', reason)
+// console.log('Attempting to update reason to ', reason)
+
 const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
   method: "PATCH", 
   headers: {
@@ -50,12 +56,17 @@ const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
   credentials: 'include'
 })
 
-const data = await response.json()
-console.log(data);
+await response.json()
+
+if (response.status === 200) {
+  toast.success("Message reason successfully updated")
+}
+return {status: response.status}
+
 }
 
 export const deleteVoicemail = async (id: string) => {
-  console.log('sending to server');
+  // console.log('Attempting to move message to trash');
   
   const response = await fetch(`${baseURL}/voicemail/${id}`, {
     method: 'DELETE', 
@@ -66,9 +77,12 @@ export const deleteVoicemail = async (id: string) => {
   }
   )
 
-  const data = await response.json()
-  console.log(data);
-  return 
+  await response.json()
+
+  if (response.status === 200) {
+    toast.success("Message successfully moved to Trash")
+  }
+  return {status: response.status}
 }
 
 export const requestAiResponse = async (type: string, transcript: string) => {
