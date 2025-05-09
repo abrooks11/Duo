@@ -4,10 +4,25 @@ const prisma = new PrismaClient();
 const appointmentController = {
   getAppointments: async (req, res, next) => {
     try {
-      // get appointments from the database
+ // Get the current date
+ const now = new Date();
+      
+ // Calculate first day of current month (set to beginning of day)
+ const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+ 
+ // Calculate last day of current month (set to end of day)
+ const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+ 
+ // Get appointments from the database with date filtering
       const appointments = await prisma.appointment.findMany({
         relationLoadStrategy: 'join',
-        take: 100,
+        // take: 100,
+        where: {
+          startDate: {
+            gte: firstDayOfMonth,
+            lte: lastDayOfMonth,
+          },
+        },
         orderBy: {
           startDate: 'desc',
         },

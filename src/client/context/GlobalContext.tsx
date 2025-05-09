@@ -42,6 +42,7 @@ interface GlobalContextType {
 // TYPE ASSERTIONS AND LABELS FOR ACTIONS
 interface GlobalStateActions {
   DISPLAY_UPLOAD_MODAL: string;
+  SET_CALENDAR_RANGE: string;
   GET_DATA: string;
   TOGGLE_FILTER: string;
   SET_COLUMN_LIST: string;
@@ -52,6 +53,7 @@ interface GlobalStateActions {
 
 const ActionTypes: GlobalStateActions = {
   DISPLAY_UPLOAD_MODAL: 'DISPLAY_UPLOAD_MODAL',
+  SET_CALENDAR_RANGE: 'SET_CALENDAR_RANGE',
   GET_DATA: 'GET_DATA',
   TOGGLE_FILTER: 'TOGGLE_FILTER',
   SET_COLUMN_LIST: 'SET_COLUMN_LIST',
@@ -63,6 +65,7 @@ const ActionTypes: GlobalStateActions = {
 // TYPE ASSERTIONS AND LABELS FOR STATE
 interface GlobalState {
   uploadModal: boolean;
+  selectedDateRange:DateRangeObject[];
   appointments: ResourceObject;
   claims: ResourceObject;
   patients: ResourceObject;
@@ -80,6 +83,11 @@ interface ResourceObject {
   //   sortOrder: string;
   // };
   // Add column configuration; columnConfig{orderMap, ColumnDisplayNames, widths, etc . . . }
+}
+interface DateRangeObject {
+    startDate: Date;
+    endDate: Date; // Initially set to the same day for single day selection
+    key: string;
 }
 
 interface RowFilterDetail {
@@ -109,6 +117,11 @@ interface TableFilter {
 // !! INITIAL STATE
 const initialState: GlobalState = {
   uploadModal: false,
+  selectedDateRange: [{
+    startDate: new Date(),
+    endDate: new Date(), // Initially set to the same day for single day selection
+    key: "selection",
+  }], 
   appointments: {
     data: [], // data from database
     rowFilterDetails: {},
@@ -326,7 +339,10 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
           !resourceToFilter.rowFilterDetails[filterKey].isSelected;
 
         break;
-      // case ActionTypes.SET_ROW_FILTER_LIST:
+      case ActionTypes.SET_CALENDAR_RANGE:
+        draft.selectedDateRange = action.payload    
+        break
+        // case ActionTypes.SET_ROW_FILTER_LIST:
       //   console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
       //   console.log(state.appointments.allRowFilters);
 

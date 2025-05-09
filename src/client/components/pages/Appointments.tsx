@@ -1,5 +1,5 @@
 // import react hooks
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 // import state
 import useGlobalContext from '../../hooks/useGlobalContext';
@@ -9,6 +9,7 @@ import AppointmentTable from '../tables/AppointmentTable';
 
 // import custom hooks
 import useApi from '../../hooks/useApi';
+import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 
 // import custom hooks/utilities
 import { formatDate } from '../../utils/dataTransformers';
@@ -17,22 +18,26 @@ import { appointmentRowFilterMap } from '../../utils/keyMappings';
 const Appointments = () => {
   // get global state from context
   const { state } = useGlobalContext();
-
+  
+  
   // destructure appointment object from global state
   const {
     data,
     rowFilterDetails, 
     allColumnHeaders,
   } = state.appointments;
-
+  
   // use custom hook
   const api = useApi();
-
+  
   useEffect(() => {
     if (!data.length) {
-    api.getAll('appointments');
+      api.getAll('appointments');
     }
   }, []);
+  
+
+  
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {
@@ -66,14 +71,17 @@ const filteredData = formattedDateData.filter(row => {
   });
 });
 
-console.log({activeFilters});
-console.log({filteredData});
+const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
+
+
+// console.log({activeFilters});
+// console.log({filteredData});
 
   return (
     <div>
       <h1>Appointments</h1>
       {formattedDateData.length > 0 && (
-        <AppointmentTable columns={allColumnHeaders} data={filteredData} styling="w-full h-full" />
+        <AppointmentTable columns={allColumnHeaders} data={dateFilteredData} styling="w-full h-full" />
       )}
     </div>
   );
