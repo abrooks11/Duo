@@ -71,22 +71,23 @@ export const getVoicemail = async (req, res, next) => {
  * @param {*} res 
  * @param {*} next 
  */
-export const addNoteToVoicemail = async (req, res, next) => {
+export const updateVoicemail = async (req, res, next) => {
   try {
     const { vmId } = req.params;
     const { note, reason } = req.body;
+    console.log({note, reason})
+    let response; 
     // CHECK DATABASE FOR VOICEMAIL WITH MATCHING ID 
     // IF NO MATCH, RETURN ERROR
     // IF MATCH, UPDATE IN DATABASE 
     if (note) {
-      const result = await updateVoicemailNote(vmId, note)
-      console.log({result});
+      response = await updateVoicemailNote(vmId, note)
     }
     if (reason) {
-      const result = await updateVoicemailReason(vmId, reason)
-      console.log({result});
+      response = await updateVoicemailReason(vmId, reason)
     }
     
+    res.locals.updateResponse = response 
     next();
   } catch (error) {
     next({

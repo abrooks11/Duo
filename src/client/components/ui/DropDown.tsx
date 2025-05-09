@@ -1,23 +1,19 @@
-import {useState} from 'react'
-
 interface Props {
   dropDownList: {[key: string]: string};
   value: string;
+  onChange: (newValue: string) => void;
 }
 
-const DropDown = ({ dropDownList, value }:Props) => {
-  const [dropDown, setDropDown] = useState(value)
-  const handleDropDownChange = (val) => {
-    setDropDown(val)
-  }
-  // console.log({dropDownList});
-  
+const DropDown = ({ dropDownList, value, onChange }:Props) => {   
   return (
     <select
       // name="reason"
       // id="reason"
-      value={dropDown || 'Pending'} 
-      onChange={(e) => handleDropDownChange(e.target.value)}
+      value={value || 'Pending'} 
+      onChange={(e) => {
+        console.log('Dropdown value changing to:', e.target.value); // Add this debug log
+        onChange(e.target.value);
+      }}
     >
       {dropDownList && Object.entries(dropDownList).map(([key, displayName])=> {
         // console.log(displayName);

@@ -104,7 +104,6 @@ export const getDbVoicemail = async () => {
       createdDate: 'desc',
     },
   });
-
   
   const trash = await prisma.voicemail.findMany({
     take: 100, 
@@ -134,8 +133,10 @@ await prisma.voicemail.update({
     },
   })
 
-return 'Noted Added'
+return 'Note updated'
 }
+
+
 export const updateVoicemailReason = async (vmId: string, reason: string) => {
 const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})
 console.log({vmId, reason})
@@ -152,10 +153,8 @@ await prisma.voicemail.update({
       reason: reason,
     },
   })
-  const updatedTarget = await prisma.voicemail.findUnique({where: {id: vmId}})
 
-console.log({updatedTarget});
-return 'Noted Added'
+return 'Reason updated'
 }
 
 export const changeFolder = async (vmId : string) => {

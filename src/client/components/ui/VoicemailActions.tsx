@@ -1,9 +1,12 @@
 
 import useGlobalContext from '../../hooks/useGlobalContext';
 import { ActionTypes } from '../../context/GlobalContext';
+
+import { deleteVoicemail } from '../../utils/voicemailApi';
 import textBubble from '../../assets/text-bubble.svg';
 import trashCan from '../../assets/trash-can.svg';
-import { deleteVoicemail } from '../../utils/voicemailApi';
+
+
 
 interface Props {
   vmId : string
@@ -12,12 +15,17 @@ interface Props {
 const VoicemailActions = ({vmId}: Props) => {
   const {dispatch} = useGlobalContext()
 
+
 const handleDelete = async () => {
-  await deleteVoicemail(vmId)
-  dispatch({
-    type: ActionTypes.DELETE_VOICEMAIL,
-    payload: vmId
-  })
+  const {status} = await deleteVoicemail(vmId)
+  console.log('delete status', status);
+  if (status === 200) {
+    dispatch({
+      type: ActionTypes.DELETE_VOICEMAIL,
+      payload: vmId
+    })
+  }
+  return 
 }
 
 const handleReply = () => {

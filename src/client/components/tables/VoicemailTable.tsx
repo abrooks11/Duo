@@ -1,8 +1,11 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import VoicemailActions from '../ui/VoicemailActions';
-import DropDown from '../ui/DropDown'
-import {voicemailRowDisplayNames} from "../../utils/keyMappings"
-import { updateVoicemailNote, updateVoicemailReason } from '../../utils/voicemailApi';
+import DropDown from '../ui/DropDown';
+import { voicemailRowDisplayNames } from '../../utils/keyMappings';
+import {
+  updateVoicemailNote,
+  updateVoicemailReason,
+} from '../../utils/voicemailApi';
 
 interface Props {
   columns: any[];
@@ -77,7 +80,17 @@ const VoicemailTable = ({
         width: 200,
         // editable: true,
         renderCell: (params) => {
-          return <DropDown dropDownList={voicemailRowDisplayNames} value={params.row.reason}/>;
+          return (
+            <DropDown
+              dropDownList={voicemailRowDisplayNames}
+              value={params.row.reason}
+              onChange={(newValue) => {
+                const newRow = { ...params.row, reason: newValue };
+                params.api.updateRows([{ id: params.id, reason: newValue }]);
+                processRowUpdate(newRow, params.row);
+              }}
+            />
+          );
         },
       };
     }
@@ -100,12 +113,12 @@ const VoicemailTable = ({
     updatedRow: VoicemailRow,
     originalRow: VoicemailRow
   ) => {
-    console.log('Row information: ', { updatedRow, originalRow });
+    // console.log('Row information: ', { updatedRow, originalRow });
     if (updatedRow.notes !== originalRow.notes) {
       updateVoicemailNote(originalRow.id, updatedRow.notes);
       return updatedRow;
     }
-    if (updatedRow.reason !== originalRow.reason) {
+    if (updatedRow.reason !== originalRow.reason) {      
       updateVoicemailReason(originalRow.id, updatedRow.reason);
       return updatedRow;
     }
@@ -124,7 +137,7 @@ const VoicemailTable = ({
         columns={muiColumns}
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleProcessRowUpdateError}
-        getRowHeight={dynamicHeight? () => 'auto' : () => null}
+        getRowHeight={dynamicHeight ? () => 'auto' : () => null}
       />
     </div>
   );
