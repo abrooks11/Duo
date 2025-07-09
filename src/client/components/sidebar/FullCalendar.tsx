@@ -1,7 +1,7 @@
 import { DateRange } from 'react-date-range';
 import useGlobalContext from '../../hooks/useGlobalContext';
 import { ActionTypes } from '../../context/GlobalContext';
-
+// 
 // import { addDays, format, isWeekend } from 'date-fns';
 
 // IMPORT DATE RANGE CSS

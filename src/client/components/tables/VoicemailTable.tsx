@@ -130,6 +130,9 @@ const VoicemailTable = ({
     console.error('Error saving row update:', error);
   };
 
+  console.log(muiRows);
+  
+
   return (
     <div className={className}>
       <DataGrid

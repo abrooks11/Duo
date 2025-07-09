@@ -77,7 +77,8 @@ const Voicemail = () => {
           <div className="table-container">
             <VoicemailTable
               columns={allColumnHeaders}
-              data={dateFilteredInboxData}
+              // data={dateFilteredInboxData}
+              data={filteredInboxData}
               className="w-full h-full"
               dynamicHeight={true}
             />

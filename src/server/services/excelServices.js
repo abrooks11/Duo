@@ -33,6 +33,7 @@ const excelServices = {
       // USE UPSERT TO UPDATE OR CREATE PATIENT RECORD
       console.log('DATA TYPE', resourceType);
       if (resourceType === 'patient') {
+
         console.log('UPSERTING PATIENTS. . . ');
 
         for (const patientObj of result) {
@@ -67,6 +68,10 @@ const excelServices = {
           }
         }
       } else if (resourceType === 'appointment') {
+        const filteredRows = result.filter((row) => {
+          return row.Type === "Patient"
+      })
+      console.log('Filtered appointment rows:', filteredRows)
         console.log('UPSERTING APPOINTMENTS. . . ');
 
         for (const appointmentObj of result) {
