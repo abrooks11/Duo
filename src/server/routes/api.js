@@ -11,6 +11,7 @@ import patientRouter from './patientRouter.js';
 import authRouter from './authRouter.js';
 import voicemailRouter from './voicemailRouter.js';
 import openAiRouter from './openAiRouter.js';
+import insuranceRouter from './insuranceRouter.js';
 
 // apiRouter.post("/upload/:resourceType/:sheetName", userActionsController.uploadFile, (req, res) => {
 //   res.status(200).send("File was uploaded successfully");
@@ -29,5 +30,7 @@ apiRouter.use('/voicemail', voicemailRouter);
 
 // LLM routes
 apiRouter.use('/openai', openAiRouter);
+
+apiRouter.use('/insurance', insuranceRouter)
 
 export default apiRouter;

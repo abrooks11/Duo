@@ -10,44 +10,16 @@ const Demo = () => {
         scope: string
     }
 
+    const BASE_URL = 'http://localhost:3000/api';
+    const getData = async () => {
+      const response = await fetch(`${BASE_URL}/insurance`);
+      console.log(await response.json())
 
-    
-    useEffect(()=>{
-        const getAvailityToken = async () => {
-        console.log('Requesting token');
-            const availityUrl = "https://api.availity.com/availity/v1/token"
-            const clientId = import.meta.env.CLIENT_ID
-            const clientSecret = import.meta.env.CLIENT_SECRET
-        try {
-            const response = await fetch(availityUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}, 
-                body: new URLSearchParams({
-                    grant_type: 'client_credentials',
-                    client_id: clientId,
-                    client_secret: clientSecret,
-                    scope: 'hipaa'
-                })
-            })
-        
-            if (!response.ok) {
-                throw new Error(`Token request failed: ${response.status}`)
-            }
-            const data = await response.json()
-            console.log('DATA', data);
-            
-            return data
-        } catch (error) {
-            console.error(error)
-        }
-        }
-        
+    }
 
-
-const response = getAvailityToken()
-console.log('TOKEN', response);
-
-}, [])
+    // useEffect(()=>{
+    //   getData()
+    // }, [])
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -59,7 +31,7 @@ console.log('TOKEN', response);
               Patient Data Dashboard
             </h1>
             {/* <button onclick="refreshData()"  */}
-            {/* <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"> */}
+            {/* <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-mediu m transition-colors"> */}
             <button>
               Refresh Data
             </button>
