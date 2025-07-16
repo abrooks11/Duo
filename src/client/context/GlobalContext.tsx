@@ -65,7 +65,7 @@ const ActionTypes: GlobalStateActions = {
 // TYPE ASSERTIONS AND LABELS FOR STATE
 interface GlobalState {
   uploadModal: boolean;
-  selectedDateRange:DateRangeObject[];
+  // selectedDateRange:DateRangeObject[];
   appointments: ResourceObject;
   claims: ResourceObject;
   patients: ResourceObject;
@@ -76,6 +76,7 @@ interface ResourceObject {
   data: any[];
   rowFilterDetails: RowFilterDetails;
   allColumnHeaders: TableColumn[]; // get from keys of first object in data array
+  selectedDateRange: DateRangeObject[]
   // allRowFilters: TableFilter[]; // defined in reducer
   // selectedFilters: TableFilter[];
   // selectedSort: {
@@ -117,15 +118,20 @@ interface TableFilter {
 // !! INITIAL STATE
 const initialState: GlobalState = {
   uploadModal: false,
-  selectedDateRange: [{
-    startDate: new Date(),
-    endDate: new Date(), // Initially set to the same day for single day selection
-    key: "selection",
-  }], 
+  // selectedDateRange: [{
+  //   startDate: new Date(),
+  //   endDate: new Date(), // Initially set to the same day for single day selection
+  //   key: "selection",
+  // }], 
   appointments: {
     data: [], // data from database
     rowFilterDetails: {},
-    allColumnHeaders: [], // all keys from first object in data array
+    allColumnHeaders: [], // list of table column headers from every key from first object in data array
+    selectedDateRange: {selection: {
+      startDate: new Date(),
+      endDate: new Date(), // Initially set to the same day for single day selection
+      key: "selection",
+    }}, 
     // TABLE SORT
     // selectedSort: {
     //   column: '',
@@ -340,7 +346,13 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
 
         break;
       case ActionTypes.SET_CALENDAR_RANGE:
-        draft.selectedDateRange = action.payload    
+        const {resource, newRange} = action.payload;
+        if (resource === 'appointments') {
+          draft.appointments.selectedDateRange.selection = newRange
+        }
+        const test = state.appointments.selectedDateRange
+        console.log(test);
+        
         break
         // case ActionTypes.SET_ROW_FILTER_LIST:
       //   console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);

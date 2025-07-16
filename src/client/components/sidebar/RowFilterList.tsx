@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';  // Add this import
 import useGlobalContext from '../../hooks/useGlobalContext';
 import type { GlobalState, RowFilterDetails } from '../../context/GlobalContext';
 import { ActionTypes } from '../../context/GlobalContext';
+import useStateMap from '../../hooks/useStateMap';
 
 
 
@@ -13,25 +14,14 @@ function RowFilterList() {
   const [resource, setResource] = useState<string>()
   const location = useLocation();  // Add this hook
 
-// Map paths to their corresponding state properties
-const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
-  appointments: 'appointments',
-  claims: 'claims',
-  patients: 'patients',
-  voicemail: 'voicemail',
-};
-
   useEffect(() => {
-      // Remove leading slash and get the path
-  const currentPath = location.pathname.slice(1);
-  
-  setResource(currentPath)
+  const currentPage = useStateMap()
+  const filterList = resource ? state[currentPage]?.rowFilterDetails || {} : {};
+  setResource(currentPage)
 
-  // Get the corresponding state property from the map
-  const stateProperty = PATH_TO_STATE_MAP[currentPath];
+  // console.log({resource})
+  // console.log({filterList});
   
-  
-  const filterList = stateProperty ? state[stateProperty]?.rowFilterDetails || {} : {};
   if (filterList) {
     setRowFilterList(filterList);
   } else {
@@ -46,7 +36,6 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   const handleFilterClick = (filterKey: string) : void => {
     // console.log('FILTER CLICKED: ', filterKey);
     // console.log('RESOURCE: ', resource);
-
     dispatch({
       type: ActionTypes.TOGGLE_FILTER,
       payload: {

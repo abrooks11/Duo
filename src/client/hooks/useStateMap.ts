@@ -1,0 +1,18 @@
+import type { GlobalState } from '../context/GlobalContext';
+
+const useStateMap = () => {
+  // Map paths to their corresponding state properties
+  const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
+    appointments: 'appointments',
+    claims: 'claims',
+    patients: 'patients',
+    voicemail: 'voicemail',
+  };
+
+  // Remove leading slash and get the path
+  const currentPath = location.pathname.slice(1);
+
+  return PATH_TO_STATE_MAP[currentPath];
+};
+
+export default useStateMap;

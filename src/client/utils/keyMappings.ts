@@ -35,18 +35,18 @@ export const appointmentRowDisplayNames: RowDisplayNames = {
 };
 
 export const appointmentColumnOrder: string[] = [
-  'actions',
-  'insEligibility',
-  'patientCopay',
-  'patientBalance',
   'startDate',
   'confirmationStatus',
+  'patientCopay',
+  'patientBalance',
   'patientFullName',
   'patientCaseName',
   'primaryInsurancePolicyNumber',
   'appointmentReason',
   'notes',
   'alertMessage',
+  'actions',
+  'insEligibility',
   'id',
   'createdDate',
   'lastModifiedDate',
