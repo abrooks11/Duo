@@ -1,6 +1,7 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import DropDown from '../ui/DropDown'
 import AppointmentActions from '../ui/AppointmentActions';
+import { updateCopay } from '../../utils/appointmentApi';
 
 interface Props {
   columns: any[];
@@ -83,7 +84,10 @@ const AppointmentTable = ({
       return updatedRow;
     }
     if (updatedRow.patientCopay !== originalRow.patientCopay) {
+      console.log('Original row: ', originalRow)
+      updateCopay(originalRow.id, updatedRow.patientCopay);
     //   updateVoicemailNote(originalRow.id, updatedRow.notes);
+  
       return updatedRow;
     }
     return originalRow;
@@ -97,6 +101,7 @@ const AppointmentTable = ({
   return (
     <div className={styling}>
       <DataGrid
+        cellSelection
         rows={muiRows}
         columns={muiColumns}
         processRowUpdate={processRowUpdate}

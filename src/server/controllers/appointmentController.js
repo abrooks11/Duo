@@ -24,12 +24,13 @@ const appointmentController = {
           },
         },
         orderBy: {
-          startDate: 'desc',
+          startDate: 'asc',
         },
         include: {
           patient: {
             select: {
               patientFullName: true,
+              dob: true,
               primaryInsurancePolicyNumber: true,
               alertMessage: true,
               patientBalance: true,
@@ -37,6 +38,7 @@ const appointmentController = {
           },
         },
       });
+      console.log(appointments.length)
 
       res.locals.appointments = appointments;
       return next();
@@ -48,6 +50,48 @@ const appointmentController = {
       });
     }
   },
+
+  updateCopay: async (req, res, next) => {
+    // deconstruct appointment id and copay from req.body
+    // query db for appointment using appointment id
+    // update matching db appointment with copay
+    // invoke next
+    try {
+      const {id, copay} = req.body
+      console.log({id, copay})
+
+      const currentAppointment = await prisma.appointment.findUnique({
+        where: {
+          id: Number(id)
+        }
+      }
+      )
+
+    if (!currentAppointment) {
+      return res.status(404).json({
+        error: 'Appointment not found',
+      });
+    }
+
+      console.log(currentAppointment);
+      if (currentAppointment) {
+        await prisma.appointment.update({
+          where: { id: id },
+          data: {
+            patientCopay: Number(copay),
+          },
+        });
+      }
+
+
+      next()
+    } catch (error) {
+
+    }
+
+
+  }
 };
+
 
 export default appointmentController;
