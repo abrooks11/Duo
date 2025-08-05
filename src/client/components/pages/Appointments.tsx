@@ -14,6 +14,7 @@ import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 // import custom hooks/utilities
 import { formatDate } from '../../utils/dataTransformers';
 import { appointmentRowFilterMap } from '../../utils/keyMappings';
+import InsuranceSlector from '../appointments/InsuranceSlector';
 
 const Appointments = () => {
   // get global state from context
@@ -36,18 +37,25 @@ const Appointments = () => {
     }
   }, []);
   
+console.log('data', data)
+const UHC = data.filter(appt => {
+  if (appt.patientCaseName === "UHC")
+    return appt
+})
 
+console.log('UHC', UHC)
   
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {
-    const {createdDate, lastModifiedDate, startDate} = row
+    const {createdDate, lastModifiedDate, startDate, dob} = row
 
     return {
       ...row,
       createdDate: formatDate(createdDate),
       lastModifiedDate: formatDate(lastModifiedDate),
       startDate: formatDate(startDate, true),
+      dob: formatDate(dob),
     };
   });
 
@@ -80,6 +88,7 @@ const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
   return (
     <div>
       <h1>Appointments</h1>
+      <InsuranceSlector />
       {formattedDateData.length > 0 && (
         <AppointmentTable columns={allColumnHeaders} data={dateFilteredData} styling="w-full h-full" />
       )}

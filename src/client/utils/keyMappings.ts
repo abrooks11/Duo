@@ -42,6 +42,7 @@ export const appointmentColumnOrder: string[] = [
   'patientFullName',
   'patientCaseName',
   'primaryInsurancePolicyNumber',
+  'dob',
   'appointmentReason',
   'notes',
   'alertMessage',
@@ -59,6 +60,7 @@ export const appointmentColumnDisplayNames: ColumnDisplayNames = {
   patientCopay: 'Co-Pay', // custom
   patientBalance: 'Balance',
   patientFullName: 'Name',
+  dob: 'DOB',
   patientCaseName: 'Insurance',
   primaryInsurancePolicyNumber: 'Member ID',
   appointmentReason: 'Reason',
@@ -166,6 +168,7 @@ export const voicemailRowDisplayNames: RowDisplayNames = {
 
 export const voicemailColumnOrder: string[] = [
   'createdDate',
+  'actions',
   'callerName',
   'callerNumber',
   'callerType',
@@ -173,7 +176,6 @@ export const voicemailColumnOrder: string[] = [
   'reason',
   'transcription',
   'notes',
-  'actions',
   // 'status',
   // 'id',
   // 'messageFolder',
