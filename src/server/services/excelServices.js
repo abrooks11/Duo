@@ -28,7 +28,7 @@ const excelServices = {
       // TRANSFORM THE RESULT ARRAY OF OBJECTS TO THE PRISMA FORMAT
       // console.log("RESULT PRE TRANSFORM: ", result[0]);
       result = result.map((row) => transformKeys(row));
-      // console.log("RESULT POST TRANSFORM: ", result[0]);
+      console.log("RESULT POST TRANSFORM: ", result[1]);
 
       // USE UPSERT TO UPDATE OR CREATE PATIENT RECORD
       console.log('DATA TYPE', resourceType);
@@ -69,17 +69,19 @@ const excelServices = {
         }
       } else if (resourceType === 'appointment') {
         const filteredRows = result.filter((row) => {
-          return row.Type === "Patient"
-      })
-      console.log('Filtered appointment rows:', filteredRows)
+          return row.type === "Patient"
+        })
+        console.log('FILTERED APPOINTMENT ROWS', filteredRows.length)
+        console.log(typeof filteredRows[0].createdDate);
+
         console.log('UPSERTING APPOINTMENTS. . . ');
-
-        for (const appointmentObj of result) {
-
-
-
-
-
+        
+        for (const appointmentObj of filteredRows) {
+          
+          
+          
+          
+ 
 
 
           // separate key fields from rest of appointment data
@@ -93,30 +95,51 @@ const excelServices = {
           ) {
 
             // check that matching patient exists
-            const existingPatient = await prisma.patient.findUnique({
+            const currentPatient = await prisma.patient.findUnique({
               where: { id: patientId },
             });
 
-            if (!existingPatient) {
+            if (!currentPatient) {
               console.log(
                 `Skipping appointment - Patient ${patientFullName} ${patientId} not found`
               );
               continue;
             }
-            const existingAppointment = await prisma.appointment.findUnique({
+
+            // ADJUST TIMES TO MATCH CURRENT TIME ZONE (NEEDED B/C EXCEL REPORT HAS DIFFERENT TIMEZONE)
+appointmentData.createdDate = new Date(
+  new Date(appointmentData.createdDate).getTime() + 2 * 60 * 60 * 1000
+);
+appointmentData.lastModifiedDate = new Date(
+  new Date(appointmentData.lastModifiedDate).getTime() + 2 * 60 * 60 * 1000
+);
+appointmentData.startDate = new Date(
+  new Date(appointmentData.startDate).getTime() + 2 * 60 * 60 * 1000
+);
+
+
+            
+            
+
+
+            const currentAppointment = await prisma.appointment.findUnique({
               where: { id: id },
             });
 
-            if (existingAppointment) {
+            if (currentAppointment) {
               // Record exists, check if incoming data is more recent
-              const existingDate = new Date(existingAppointment.lastModifiedDate);
+              const currentDate = new Date(currentAppointment.lastModifiedDate);
               const incomingDate = new Date(appointmentData.lastModifiedDate);
   
-              if (incomingDate > existingDate) {
+              if (incomingDate > currentDate) {
                 // Incoming data is more recent, update the record
                 await prisma.appointment.update({
                   where: { id: id },
-                  data: {patientId, ...appointmentData},
+                  data: {
+                    patientId,
+                    ...appointmentData,
+                    notes: String(appointmentData.notes),
+                  },
                 });
                 console.log('Updated patient record with more recent data');
               } else {
