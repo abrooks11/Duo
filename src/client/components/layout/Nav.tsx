@@ -50,6 +50,13 @@ function Nav() {
         >
           <li>Demo</li>
         </NavLink>
+
+        <NavLink
+          to="/payments"
+          className={({ isActive }) => (isActive ? 'active-page' : '')}
+        >
+          <li>Payments</li>
+        </NavLink>
       </ul>
     </nav>
   );

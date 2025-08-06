@@ -8,6 +8,7 @@ import Claims from '../pages/Claims';
 import Patients from '../pages/Patients';
 import Voicemail from '../pages/Voicemail';
 import Demo from '../pages/Demo';
+import Payments from '../pages/Payments';
 
 function MainContent() {
   return (
@@ -22,6 +23,7 @@ function MainContent() {
         <Route path="/patients" element={<Patients />} />
         <Route path="/voicemail" element={<Voicemail />} />
         <Route path="/demo" element={<Demo />} />
+        <Route path="/payments" element={<Payments />} />
       </Routes>
     </div>
   );
