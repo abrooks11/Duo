@@ -4,12 +4,16 @@ import express from 'express';
 const apiRouter = express.Router();
 
 // import custom routes
-import uploadRouter from './uploadRouter.js';
+// resource routes
 import appointmentRouter from './appointmentRouter.js';
 import claimRouter from './claimRouter.js';
 import patientRouter from './patientRouter.js';
-import authRouter from './authRouter.js';
+import paymentRouter from './paymentRouter.js';
 import voicemailRouter from './voicemailRouter.js';
+
+// service routes
+import authRouter from './authRouter.js';
+import uploadRouter from './uploadRouter.js';
 import openAiRouter from './openAiRouter.js';
 import insuranceRouter from './insuranceRouter.js';
 
@@ -23,6 +27,7 @@ apiRouter.use('/upload', uploadRouter);
 apiRouter.use('/appointments', appointmentRouter);
 apiRouter.use('/claims', claimRouter);
 apiRouter.use('/patients', patientRouter);
+apiRouter.use('/payments', paymentRouter);
 
 // voicemail routes
 apiRouter.use('/login', authRouter);

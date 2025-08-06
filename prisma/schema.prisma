@@ -128,3 +128,13 @@ model PatientVoicemail {
 
   @@unique([patientId, voicemailId]) // Prevent duplicate associations
 }
+
+model Payment {
+  id Int @unique
+  createdDate DateTime
+  reference String @unique
+  payerType String @default("insurance")
+  payerName String
+  amount Float
+  isPaid Boolean @default(false)
+}

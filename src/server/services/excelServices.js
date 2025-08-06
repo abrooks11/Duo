@@ -28,12 +28,10 @@ const excelServices = {
       // TRANSFORM THE RESULT ARRAY OF OBJECTS TO THE PRISMA FORMAT
       // console.log("RESULT PRE TRANSFORM: ", result[0]);
       result = result.map((row) => transformKeys(row));
-      console.log("RESULT POST TRANSFORM: ", result[1]);
 
       // USE UPSERT TO UPDATE OR CREATE PATIENT RECORD
       console.log('DATA TYPE', resourceType);
       if (resourceType === 'patient') {
-
         console.log('UPSERTING PATIENTS. . . ');
 
         for (const patientObj of result) {
@@ -69,21 +67,14 @@ const excelServices = {
         }
       } else if (resourceType === 'appointment') {
         const filteredRows = result.filter((row) => {
-          return row.type === "Patient"
-        })
-        console.log('FILTERED APPOINTMENT ROWS', filteredRows.length)
+          return row.type === 'Patient';
+        });
+        console.log('FILTERED APPOINTMENT ROWS', filteredRows.length);
         console.log(typeof filteredRows[0].createdDate);
 
         console.log('UPSERTING APPOINTMENTS. . . ');
-        
+
         for (const appointmentObj of filteredRows) {
-          
-          
-          
-          
- 
-
-
           // separate key fields from rest of appointment data
           const { id, type, patientId, patientFullName, ...appointmentData } =
             appointmentObj;
@@ -93,7 +84,6 @@ const excelServices = {
             type === 'Patient' &&
             appointmentData.appointmentReason !== 'OTHER'
           ) {
-
             // check that matching patient exists
             const currentPatient = await prisma.patient.findUnique({
               where: { id: patientId },
@@ -107,20 +97,17 @@ const excelServices = {
             }
 
             // ADJUST TIMES TO MATCH CURRENT TIME ZONE (NEEDED B/C EXCEL REPORT HAS DIFFERENT TIMEZONE)
-appointmentData.createdDate = new Date(
-  new Date(appointmentData.createdDate).getTime() + 2 * 60 * 60 * 1000
-);
-appointmentData.lastModifiedDate = new Date(
-  new Date(appointmentData.lastModifiedDate).getTime() + 2 * 60 * 60 * 1000
-);
-appointmentData.startDate = new Date(
-  new Date(appointmentData.startDate).getTime() + 2 * 60 * 60 * 1000
-);
-
-
-            
-            
-
+            appointmentData.createdDate = new Date(
+              new Date(appointmentData.createdDate).getTime() +
+                2 * 60 * 60 * 1000
+            );
+            appointmentData.lastModifiedDate = new Date(
+              new Date(appointmentData.lastModifiedDate).getTime() +
+                2 * 60 * 60 * 1000
+            );
+            appointmentData.startDate = new Date(
+              new Date(appointmentData.startDate).getTime() + 2 * 60 * 60 * 1000
+            );
 
             const currentAppointment = await prisma.appointment.findUnique({
               where: { id: id },
@@ -130,7 +117,7 @@ appointmentData.startDate = new Date(
               // Record exists, check if incoming data is more recent
               const currentDate = new Date(currentAppointment.lastModifiedDate);
               const incomingDate = new Date(appointmentData.lastModifiedDate);
-  
+
               if (incomingDate > currentDate) {
                 // Incoming data is more recent, update the record
                 await prisma.appointment.update({
@@ -147,15 +134,72 @@ appointmentData.startDate = new Date(
               }
             } else {
               // Record doesn't exist, create it
-              appointmentData.notes = String(appointmentData.notes) // edge case: only numbers in the notes section
+              appointmentData.notes = String(appointmentData.notes); // edge case: only numbers in the notes section
               await prisma.appointment.create({
-                data: {id, ...appointmentData, patient: {connect: {id: patientId}}},
+                data: {
+                  id,
+                  ...appointmentData,
+                  patient: { connect: { id: patientId } },
+                },
               });
               // console.log('Created new appointment record');
             }
-          
           }
         }
+      } else if (resourceType === 'eob') {
+        // FILTER RESULT: only include non-zero insurance payments that have reference numbers
+        // PREP PAYMENTS FOR UPLOAD: make sure the keys match the schema
+        const insPayments = result
+          .filter((payment) => {
+            const { payerType, amount, referenceNumber } = payment;
+            if (payerType === 'Insurance' && amount > 0 && referenceNumber) {
+              return payment;
+            }
+          })
+          .map((payment) => {
+            const {
+              id,
+              createdDate,
+              referenceNumber,
+              payerType,
+              payerName,
+              amount,
+            } = payment;
+            return {
+              id: payment.id,
+              createdDate: new Date(createdDate),
+              reference: String(referenceNumber),
+              payerType,
+              payerName,
+              amount,
+            };
+          });
+
+        const newPayments = await prisma.payment.createMany({
+          data: insPayments,
+          skipDuplicates: true
+        })
+
+        // console.log("ORIGINAL ARRAY SIZE: ", result.length)
+        //console.log('RESULT POST TRANSFORM: ', result[1]);
+        console.log('INS PAYMENT SIZE: ', insPayments.length);
+        console.log('INS PAYMENT EX: ', insPayments[0]);
+        console.log('PAYMENTS UPLOADED', newPayments.count)
+
+        // RESULT POST TRANSFORM:  {
+        //   id: 33946,
+        //   createdDate: '2025-07-08T12:26:46.000Z',
+        //   lastModifiedDate: '2025-07-08T12:26:46.000Z',
+        //   payerType: 'Insurance',
+        //   payerName: 'AETNA (1)',
+        //   referenceNumber: 925167000028933,
+        //   amount: 0
+      } else if (resourceType === 'payment') {
+        // RESULT POST TRANSFORM:  {
+        // date: '2025-07-09T00:00:00.000Z',
+        // description: 'HCCLAIMPMTAARP SupplementaCCD 461717539 TRN*1*11279606667*1362739571*000036273\\',
+        // credit: 17.8
+        // iterate over each object: result should be object that contains id:
       }
 
       // console.log('EXCEL SERVICES readFile', file);
@@ -177,7 +221,12 @@ const transformKeys = (row) => {
       if (prismaKey) {
         // if key contains 'Date' then convert to date to ISO string? (.toISOString())
         // if key is dob then convert to date to ISO string? (.toISOString())
-        if (prismaKey.includes('Date') || prismaKey === 'dob') {
+
+        if (
+          prismaKey.includes('Date') ||
+          prismaKey === 'date' ||
+          prismaKey === 'dob'
+        ) {
           if (value) {
             // Handle Excel date format
             if (typeof value === 'number') {
@@ -189,18 +238,6 @@ const transformKeys = (row) => {
               acc[prismaKey] = new Date(value).toISOString();
             }
           }
-          // } else if (prismaKey === "dob") {
-          //   // Handle various string date formats
-          //   console.log({value})
-          //   const [month, day, year] = value.split("/");
-          //   if (month && day && year) {
-          //     // Handle M/D/YYYY format
-          //     const date = new Date(year, month - 1, day);
-          //     acc[prismaKey] = date.toISOString();
-          //   } else {
-          //     // Fallback for other string formats
-          //     acc[prismaKey] = new Date(value).toISOString();
-          //   }
         } else if (prismaKey.includes('PolicyNumber')) {
           acc[prismaKey] = value ? String(value) : null;
         } else if (

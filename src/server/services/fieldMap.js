@@ -120,6 +120,20 @@ const fieldMap = {
   AppointmentReason1: 'appointmentReason',
   Notes: 'notes',
   Type: 'type',
+
+  // EOB HEADERS
+  PayerType: "payerType", 
+  PayerName: "payerName", 
+  ReferenceNumber: "referenceNumber", 
+  Amount: "amount", 
+
+
+
+  // BANK PAYMENT HEADERS
+   "Post Date": "date", 
+  Description: "description",
+  Credit: "credit"
+
 };
 
 export default fieldMap;
