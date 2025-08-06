@@ -130,7 +130,7 @@ model PatientVoicemail {
 }
 
 model Payment {
-  id Int @unique
+  id String @id @unique
   createdDate DateTime
   reference String @unique
   payerType String @default("insurance")
