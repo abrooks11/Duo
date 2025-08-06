@@ -13,6 +13,7 @@ export const requestVoicemail = async () => {
   });
 
   await getAuthToken.json();
+  
   // get voicemail 
   const getVoicemail = await fetch(`${baseURL}/voicemail`, {
     method: "POST", 
@@ -67,22 +68,31 @@ return {status: response.status}
 
 export const deleteVoicemail = async (id: string) => {
   // console.log('Attempting to move message to trash');
-  
-  const response = await fetch(`${baseURL}/voicemail/${id}`, {
-    method: 'DELETE', 
+  // get auth cookie
+  const getAuthToken = await fetch(`${baseURL}/login`, {
+    method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
-    }, 
-    credentials: 'include'
-  }
-  )
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
 
-  await response.json()
+  await getAuthToken.json();
+
+  const response = await fetch(`${baseURL}/voicemail/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
+
+  await response.json();
 
   if (response.status === 200) {
-    toast.success("Message successfully moved to Trash")
+    toast.success('Message successfully moved to Trash');
   }
-  return {status: response.status}
+  return { status: response.status };
 }
 
 export const requestAiResponse = async (type: string, transcript: string) => {
