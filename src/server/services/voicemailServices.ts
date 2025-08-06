@@ -1,19 +1,41 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-// UPLOAD SINGLE VOICEMAIL TO DATABASE
+/** UPLOAD SINGLE VOICEMAIL TO DATABASE
+ * 
+ * Takes a raw voicemail object and processes it for database storage by:
+ * 1. Extracting and formatting core voicemail properties
+ * 2. Formatting phone number to standard (XXX) XXX-XXXX format
+ * 3. Analyzing transcription to determine call reason category
+ * 4. Querying patient database to identify if caller is an existing patient
+ * 5. Upserting the processed voicemail data to the database
+ * 
+ * @param voicemailObj - Raw voicemail object from external source (e.g., phone system API)
+ * @returns Promise<void>
+ */
+
 export const createVoicemail = async (voicemailObj: any): Promise<void> => {
-  // extract values from voicemail object. add custom properties and format phone number. upload to voicemail table. query patient table by phone number for matching patient.
+  // Extract core voicemail properties from the incoming object
   const { id, created_at, duration, message_folder, status, transcription } =
     voicemailObj;
 
+  // Extract caller information (will be modified by formatting functions)
   let { caller, caller_name } = voicemailObj;
 
+  // Initialize call classification with default values
+  // Will be updated based on transcription analysis and patient lookup
   const callDetails = {
-    callerType: 'other',
-    reason: 'misc',
+    callerType: 'other', // Will become 'patient' if found in database
+    reason: 'misc', // Will be categorized based on transcription keywords
   };
 
+  /**
+   * Formats a phone number to standard (XXX) XXX-XXXX format
+   * Handles numbers with or without country codes by taking last 10 digits
+   * Modifies the 'caller' variable directly
+   *
+   * @param input - Raw phone number string (may include country code)
+   */
   function formatPhoneNumber(input: string): void {
     // Extract the last 10 digits if the number has country code
     const digits = input.slice(-10);
@@ -21,7 +43,14 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
     // Format as (XXX) XXX-XXXX
     caller = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   }
-
+  /**
+   * Analyzes voicemail transcription to categorize the reason for the call
+   * Uses keyword matching to determine if call is about appointments, prescriptions, etc.
+   * Modifies callDetails.reason based on first matching category found
+   * Priority order: appointment > prescription > referral > records > misc (default)
+   *
+   * @param transcription - Text transcription of the voicemail message
+   */
   const determineReason = (transcription: String): void => {
     const appointmentKeywords = [
       'appointment',
@@ -56,6 +85,13 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
     }
   };
 
+  /**
+   * Queries the patient database to check if the caller is an existing patient
+   * If found, updates caller type to 'patient' and sets caller name from patient record
+   * Modifies callDetails.callerType and caller_name variables
+   *
+   * @param phoneNumber - Formatted phone number to search for in patient records
+   */
   const determineCallerName = async (phoneNumber: string): Promise<void> => {
     const matchingPatients = await prisma.patient.findMany({
       where: {
@@ -83,37 +119,29 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
       status: status,
     },
     create: {
-      id: id, // e.g. "4cbda5b4-4d14-48dc-a82e-aed957e788cf"
-      callerNumber: caller,
-      callerName: caller_name || '',
-      createdDate: created_at,
-      duration: duration || 0,
-      messageFolder: message_folder,
-      status: status,
-      transcription: transcription || '',
-      callerType: callDetails.callerType,
-      reason: callDetails.reason,
+      id: id, // Unique identifier from external system (e.g. "4cbda5b4-4d14-48dc-a82e-aed957e788cf")
+      callerNumber: caller, // Formatted phone number
+      callerName: caller_name || '', // Patient name if found, empty string if not
+      createdDate: created_at, // Original timestamp from voicemail system
+      duration: duration || 0, // Call duration in seconds, default to 0
+      messageFolder: message_folder, // Folder classification from phone system
+      status: status, // Message status (new, read, etc.)
+      transcription: transcription || '', // Voice-to-text transcription, empty if unavailable
+      callerType: callDetails.callerType, // 'patient' or 'other' based on database lookup
+      reason: callDetails.reason, // Call category based on transcription analysis
     },
   });
 };
 
 export const getDbVoicemail = async () => {
-  const inbox = await prisma.voicemail.findMany({
+  const result = await prisma.voicemail.findMany({
     where: { messageFolder: 'inbox' },
     orderBy: {
       createdDate: 'desc',
     },
   });
-  
-  const trash = await prisma.voicemail.findMany({
-    take: 100, 
-    where: { messageFolder: 'trash' },
-    orderBy: {
-      createdDate: 'desc'
-    }
-  })
 
-  return [...inbox, ...trash]
+  return result
 };
 
 export const updateVoicemailNote = async (vmId: string, content: string) => {
@@ -135,7 +163,6 @@ await prisma.voicemail.update({
 
 return 'Note updated'
 }
-
 
 export const updateVoicemailReason = async (vmId: string, reason: string) => {
 const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})

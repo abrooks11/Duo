@@ -6,11 +6,21 @@ import {
   updateVoicemailReason,
 } from '../services/voicemailServices.ts';
 
+/** getVoicemail
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ * 
+ * 
+ */
+
 export const getVoicemail = async (req, res, next) => {
   try {
     // ACQUIRE AUTH
-    const token = req.cookies['ring-token']; // Get the token from cookies
-    if (!token) {
+    const ringToken = req.cookies['ring-token']; // Get the token from cookies
+    if (!ringToken) {
       return next({
         status: 401,
         message: { err: 'Authentication required' },
@@ -19,40 +29,26 @@ export const getVoicemail = async (req, res, next) => {
     }
 
     // FETCH VOICEMAIL FROM RINGRX
-    const inboxResponse = await fetch(
+    const ringResponse = await fetch(
       `https://portal.ringrx.com/voicemails?message_folder=inbox`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${ringToken}`,
           'Content-Type': 'application/json',
         },
       }
     );
-    const trashResponse = await fetch(
-      `https://portal.ringrx.com/voicemails?message_folder=trash`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    const inboxData = await inboxResponse.json();
-    const trashData = await trashResponse.json();
 
-    // UPLOAD VOICEMAIL TO DATABASE
-    if (inboxData.length > 0) {
+    const ringData = await ringResponse.json();
+
+    // SAVE RING VOICEMAIL TO DATABASE
+    if (ringData.length > 0) {
       await Promise.all(
-        inboxData.map((voicemail) => createVoicemail(voicemail))
-      );
-    }
-    if (trashData.length > 0) {
-      await Promise.all(
-        trashData.map((voicemail) => createVoicemail(voicemail))
+        ringData.map((voicemail) => createVoicemail(voicemail))
       );
     }
 
-    // FETCH VOICEMAIL FROM DB
+    // FETCH SAVED VOICEMAIL FROM DB
     const voicemail = await getDbVoicemail();
     res.locals.voicemail = voicemail;
     return next();
