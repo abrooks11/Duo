@@ -4,17 +4,33 @@ const prisma = new PrismaClient();
 const appointmentController = {
   getAppointments: async (req, res, next) => {
     try {
-      // get appointments from the database
+ // Get the current date
+ const now = new Date();
+      
+ // Calculate first day of current month (set to beginning of day)
+ const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+ 
+ // Calculate last day of next month (set to end of day)
+ const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+ 
+ // Get appointments from the database with date filtering
       const appointments = await prisma.appointment.findMany({
         relationLoadStrategy: 'join',
-        take: 100,
+        // take: 100,
+        where: {
+          startDate: {
+            gte: firstDayOfMonth,
+            lte: lastDayOfNextMonth,
+          },
+        },
         orderBy: {
-          startDate: 'desc',
+          startDate: 'asc',
         },
         include: {
           patient: {
             select: {
               patientFullName: true,
+              dob: true,
               primaryInsurancePolicyNumber: true,
               alertMessage: true,
               patientBalance: true,
@@ -22,7 +38,7 @@ const appointmentController = {
           },
         },
       });
-      //   console.log(appointments);
+      console.log(appointments.length)
 
       res.locals.appointments = appointments;
       return next();
@@ -34,6 +50,48 @@ const appointmentController = {
       });
     }
   },
+
+  updateCopay: async (req, res, next) => {
+    // deconstruct appointment id and copay from req.body
+    // query db for appointment using appointment id
+    // update matching db appointment with copay
+    // invoke next
+    try {
+      const {id, copay} = req.body
+      console.log({id, copay})
+
+      const currentAppointment = await prisma.appointment.findUnique({
+        where: {
+          id: Number(id)
+        }
+      }
+      )
+
+    if (!currentAppointment) {
+      return res.status(404).json({
+        error: 'Appointment not found',
+      });
+    }
+
+      console.log(currentAppointment);
+      if (currentAppointment) {
+        await prisma.appointment.update({
+          where: { id: id },
+          data: {
+            patientCopay: Number(copay),
+          },
+        });
+      }
+
+
+      next()
+    } catch (error) {
+
+    }
+
+
+  }
 };
+
 
 export default appointmentController;

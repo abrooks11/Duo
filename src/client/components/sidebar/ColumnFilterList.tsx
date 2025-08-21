@@ -40,18 +40,18 @@ if (columnHeaders.length) {
 
 
 
-  // const handleColumnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   // extract checkbox name and checked status from event target
-  //   const { name, checked } = e.target;
-  //   // dispatch action to update column status
-  //   // dispatch({
-  //   //   type: ActionTypes.SET_APPOINTMENT_COLUMNS,
-  //   //   payload: {
-  //   //     column: name,
-  //   //     isSelected: checked,
-  //   //   },
-  //   // });
-  // };
+  const handleColumnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // extract checkbox name and checked status from event target
+    const { name, checked } = e.target;
+    // dispatch action to update column status
+    // dispatch({
+    //   type: ActionTypes.SET_APPOINTMENT_COLUMNS,
+    //   payload: {
+    //     column: name,
+    //     isSelected: checked,
+    //   },
+    // });
+  };
 
   return (
     <div className="header-selector-wrapper">
@@ -63,7 +63,7 @@ if (columnHeaders.length) {
             type="checkbox"
             value={column.value}
             name={column.value}
-            // onChange={handleColumnChange}
+            onChange={handleColumnChange}
             checked={column.isSelected}
           />
           <label htmlFor={column.value}>{column.label}</label>

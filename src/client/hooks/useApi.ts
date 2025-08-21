@@ -2,8 +2,9 @@
 import useGlobalContext from './useGlobalContext';
 import { ActionTypes } from '../context/GlobalContext';
 
+import { requestVoicemail } from '../utils/voicemailApi';
+
 const BASE_URL = 'http://localhost:3000/api';
-// const response = await fetch("http://localhost:3000/api/appointments");
 
 interface apiRequests {
   getAll: (endpoint: string) => Promise<any>;
@@ -16,17 +17,24 @@ const useApi = () => {
   const api: apiRequests = {
     getAll: async (endpoint) => {
       try {
-        const response = await fetch(`${BASE_URL}/${endpoint}`);
-        const data = await response.json();
-        // console.log('FETCHING', endpoint);
-        if (data) {
+        let serverData = {};
+
+        if (endpoint === 'voicemail') {
+          serverData = await requestVoicemail();
+        } else {
+          const response = await fetch(`${BASE_URL}/${endpoint}`);
+          serverData = await response.json();
+        }
+
+        if (serverData) {
           // console.log(`REQUEST FOR ${endpoint} successful`)
           dispatch({
             type: ActionTypes.GET_DATA,
-            payload: { resourceType: endpoint, data: data },
+            payload: { resourceType: endpoint, data: serverData },
           });
         }
-        return data;
+        // console.log({serverData})
+        return serverData;
       } catch (error) {
         console.error(`Error fetching ${endpoint}: `, error);
       }

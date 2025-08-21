@@ -8,7 +8,25 @@ import React, { createContext, useReducer } from 'react';
 // import immer for state management
 import { produce } from 'immer';
 
-import { appointmentMap, claimMap } from '../utils/rowFilterMap';
+import {
+  ColumnDisplayNames,
+  RowFilterMap,
+  patientColumnOrder,
+  patientColumnNames,
+} from '../utils/keyMappings';
+
+import {
+  appointmentRowFilterMap,
+  appointmentRowDisplayNames,
+  appointmentColumnOrder,
+  appointmentColumnDisplayNames,
+} from '../utils/keyMappings';
+
+import {
+  voicemailRowDisplayNames,
+  voicemailColumnOrder,
+  voicemailColumnDisplayNames,
+} from '../utils/keyMappings';
 
 // types for context object
 interface DispatchAction {
@@ -24,46 +42,71 @@ interface GlobalContextType {
 // TYPE ASSERTIONS AND LABELS FOR ACTIONS
 interface GlobalStateActions {
   DISPLAY_UPLOAD_MODAL: string;
+  SET_CALENDAR_RANGE: string;
   GET_DATA: string;
+  TOGGLE_FILTER: string;
   SET_COLUMN_LIST: string;
   SET_ROW_FILTER_LIST: string;
   SET_DATA_SORT: string;
+  DELETE_VOICEMAIL: string;
 }
 
 const ActionTypes: GlobalStateActions = {
   DISPLAY_UPLOAD_MODAL: 'DISPLAY_UPLOAD_MODAL',
+  SET_CALENDAR_RANGE: 'SET_CALENDAR_RANGE',
   GET_DATA: 'GET_DATA',
+  TOGGLE_FILTER: 'TOGGLE_FILTER',
   SET_COLUMN_LIST: 'SET_COLUMN_LIST',
   SET_ROW_FILTER_LIST: 'SET_ROW_FILTER_LIST',
   SET_DATA_SORT: 'SET_DATA_SORT',
+  DELETE_VOICEMAIL: 'DELETE_VOICEMAIL',
 };
 
 // TYPE ASSERTIONS AND LABELS FOR STATE
 interface GlobalState {
   uploadModal: boolean;
-  appointments: DataObject;
-  claims: DataObject;
-  patients: DataObject;
-  voicemail: DataObject;
+  // selectedDateRange:DateRangeObject[];
+  appointments: ResourceObject;
+  claims: ResourceObject;
+  patients: ResourceObject;
+  voicemail: ResourceObject;
 }
 
-interface DataObject {
+interface ResourceObject {
   data: any[];
-  filteredData: any[];
+  rowFilterDetails: RowFilterDetails;
   allColumnHeaders: TableColumn[]; // get from keys of first object in data array
-  selectedColumnHeaders: TableColumn[];
-  allFilters: TableFilter[]; // defined in reducer
-  selectedFilters: TableFilter[];
-  selectedSort: {
-    column: string;
-    sortOrder: string;
-  };
+  selectedDateRange: DateRangeObject[]
+  // allRowFilters: TableFilter[]; // defined in reducer
+  // selectedFilters: TableFilter[];
+  // selectedSort: {
+  //   column: string;
+  //   sortOrder: string;
+  // };
+  // Add column configuration; columnConfig{orderMap, ColumnDisplayNames, widths, etc . . . }
+}
+interface DateRangeObject {
+    startDate: Date;
+    endDate: Date; // Initially set to the same day for single day selection
+    key: string;
+    color: string;
+}
+
+interface RowFilterDetail {
+  displayName: string;
+  sum: number;
+  isSelected: boolean;
+}
+
+interface RowFilterDetails {
+  [key: string]: RowFilterDetail;
 }
 
 interface TableColumn {
-  label: string;
-  value: string;
-  isSelected: boolean;
+  key: string;
+  order: number;
+  displayName: string;
+  isVisible: boolean;
 }
 
 interface TableFilter {
@@ -76,35 +119,34 @@ interface TableFilter {
 // !! INITIAL STATE
 const initialState: GlobalState = {
   uploadModal: false,
+  // selectedDateRange: [{
+  //   startDate: new Date(),
+  //   endDate: new Date(), // Initially set to the same day for single day selection
+  //   key: "selection",
+  // }], 
   appointments: {
     data: [], // data from database
-    filteredData: [],
-    // TABLE COLUMN NAMES
-    allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
-    // TABLE FILTERS
-    allFilters: [
-      { key: 'scheduled', label: 'Scheduled', isSelected: false, data: [] },
-      { key: 'completed', label: 'Completed', isSelected: false, data: [] },
-      { key: 'cancelled', label: 'Cancelled', isSelected: false, data: [] },
-      { key: 'noShow', label: 'No Show', isSelected: false, data: [] },
-      { key: 'total', label: 'Total', isSelected: false, data: [] },
-    ],
-    selectedFilters: [], // default to 0 filters
+    rowFilterDetails: {},
+    allColumnHeaders: [], // list of table column headers from every key from first object in data array
+    selectedDateRange: {selection: {
+      startDate: new Date(),
+      endDate: new Date(), // Initially set to the same day for single day selection
+      key: "selection",
+      color: '#3d91ff',
+    }}, 
     // TABLE SORT
-    selectedSort: {
-      column: '',
-      sortOrder: '',
-    },
+    // selectedSort: {
+    //   column: '',
+    //   sortOrder: '',
+    // },
   },
   claims: {
     data: [], // data from database
     filteredData: [],
     // TABLE COLUMN NAMES
     allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
     // TABLE FILTERS
-    allFilters: [
+    allRowFilters: [
       { key: 'missed', label: 'Missed', isSelected: false, data: [] },
       { key: 'owes', label: 'Owes', isSelected: false, data: [] },
       { key: 'paid', label: 'Paid', isSelected: false, data: [] },
@@ -122,11 +164,11 @@ const initialState: GlobalState = {
   patients: {
     data: [], // data from database
     filteredData: [],
-    // TABLE COLUMN NAMES
-    allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
+    allColumnHeaders: [],
     // TABLE FILTERS
-    allFilters: [{ label: 'Has Balance', isSelected: false, data: [] }],
+    allRowFilters: [
+      { key: 'balance', label: 'Has Balance', isSelected: false, data: [] },
+    ],
     selectedFilters: [], // default to 0 filters
     // TABLE SORT
     selectedSort: {
@@ -136,41 +178,19 @@ const initialState: GlobalState = {
   },
   voicemail: {
     data: [], // data from database
-    filteredData: [],
-    // TABLE COLUMN NAMES
-    allColumnHeaders: [], // all keys from first object in data array
-    selectedColumnHeaders: [], // default to all columns
-    // TABLE FILTERS
-    allFilters: [
-      { key: 'admin', label: 'Admin', isSelected: false, data: [] },
-      { key: 'appointment', label: 'Appointment', isSelected: false, data: [] },
-      { key: 'memo', label: 'Memo', isSelected: false, data: [] },
-      { key: 'misc', label: 'Misc', isSelected: false, data: [] },
-      {
-        key: 'prescription',
-        label: 'Prescription',
-        isSelected: false,
-        data: [],
-      },
-      { key: 'referral', label: 'Referral', isSelected: false, data: [] },
-      {
-        key: 'recordRequest',
-        label: 'Record Request',
-        isSelected: false,
-        data: [],
-      },
-    ],
-    selectedFilters: [], // default to 0 filters
+    rowFilterDetails: {},
+    allColumnHeaders: [],
     // TABLE SORT
-    selectedSort: {
-      column: '',
-      sortOrder: '',
-    },
+    // selectedSort: {
+    //   column: '',
+    //   sortOrder: '',
+    // },
   },
 };
 
 // define reducer function and action handlers
 const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
+  // helper function for flattening nested objects from server.json
   const flattenObject = (obj: { [key: string]: any }) => {
     const flattened: { [key: string]: any } = {};
 
@@ -187,8 +207,71 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         flattened[key] = value;
       }
     });
-
     return flattened;
+  };
+
+  const generateOrderedColumns = (
+    orderMap: string[],
+    nameMap: ColumnDisplayNames
+  ) => {
+    return orderMap
+      .map((label, index) => {
+        return {
+          key: label,
+          order: index,
+          displayName: nameMap[label],
+          isVisible: true,
+        };
+      })
+      .sort((a, b) => a.order - b.order); //### do I need to sort?
+  };
+
+  const generateRowFilterDetails = (
+    data: any[],
+    displayNames: ColumnDisplayNames,
+    targetColumnName: string,
+    filterMap?: RowFilterMap
+  ): RowFilterDetails => {
+    // Create template object from keys in ordered filter list; Initialize with zero counts and not selected
+    const filterDetails = Object.fromEntries(
+      Object.entries(displayNames).map(([key, _]) => [
+        key,
+        { displayName: displayNames[key], sum: 0, isSelected: false },
+      ])
+    );
+    // Iterate over data and update counts
+    if (filterMap) {
+      for (const row of data) {
+        const filterKey = row[targetColumnName];
+
+        // Check each filter group
+        for (const key in filterMap) {
+          if (filterMap[key].includes(filterKey)) {
+            filterDetails[key].sum += 1;
+          }
+        }
+      }
+    } else {
+      // console.log('Processing data without filterMap');
+      for (const row of data) {
+        const filterKey = row[targetColumnName];
+        // console.log('Current row filterKey:', filterKey);
+        // console.log('Available keys in filterDetails:', Object.keys(filterDetails));
+
+        if (filterDetails[filterKey] === undefined) {
+          console.log('Warning: No matching key found for:', filterKey);
+          continue;
+        }
+        filterDetails[filterKey].sum += 1;
+      }
+    }
+
+    // Calculate total if it's in the ordered list
+    if (Object.keys(displayNames).includes('total')) {
+      filterDetails['total'].sum = data.length;
+    }
+
+    return filterDetails;
   };
 
   return produce(state, (draft) => {
@@ -203,75 +286,101 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
         if (Array.isArray(data) && data.length > 0) {
           // generate list of column labels from  keys of first object in response array then filter into categories
           const flatSingleRow = flattenObject(data[0]);
+
           const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
-            label: header,
+            key: header,
             value: header,
             isSelected: true,
+
             // !TODO: refactor this to maintain selected columns from state
             // isSelected:
             //   state.appointments.allColumns.find((h) => h.value === header)
             //     ?.isSelected || true,
           }));
 
-          if (resourceType === 'patients') {
-            // assign database response, column labels to
-            draft.patients.data = data;
-            // ALL AND SELECTED COLUMNS
-            draft.patients.allColumnHeaders = allColumnHeaders;
-            draft.patients.selectedColumnHeaders = allColumnHeaders.filter(
-              (column) => column.isSelected
-            );
-          } else if (resourceType === 'appointments') {
+          // const target =generateRowFilterDetails(data, appointmentRowFilterMap, appointmentRowDisplayNames,  'confirmationStatus');
+          // console.log({ target });
+
+          if (resourceType === 'appointments') {
             draft.appointments.data = data.map((row) => flattenObject(row));
-            // ALL AND SELECTED COLUMNS
-            draft.appointments.allColumnHeaders = allColumnHeaders;
-            draft.appointments.selectedColumnHeaders = allColumnHeaders.filter(
-              (column) => column.isSelected
+            draft.appointments.rowFilterDetails = generateRowFilterDetails(
+              data,
+              appointmentRowDisplayNames,
+              'confirmationStatus',
+              appointmentRowFilterMap
             );
-
-            const filteredData = data.reduce((acc, currentRow, index) => {
-              const { confirmationStatus } = currentRow;
-              for (const key in appointmentMap) {
-                if (appointmentMap[key].includes(confirmationStatus)) {
-                  // find index of acc array 
-                  const targetIndex = acc.findIndex(element => element.key === key)    
-                  const totalIndex = acc.findIndex(element => element.key === 'total')    
-                  if (targetIndex === -1) {
-                    console.log('key not found for ', confirmationStatus);
-                    return acc
-                  }
-                  acc[targetIndex].data.push(currentRow)
-                  acc[totalIndex].data.push(currentRow)
-                }
-              }
-              return acc;
-            }, state.appointments.allFilters);
-
+            draft.appointments.allColumnHeaders = generateOrderedColumns(
+              appointmentColumnOrder,
+              appointmentColumnDisplayNames
+            );
           } else if (resourceType === 'claims') {
             draft.claims.data = data;
             // ALL AND SELECTED COLUMNS
             draft.claims.allColumnHeaders = allColumnHeaders;
-            draft.claims.selectedColumnHeaders = allColumnHeaders.filter(
-              (column) => column.isSelected
+          } else if (resourceType === 'patients') {
+            draft.patients.data = data;
+            draft.patients.allColumnHeaders = generateOrderedColumns(
+              patientColumnOrder,
+              patientColumnNames
+            );
+          } else if (resourceType === 'voicemail') {
+            // console.log(data[0])
+            draft.voicemail.data = data.map((row) => flattenObject(row));
+            draft.voicemail.rowFilterDetails = generateRowFilterDetails(
+              data.filter((row) => row.messageFolder === 'inbox'),
+              voicemailRowDisplayNames,
+              'reason'
+            );
+            draft.voicemail.allColumnHeaders = generateOrderedColumns(
+              voicemailColumnOrder,
+              voicemailColumnDisplayNames
             );
           }
         }
         break;
-      case ActionTypes.SET_ROW_FILTER_LIST:
-        console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
-        console.log(state.appointments.allFilters);
+      case ActionTypes.TOGGLE_FILTER:
+        const { filterResource, filterKey } = action.payload;
+        const resourceToFilter: ResourceObject = draft[filterResource];
+        console.log({filterResource, filterKey});
+        
+        resourceToFilter.rowFilterDetails[filterKey].isSelected =
+          !resourceToFilter.rowFilterDetails[filterKey].isSelected;
 
-        // use the path name to know which object to select (appt, claims or patiets)
-        // use the filter name to know this prop to select from allFilters
-        // use the status to toggle the isSelected value
-
-        // get filter key from payload
-        const { componentFilterName, selectStatus, pathname } = action.payload;
-        if (pathname.includes('appointments')) {
-          draft.appointments.allFilters;
-        }
         break;
+      case ActionTypes.SET_CALENDAR_RANGE:
+        const {resource, newRange} = action.payload;
+        if (resource === 'appointments') {
+          draft.appointments.selectedDateRange.selection = newRange
+        }
+        const test = state.appointments.selectedDateRange
+        console.log(test);
+        
+        break
+        // case ActionTypes.SET_ROW_FILTER_LIST:
+      //   console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
+      //   console.log(state.appointments.allRowFilters);
+
+      //   // use the path name to know which object to select
+      //   // use the filter name to know this prop to select from allRowFilters
+      //   // use the status to toggle the isSelected value
+
+      //   // get filter key from payload
+      //   const { pathname } = action.payload;
+      //   if (pathname.includes('appointments')) {
+      //     draft.appointments.allRowFilters;
+      //   }
+      //   break;
       // default case returns state
+      case ActionTypes.DELETE_VOICEMAIL:
+        const id = action.payload;
+        console.log('DISPATCHED ID', id);
+        const target = draft.voicemail.data.find(
+          (message) => message.id === id
+        );
+        target.messageFolder = 'trash';
+        console.log({ target });
+
+        break;
       default:
         break;
     }
@@ -301,4 +410,4 @@ const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
 // export the ActionTypes for use in other components
 // export custom types for use in other components
 export { GlobalProvider, GlobalContext, ActionTypes };
-export type { GlobalState, TableColumn, TableFilter };
+export type { GlobalState, RowFilterDetails, TableColumn, TableFilter };

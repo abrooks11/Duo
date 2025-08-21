@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import useGlobalContext from '../../hooks/useGlobalContext';
-import Table from '../ui/Table';
+import Table from '../tables/Table';
 import useApi from '../../hooks/useApi';
 import dataTransformers from '../../utils/dataTransformers';
 

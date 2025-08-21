@@ -1,30 +1,102 @@
-import { useState } from 'react';
-import VoicemailTable from '../voicemail/VoicemailTable';
-import { requestVoicemail } from '../../utils/voicemailApi';
+import { useState, useEffect } from 'react';
+// import state
+import useGlobalContext from '../../hooks/useGlobalContext';
+
+
+// import custom components
+import VoicemailTable from '../tables/VoicemailTable';
+
+// import custom hooks
+import useApi from '../../hooks/useApi';
+import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 
 const Voicemail = () => {
-  const [inbox, setInbox] = useState([]);
+  // get global state from context
+  const { state } = useGlobalContext();
+  const { data, rowFilterDetails, allColumnHeaders } = state.voicemail;
 
-  const handleGetVoicemail = async () => {
-    const voicemail = await requestVoicemail();
-    setInbox(voicemail);
+  const [inbox, setInbox] = useState<any[]>([]);
+  const [trash, setTrash] = useState<any[]>([]);
+  
+  const api = useApi();
+  
+  useEffect(() => {
+    if (!data.length) {
+      api.getAll('voicemail');
+    }
+  }, []);
+  
+  // This effect runs when data changes (is fetched from API)
+  useEffect(() => {
+    processVoicemailData();
+  }, [data]);
+  
+  
+  const processVoicemailData = () => {
+    if (data.length) {
+      const formattedVoicemailData = data.map((row) => {
+        return {
+          ...row,
+          duration: Math.floor(row.duration / 1000),
+        };
+      });
+
+      setInbox(
+        formattedVoicemailData.filter((row) => row.messageFolder === 'inbox')
+      );
+      setTrash(
+        formattedVoicemailData.filter((row) => row.messageFolder === 'trash')
+      );
+    }
   };
 
-  return (
-    <div>
-      {/* TOP BUTTON WRAPPER */}
-      <div className="h-[100px] border border-red-100 flex justify-center gap-4">
-        <button
-          className="bg-rose-400 h-[50px] w-[100px] hover:bg-rose-600"
-          onClick={handleGetVoicemail}
-        >
-          Get Voicemail
-        </button>
-      </div>
+  // Get active filters
+  const activeFilters = Object.entries(rowFilterDetails)
+    .filter(([_, details]) => details.isSelected)
+    .map(([key]) => key);
 
-      <div className="min-h-[100px] border-2 border-blue-100 flex flex-col justify-center gap-4">
-        <VoicemailTable voicemailList={inbox} />
+  // Filter the data based on active filters
+  const filteredInboxData = inbox.filter((row) => {
+    // If no filters are selected, show all data
+    if (activeFilters.length === 0) return true;
+
+    // Check if the row matches any of the selected filters
+    return activeFilters.some((filterKey) => {
+      return row.reason === filterKey;
+    });
+  });
+
+  const dateFilteredInboxData = useDateRangeFilter(filteredInboxData, 'createdDate')
+
+
+  return (
+    <div className="voicemail-container">
+      <div className="voicemail-section">
+        <h1>({inbox.length || 0}) Unread</h1>
+        {inbox.length > 0 && (
+          <div className="table-container">
+            <VoicemailTable
+              columns={allColumnHeaders}
+              // data={dateFilteredInboxData}
+              data={filteredInboxData}
+              className="w-full h-full"
+              dynamicHeight={true}
+            />
+          </div>
+        )}
       </div>
+      {/* <div className="voicemail-section">
+        <h1>({trash.length}) Read</h1>
+        {trash.length > 0 && (
+          <div className="table-container">
+            <VoicemailTable
+              columns={allColumnHeaders}
+              data={trash}
+              className="w-full h-full"
+            />
+          </div>
+        )}
+      </div> */}
     </div>
   );
 };

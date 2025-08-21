@@ -23,7 +23,6 @@ patientRouter.get('/', async (req, res) => {
 });
 
 patientRouter.delete('/', async (req, res) => {
-  await prisma.appointment.deleteMany({});
   await prisma.patient.deleteMany({});
   return res.status(200).json({ message: 'Records deleted' });
 });

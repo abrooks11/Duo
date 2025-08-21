@@ -21,10 +21,10 @@ const app = express();
 // Enable CORS for all routes
 app.use(
   cors({
-    origin: 'http://localhost:5173', // Your frontend origin
+    origin: ['http://localhost:5173', 'http://localhost:5174'], // Allow both frontend origins
     credentials: true,
   })
-); // Add this line to enable CORS
+);
 
 app.use(cookieParser());
 
