@@ -47,6 +47,25 @@ export const getVoicemail = async (req, res, next) => {
         ringData.map((voicemail) => createVoicemail(voicemail))
       );
     }
+    // FETCH VOICEMAIL FROM RINGRX
+    const trashResponse = await fetch(
+      `https://portal.ringrx.com/voicemails?message_folder=trash`,
+      {
+        headers: {
+          Authorization: `Bearer ${ringToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const trashData = await trashResponse.json();
+
+    // SAVE RING VOICEMAIL TO DATABASE
+    if (trashData.length > 0) {
+      await Promise.all(
+        trashData.map((voicemail) => createVoicemail(voicemail))
+      );
+    }
 
     // FETCH SAVED VOICEMAIL FROM DB
     const voicemail = await getDbVoicemail();

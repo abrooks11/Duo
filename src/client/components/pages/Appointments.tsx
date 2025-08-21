@@ -38,13 +38,6 @@ const Appointments = () => {
   }, []);
   
 console.log('data', data)
-const UHC = data.filter(appt => {
-  if (appt.patientCaseName === "UHC")
-    return appt
-})
-
-console.log('UHC', UHC)
-  
 
   // prep data: format the dates
   const formattedDateData = data.map((row) => {

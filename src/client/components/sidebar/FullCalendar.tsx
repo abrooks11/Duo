@@ -20,11 +20,12 @@ const FullCalendar = () => {
   const [resource, setResource] = useState<string>('appointments')
   const [RANGE, SETRANGE] = useState<any>({
     selection: {
-    startDate: new Date(),
-    endDate: new Date(),
-    key: 'selection'
-  }
-})
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection',
+      color: '#3d91ff',
+    },
+  });
 
 
   const {state, dispatch} = useGlobalContext()
@@ -34,7 +35,9 @@ const FullCalendar = () => {
     if (currentPage === 'appointments') {
       const DATERANGE = state[currentPage]?.selectedDateRange
       setResource(currentPage)
-      SETRANGE(DATERANGE)
+      if (DATERANGE && DATERANGE.selection) {
+        SETRANGE({ selection: { ...DATERANGE.selection } })
+      }
       console.log({currentPage, DATERANGE});
     }
 }, [location.pathname, state]);
@@ -42,11 +45,10 @@ const FullCalendar = () => {
 
   const setRange = (item) => {
     console.log(item);
-    // SETRANGE({...RANGE, ...item})
     SETRANGE(item)
     dispatch({
       type: ActionTypes.SET_CALENDAR_RANGE,
-      payload: {resource: resource, newRange: RANGE },
+      payload: {resource: resource, newRange: item.selection },
     });
   };
 

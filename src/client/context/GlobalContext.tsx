@@ -89,6 +89,7 @@ interface DateRangeObject {
     startDate: Date;
     endDate: Date; // Initially set to the same day for single day selection
     key: string;
+    color: string;
 }
 
 interface RowFilterDetail {
@@ -131,6 +132,7 @@ const initialState: GlobalState = {
       startDate: new Date(),
       endDate: new Date(), // Initially set to the same day for single day selection
       key: "selection",
+      color: '#3d91ff',
     }}, 
     // TABLE SORT
     // selectedSort: {

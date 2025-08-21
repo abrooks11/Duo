@@ -57,7 +57,7 @@ const VoicemailTable = ({
       return {
         field: key,
         headerName: displayName,
-        width: 200,
+        width: 100,
         renderCell: (params) => {
           return <VoicemailActions vmId={params.row.id} />;
         },
@@ -105,7 +105,7 @@ const VoicemailTable = ({
     return {
       field: key,
       headerName: displayName,
-      width: 200,
+      width: 150,
     };
   });
 
