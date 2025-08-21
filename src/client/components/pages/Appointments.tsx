@@ -80,8 +80,8 @@ const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
 
   return (
     <div>
-      <h1>Appointments</h1>
-      <InsuranceSlector />
+      {/* <h1>Appointments</h1> */}
+      {/* <InsuranceSlector /> */}
       {formattedDateData.length > 0 && (
         <AppointmentTable columns={allColumnHeaders} data={dateFilteredData} styling="w-full h-full" />
       )}
