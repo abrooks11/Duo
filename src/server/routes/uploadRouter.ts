@@ -14,6 +14,47 @@ const prisma = new PrismaClient();
 // create a router
 const uploadRouter = express.Router();
 
+/**
+ * @param {} str
+ * @returns
+ *
+ * Helper function that takes a string and returns the insurance company name that aligns with the provider portal for further claims information
+ */
+const getPayerName = (str: string): string => {
+  if (str.includes('BCBS') || str.includes('BC/BS')) {
+    return 'BC/BS';
+  } else if (str.includes('AETNA')) {
+    return 'AETNA';
+  } else if (str.includes('AARP')) {
+    return 'AARP';
+  } else if (str.includes('CIGNA')) {
+    return 'CIGNA';
+  } else if (str.includes('ECHO')) {
+    return 'ECHO';
+  } else if (str.toLowerCase().includes('freedom')) {
+    return 'FREEDOM LIFE';
+  } else if (str.includes('GEHA')) {
+    return 'GEHA';
+  } else if (str.includes('NOVITAS') || str.includes('MEDICARE')) {
+    return 'MEDICARE';
+  } else if (str.includes('MERITAIN')) {
+    return 'MERITAIN';
+  } else if (str.includes('OSCAR')) {
+    return 'OSCAR';
+  } else if (str.includes('WPS')) {
+    return 'WPS';
+  } else if (str.includes('PAY PLUS')) {
+    return 'ZELIS';
+  } else if (
+    str.toLowerCase().includes('united') ||
+    str.toLowerCase().includes('uhc')
+  ) {
+    return 'UNITED';
+  } else {
+    return str;
+  }
+};
+
 uploadRouter.post(
   '/:resourceType/:sheetName',
   upload.single('file'),
@@ -35,7 +76,16 @@ uploadRouter.post(
         resourceType,
         sheetName
       );
-      console.log('excelData:', excelData.length);
+
+      if (!excelData) {
+        return next({
+          status: 400,
+          message: { err: 'Failed to read Excel data' },
+          log: 'Excel data is undefined',
+        });
+      }
+
+      console.log('excelData: total rows:', excelData.length);
 
       switch (resourceType) {
         case 'patient':
@@ -158,8 +208,8 @@ uploadRouter.post(
             }
           }
           break;
-        case 'payment':
-          const getReferenceNumber = (str) => {
+        case 'deposit':
+          const getReferenceNumber = (str: string): string => {
             let count = 2; // number of times to slice a *
 
             while (count > 0) {
@@ -174,45 +224,14 @@ uploadRouter.post(
             return str;
           };
 
-          const getPayerName = (str) => {
-            if (str.includes('BCBS')) {
-              return 'BC/BS';
-            } else if (str.includes('AETNA')) {
-              return 'AETNA';
-            } else if (str.includes('AARP')) {
-              return 'AARP';
-            } else if (str.includes('CIGNA')) {
-              return 'CIGNA';
-            } else if (str.includes('ECHO')) {
-              return 'ECHO';
-            } else if (str.toLowerCase().includes('freedom')) {
-              return 'FREEDOM LIFE';
-            } else if (str.includes('GEHA')) {
-              return 'GEHA';
-            } else if (str.includes('NOVITAS')) {
-              return 'MEDICARE';
-            } else if (str.includes('WPS')) {
-              return 'WPS';
-            } else if (str.includes('PAY PLUS')) {
-              return 'ZELIS';
-            } else if (
-              str.toLowerCase().includes('united') ||
-              str.toLowerCase().includes('uhc')
-            ) {
-              return 'UNITED';
-            } else {
-              return str;
-            }
-          };
-
           // map over excel data to prep data for batch upload
           // console.log('INPUT DATA:', excelData[0]);
 
-          const payments = excelData
+          const deposits = excelData
             .filter((row) => row.description.includes('HCCLAIMPMT'))
-            .map((payment) => {
+            .map((deposit) => {
               // init constants,  parse the reference and payerName from the description
-              const { date, description, credit } = payment;
+              const { date, description, credit } = deposit;
               const referenceNumber = getReferenceNumber(description);
               return {
                 id: referenceNumber, // String
@@ -222,42 +241,109 @@ uploadRouter.post(
                 amount: credit, // Float
               };
             });
-          console.log('filteredPayments', payments.length);
-          // console.log('filteredPayments', payments);
+          console.log('filteredDeposits', deposits.length);
 
-          const newPayments = await prisma.payment.createMany({
-            data: payments,
+          // FOR EACH NEW DEPOSIT, CHECK IF IT EXISTS ON THE DEPOSITS TABLE, IF SO, SKIP,
+
+          const newDeposits = await prisma.deposit.createMany({
+            data: deposits,
             skipDuplicates: true,
           });
-          console.log('PAYMENTS UPLOADED', newPayments.count);
+          console.log('PAYMENTS UPLOADED', newDeposits.count);
 
           break;
         case 'eob':
-          // FILTER RESULT: only include non-zero insurance payments that have reference numbers
-          console.log('EOB EXCEL DATA[0]:', excelData[0]);
+          /**
+           * STEPS:
+           * 1 - Filter Excel data for non-zero, insurance payments
+           * 2 - Add/Update payments to database
+           */
 
-          const eobs = excelData
-            .filter((row) => {
-              const { payerType, amount, referenceNumber } = row;
-              if (payerType === 'Insurance' && amount > 0 && referenceNumber) {
-                return row;
-              }
+          interface ExcelEOB {
+            id?: number;
+            createdDate?: string | Date;
+            lastModifiedDate?: string | Date;
+            payerType?: string;
+            payerName?: string;
+            amount?: number | string;
+            [key: string]: any;
+          }
+
+          interface EOB {
+            id: number;
+            createdDate: Date;
+            lastModifiedDate: Date;
+            reference: string | null;
+            payerType: string;
+            payerName: string;
+            paymentMethod: string;
+            amount: number;
+          }
+          // 1 - FILTER EXCEL DATA
+          const eobs: EOB[] = excelData
+            .filter((row: any): row is ExcelEOB => {
+              return row && row.payerType === 'Insurance' && row.amount > 0;
             })
-            .map((eob) => {
-              return String(eob.referenceNumber);
+            .map((eob: ExcelEOB): EOB => {
+              const {
+                id,
+                createdDate,
+                lastModifiedDate,
+                payerName,
+                paymentMethod,
+                reference,
+                amount,
+              } = eob;
+              return {
+                id: id,
+                createdDate: createdDate ? new Date(createdDate) : new Date(),
+                lastModifiedDate: lastModifiedDate
+                  ? new Date(lastModifiedDate)
+                  : new Date(),
+                reference: String(reference) || null,
+                payerType: 'Insurance',
+                payerName: getPayerName(payerName || ''),
+                paymentMethod,
+                amount:
+                  typeof amount === 'number'
+                    ? amount
+                    : parseFloat(String(amount)) || 0,
+              };
             });
 
+          // console.log('EOB EXCEL DATA[0]:', excelData[0]);
           console.log('EOB[0]', eobs[0]);
 
-          const updatedPayments = await prisma.payment.updateMany({
-            where: { id: { in: eobs } },
-            data: { isPaid: true },
-          });
+          // 2 - ADD/UPDATE TO DATABASE
+          for (const incomingEOB of eobs) {
+            const existingEOB = await prisma.eob.findUnique({
+              where: { id: incomingEOB.id },
+            });
 
-          console.log('PAYMENTS UPDATED', updatedPayments.count);
+            if (
+              !existingEOB ||
+              incomingEOB.lastModifiedDate > existingEOB?.lastModifiedDate
+            ) {
+              const eob = await prisma.eob.upsert({
+                where: {
+                  reference: incomingEOB.reference
+                },
+                update: {
+                  lastModifiedDate: incomingEOB.lastModifiedDate,
+                  reference: incomingEOB.reference,
+                  payerName: incomingEOB.payerName,
+                  paymentMethod: incomingEOB.paymentMethod,
+                  amount: incomingEOB.amount,
+                },
+                create: incomingEOB,
+              });
+            }
+          }
 
           break;
-      }
+        default:
+          return res.status(400).json({message: "Invalid resource type"})
+        }
 
       return res
         .status(200)
