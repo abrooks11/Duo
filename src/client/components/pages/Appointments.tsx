@@ -14,7 +14,7 @@ import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 // import custom hooks/utilities
 import { formatDate } from '../../utils/dataTransformers';
 import { appointmentRowFilterMap } from '../../utils/keyMappings';
-import InsuranceSlector from '../appointments/InsuranceSlector';
+import InsuranceSlector from '../resource-components/appointments/InsuranceSlector';
 
 const Appointments = () => {
   // get global state from context
