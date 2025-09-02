@@ -4,8 +4,8 @@
 export interface GlobalState {
   ui: UIState;
   appointments: AppointmentState;
-//   claims: ClaimState;
-//   patients: PatientState;
+  claims: ClaimState;
+  patients: PatientState;
   voicemail: VoicemailState;
 }
 
@@ -30,17 +30,19 @@ export interface AppointmentState extends BaseResourceState<AppointmentData> {
   selectedFilters: string[];
 }
 
-// export interface ClaimState extends BaseResourceState<ClaimData> {
-//   filteredData: ClaimData[];
-//   allRowFilters: TableFilter[];
-//   selectedFilters: TableFilter[];
-// }
+export interface ClaimState extends BaseResourceState<ClaimData> {
+  // Claim-specific properties
+  selectedFilters: TableFilter[];
+  // filteredData: ClaimData[];
+  // allRowFilters: TableFilter[];
+}
 
-// export interface PatientState extends BaseResourceState<PatientData> {
-//   filteredData: PatientData[];
-//   allRowFilters: TableFilter[];
-//   selectedFilters: TableFilter[];
-// }
+export interface PatientState extends BaseResourceState<PatientData> {
+  // Patient-specific properties
+  selectedFilters: TableFilter[];
+  // filteredData: PatientData[];
+  // allRowFilters: TableFilter[];
+}
 
 export interface VoicemailState extends BaseResourceState<VoicemailData> {
   // Voicemail-specific properties if needed
@@ -66,8 +68,56 @@ export interface AppointmentData {
   patientBalance: number | null;
 }
 
+export interface ClaimData {}
+
+export interface PatientData {
+  id: number;
+  createdDate: Date;
+  lastModifiedDate: Date;
+  patientFullName: string;
+  dob: Date;
+  mobilePhone: string;
+  primaryInsurancePolicyCompanyId: null;
+  primaryInsurancePolicyCompanyName: string;
+  primaryInsurancePolicyPlanId: null;
+  primaryInsurancePolicyPlanName: string;
+  primaryInsurancePolicyPlanAddressLine1: string;
+  primaryInsurancePolicyPlanCity: string;
+  primaryInsurancePolicyPlanState: string | null;
+  primaryInsurancePolicyPlanZipCode: number | null;
+  primaryInsurancePolicyNumber: string | null;
+  secondaryInsurancePolicyCompanyId: number | null;
+  secondaryInsurancePolicyCompanyName: string | null;
+  secondaryInsurancePolicyPlanId: number | null;
+  secondaryInsurancePolicyPlanName: string | null;
+  secondaryInsurancePolicyPlanAddressLine1: string | null;
+  secondaryInsurancePolicyPlanCity: string | null;
+  secondaryInsurancePolicyPlanState: string | null;
+  secondaryInsurancePolicyPlanZipCode: number | null;
+  secondaryInsurancePolicyNumber: string | null;
+  alertMessage: string | null;
+  lastAppointmentDate: Date | null;
+  lastEncounterDate: Date | null;
+  lastStatementDate: Date | null;
+  insuranceBalance: number | null;
+  patientBalance: number | null;
+  totalBalance: number | null;
+}
+
 export interface VoicemailData {
-    id: number
+  id: string;
+  callerNumber: string;
+  callerName: string;
+  createdDate: Date;
+  duration: number;
+  messageFolder: string;
+  status: string;
+  transcription: string;
+  callerType: string;
+  reason: string;
+  notes: null;
+  officeId: null;
+  officeName: null;
 }
 
 export interface DateRangeObject {

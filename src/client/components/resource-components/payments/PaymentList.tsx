@@ -1,28 +1,10 @@
-/** VISUAL COMPONENT
- * PROPS:
- * - RESOURCE TYPE [EOBS, DEPOSITS, MATCHED DEPOSITS]
- * - ARRAY OF OBJECTS
+import type {Eob, Deposit } from '../../../../shared/types/payment.types'
 
- */
+type PaymentListProps = {
+  data: Eob[] | Deposit[]
+}
 
-/* EOB COlUMNS 
-id
-createdDate
-reference
-payerName
-paymentMethod
-amount
- */
-
-/* DEPOSIT COLUMNS
-id
-createdDate
-reference
-payerName
-amount
-*/
-
-const PaymentList = ({data}) => {
+const PaymentList = ({data}: PaymentListProps) => {
   return (
     <div>
       {data &&
@@ -33,7 +15,7 @@ const PaymentList = ({data}) => {
           >
             <div className="flex justify-between items-start mb-2">
               <div>
-                <span className="font-medium text-gray-900">{row.createdDate}</span>
+                <span className="font-medium text-gray-900">{new Date(row.createdDate).toLocaleDateString()}</span>
                 <span className="font-medium text-gray-900">{row.payerName}</span>
                 <span className="font-medium text-gray-900">{row.reference}</span>
                 <span className="font-bold text-green-600 ml-3">

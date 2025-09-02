@@ -3,7 +3,7 @@ import { addDays } from 'date-fns';
 // import { addDays, format, isWeekend } from 'date-fns';
 
 import useGlobalContext from '../../hooks/useGlobalContext';
-import { ActionTypes } from '../../context/GlobalContext';
+import { appointmentActions } from '../../context/reducers/appointmentReducer';
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';  // Add this import
@@ -17,6 +17,7 @@ import 'react-date-range/dist/theme/default.css'; // theme css file
 const FullCalendar = () => {
   // !!!need type definition for resource pages
   const location = useLocation();
+  const currentPage = useStateMap(); // Move hook call to top level
   const [resource, setResource] = useState<string>('appointments')
   const [RANGE, SETRANGE] = useState<any>({
     selection: {
@@ -27,11 +28,9 @@ const FullCalendar = () => {
     },
   });
 
-
   const {state, dispatch} = useGlobalContext()
 
   useEffect(() => {
-    const currentPage = useStateMap()
     if (currentPage === 'appointments') {
       const DATERANGE = state[currentPage]?.selectedDateRange
       setResource(currentPage)
@@ -40,16 +39,17 @@ const FullCalendar = () => {
       }
       console.log({currentPage, DATERANGE});
     }
-}, [location.pathname, state]);
+}, [currentPage, state]); // Update dependency array
 
 
   const setRange = (item) => {
     console.log(item);
     SETRANGE(item)
-    dispatch({
-      type: ActionTypes.SET_CALENDAR_RANGE,
-      payload: {resource: resource, newRange: item.selection },
-    });
+    
+    // Only handle appointments for now since that's the only implemented reducer
+    if (resource === 'appointments') {
+      dispatch(appointmentActions.setDateRange([item.selection]));
+    }
   };
 
   return (

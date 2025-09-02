@@ -10,7 +10,6 @@ import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 // import custom hooks/utilities
 import { formatDate } from '../../utils/stateHelpers';
 import { appointmentRowFilterMap } from '../../utils/keyMappings';
-
 import { useAppointment } from '../../hooks/useAppointment';
 
 const Appointments = () => {
@@ -18,11 +17,10 @@ const Appointments = () => {
     appointments,
     allColumnHeaders,
     rowFilterDetails,
-    isLoading,
-    error,
+    // isLoading,
+    // error,
     loadAppointments,
   } = useAppointment();
-  console.log('appointments:', appointments);
 
   // use custom hook
   useEffect(() => {
@@ -65,7 +63,7 @@ const Appointments = () => {
     });
   });
 
-  // const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
+  const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
 
   // console.log({activeFilters});
   // console.log({filteredData});
@@ -77,7 +75,7 @@ const Appointments = () => {
       {formattedDateData.length > 0 && (
         <AppointmentTable
           columns={allColumnHeaders}
-          data={filteredData}
+          data={dateFilteredData}
           styling="w-full h-full"
         />
       )}

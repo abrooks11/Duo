@@ -1,4 +1,6 @@
 // import context and action types
+import { useCallback } from 'react';
+import { requestVoicemail } from '../utils/voicemailApi';
 import useGlobalContext from './useGlobalContext';
 
 interface ApiResponse<T> {
@@ -50,30 +52,37 @@ class ApiClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-      const response = await fetch(`${this.baseUrl}/${endpoint}`, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: data ? JSON.stringify(data) : undefined,
-        signal: controller.signal,
-      });
+      let result = [];
 
-      clearTimeout(timeoutId);
+      if (endpoint === 'voicemail') {
+        result = await requestVoicemail()
+      } else {
+        const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: data ? JSON.stringify(data) : undefined,
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        result = await response.json();
       }
 
-      const responseData = await response.json();
       console.log('Successful fetch from', endpoint);
-      console.log('Total records:', responseData.length);
-      console.log('Sample record:', responseData[0]);
+      console.log('Total records:', result.length);
+      console.log('Sample record:', result[0]);
 
       return {
-        data: responseData,
+        data: result,
         success: true,
       };
+      
     } catch (error) {
       if (attempt < this.retries && (error as Error).name !== 'AbortError') {
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
@@ -93,7 +102,7 @@ class ApiClient {
 export const useApiWithState = () => {
   const { dispatch } = useGlobalContext();
   
-  const fetchAndDispatch = async <T>(
+  const fetchAndDispatch = useCallback(async <T>(
     endpoint: string,
     actionCreator: (data: T) => any,
     setLoading?: (loading: boolean) => any,
@@ -115,7 +124,7 @@ export const useApiWithState = () => {
         );
       }
     }
-  };
+  }, [dispatch]);
 
   return {
     apiClient,

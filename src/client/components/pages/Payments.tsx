@@ -1,28 +1,9 @@
 import { useState, useEffect } from 'react';
 import PaymentList from '../resource-components/payments/PaymentList';
+import type { Eob, Deposit } from '../../../shared/types/payment.types';
 
 const Payments = () => {
   type Resource = 'eobs' | 'deposits' | 'matched';
-
-  type Eob = {
-    id: number;
-    createdDate: Date;
-    lastModifiedDate: Date;
-    reference: string;
-    payerType: string;
-    payerName: string;
-    paymentMethod: string;
-    amount: number;
-    depositId: number | null;
-  };
-
-  type Deposit = {
-    id: string;
-    createdDate: Date;
-    reference: string;
-    payerName: string;
-    amount: number;
-  };
   
   const BASE_URL = 'http://localhost:3000/api/payments';
 
@@ -39,7 +20,7 @@ const Payments = () => {
         setUnmatchedDeposits(data.deposits);
         break;
       case 'matched':
-        setMatchedEobs(Object.values(data));
+        setMatchedEobs(data.matchedEobs);
         break;
       default:
         break;
@@ -49,7 +30,19 @@ const Payments = () => {
   };
 
   const matchDeposits = async (): Promise<void> => {
+    console.log('button clocked');
 
+    const response = await fetch(`${BASE_URL}/match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json()
+
+    console.log(data)
+    return
   }
 
   useEffect(() => {
@@ -130,7 +123,7 @@ const Payments = () => {
             </span>
           </div>
           <button className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 transition-colors"
-          onClick={() => matchDeposits}>
+          onClick={ matchDeposits}>
            Match Deposits
           </button>
           <div className="space-y-3">

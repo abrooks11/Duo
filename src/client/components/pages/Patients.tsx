@@ -7,54 +7,54 @@ import useGlobalContext from '../../hooks/useGlobalContext';
 import Table from '../tables/Table';
 
 // import custom hooks
-import useApi from '../../hooks/useApi';
+import {apiClient} from '../../hooks/useApi';
 
 // import custom utilities
-import dataTransformers, { formatDate } from '../../utils/dataTransformers';
+import dataTransformers from '../../utils/dataTransformers';
+import { formatDate } from '../../utils/stateHelpers';
+
 
 function Patients() {
   // get global state from context
   const { state } = useGlobalContext();
 
   // destructure patient object from global state
-  const { data, allColumnHeaders, selectedFilters, selectedSort } =
-    state.patients;
+  // const { data, allColumnHeaders, selectedFilters, selectedSort } =
+  //   state.patients;
 
   // extract utils
   const { filterAndSort } = dataTransformers;
 
-  // use custom hook
-  const api = useApi();
-
   useEffect(() => {
-    if (!data.length) {
-      api.getAll('patients');
-    }
+      apiClient.get('patients');
+    // if (!data.length) {
+    //   apiClient.get('patients');
+    // }
   }, []);
 
   // prep data: format the dates
-  const formattedDateData = data.map((row) => {
-    const {createdDate, lastModifiedDate, dob} = row
+  // const formattedDateData = data.map((row) => {
+  //   const {createdDate, lastModifiedDate, dob} = row
 
-    return {
-      ...row,
-      createdDate: formatDate(createdDate),
-      lastModifiedDate: formatDate(lastModifiedDate),
-      dob: formatDate(dob),
-    };
-  });
+  //   return {
+  //     ...row,
+  //     createdDate: formatDate(createdDate),
+  //     lastModifiedDate: formatDate(lastModifiedDate),
+  //     dob: formatDate(dob),
+  //   };
+  // });
 
   // process the data: apply filters and sort
-  const processedData = useMemo(() => {
-    return filterAndSort(formattedDateData, selectedFilters, selectedSort);
-  }, [formattedDateData, selectedFilters, selectedSort]);
+  // const processedData = useMemo(() => {
+  //   return filterAndSort(formattedDateData, selectedFilters, selectedSort);
+  // }, [formattedDateData, selectedFilters, selectedSort]);
 
   return (
     <div>
       <h1>Patients</h1>
-      {processedData.length > 0 && (
+      {/* {processedData.length > 0 && (
         <Table columns={allColumnHeaders} data={processedData} />
-      )}
+      )} */}
     </div>
   );
 }

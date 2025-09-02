@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { apiClient, useApiWithState } from '../hooks/useApi';
 import { appointmentActions } from '../context/reducers/appointmentReducer';
 import type { AppointmentData } from '../context/types/state';
@@ -30,13 +31,15 @@ export const appointmentServices = {
 export const useAppointmentService = () => {
   const { fetchAndDispatch } = useApiWithState();
 
+  const fetchAppointments = useCallback(() =>
+    fetchAndDispatch<AppointmentData[]>(
+      'appointments',
+      appointmentActions.getAppointments,
+      appointmentActions.setLoading,
+      appointmentActions.setError
+    ), [fetchAndDispatch]);
+
   return {
-    fetchAppointments: () =>
-      fetchAndDispatch<AppointmentData[]>(
-        'appointments',
-        appointmentActions.getAppointments,
-        appointmentActions.setLoading,
-        appointmentActions.setError
-      ),
+    fetchAppointments,
   };
 };

@@ -1,40 +1,40 @@
 import { useState, useEffect } from 'react';
-// import state
-import useGlobalContext from '../../hooks/useGlobalContext';
-
 
 // import custom components
 import VoicemailTable from '../tables/VoicemailTable';
 
 // import custom hooks
-import useApi from '../../hooks/useApi';
 import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 
+// import custom hooks/utilities
+import { useVoicemail } from '../../hooks/useVoicemail';
+
 const Voicemail = () => {
-  // get global state from context
-  const { state } = useGlobalContext();
-  const { data, rowFilterDetails, allColumnHeaders } = state.voicemail;
+  const {
+    voicemail,
+    allColumnHeaders,
+    rowFilterDetails,
+    // isLoading,
+    // error,
+    loadVoicemail,
+  } = useVoicemail();
 
   const [inbox, setInbox] = useState<any[]>([]);
-  const [trash, setTrash] = useState<any[]>([]);
-  
-  const api = useApi();
-  
+
   useEffect(() => {
-    if (!data.length) {
-      api.getAll('voicemail');
+    if (!voicemail.length) {
+      loadVoicemail();
     }
-  }, []);
-  
+  }, [voicemail.length, loadVoicemail]);
+
   // This effect runs when data changes (is fetched from API)
   useEffect(() => {
     processVoicemailData();
-  }, [data]);
-  
-  
+  }, [voicemail]);
+
   const processVoicemailData = () => {
-    if (data.length) {
-      const formattedVoicemailData = data.map((row) => {
+    if (voicemail.length) {
+      const formattedVoicemailData = voicemail.map((row) => {
         return {
           ...row,
           duration: Math.floor(row.duration / 1000),
@@ -43,9 +43,6 @@ const Voicemail = () => {
 
       setInbox(
         formattedVoicemailData.filter((row) => row.messageFolder === 'inbox')
-      );
-      setTrash(
-        formattedVoicemailData.filter((row) => row.messageFolder === 'trash')
       );
     }
   };
@@ -68,7 +65,6 @@ const Voicemail = () => {
 
   const dateFilteredInboxData = useDateRangeFilter(filteredInboxData, 'createdDate')
 
-
   return (
     <div className="voicemail-container">
       <div className="voicemail-section">
@@ -77,26 +73,13 @@ const Voicemail = () => {
           <div className="table-container">
             <VoicemailTable
               columns={allColumnHeaders}
-              // data={dateFilteredInboxData}
-              data={filteredInboxData}
+              data={dateFilteredInboxData}
               className="w-full h-full"
               dynamicHeight={true}
             />
           </div>
         )}
       </div>
-      {/* <div className="voicemail-section">
-        <h1>({trash.length}) Read</h1>
-        {trash.length > 0 && (
-          <div className="table-container">
-            <VoicemailTable
-              columns={allColumnHeaders}
-              data={trash}
-              className="w-full h-full"
-            />
-          </div>
-        )}
-      </div> */}
     </div>
   );
 };

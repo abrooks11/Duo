@@ -135,18 +135,20 @@ model Deposit {
   reference String @unique
   payerName String
   amount Float
-  eob    EOB?
+  eob    Eob?
 }
 
-model EOB {
-  id String @id @unique
+model Eob {
+  id Int @id @unique
   createdDate DateTime
-  reference String @unique
+  lastModifiedDate DateTime
+  reference String? @unique
   payerType String @default("insurance")
   payerName String
+  paymentMethod String
   amount Float
   deposit Deposit? @relation(fields: [depositId], references: [id])
-  depositId String @unique
+  depositId String? @unique
 }
 
 model Payment {
