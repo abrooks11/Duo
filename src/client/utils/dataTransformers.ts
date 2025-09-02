@@ -1,4 +1,4 @@
-import { TableFilter } from '../context/GlobalContext';
+import { TableFilter } from '../context/types/state';
 
 interface dataTransformers {
   filterAndSort: (
@@ -8,34 +8,6 @@ interface dataTransformers {
   ) => any[];
 }
 
-export const formatDate = (date: string, includeTime: boolean = false): string => {
-  const dateObj = new Date(date);
-
-  // Format date as MM/DD/YYYY
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit', 
-    timeZone: 'UTC' // Keep in UTC timezone
-  };
-  
-  // Format time as H:MM AM/PM
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true, 
-    timeZone: 'UTC' // Keep in UTC timezone
-  };
-
-  const formattedDate = dateObj.toLocaleDateString('en-US', dateOptions);
-
-  if (includeTime) {
-    const formattedTime = dateObj.toLocaleTimeString('en-US', timeOptions);
-    return `${formattedDate} ${formattedTime}`;
-  } else {
-    return formattedDate;
-  }
-}
 
 const dataTransformers: dataTransformers = {
   filterAndSort: (data, selectedFilters, selectedSort) => {

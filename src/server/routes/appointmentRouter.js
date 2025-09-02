@@ -10,6 +10,7 @@ const { getAppointments, updateCopay } = appointmentController;
 
 appointmentRouter.get('/', getAppointments, (req, res) => {
   const appointments = res.locals.appointments;
+  // console.log('server response for appointments: ')
   return res.status(200).json(appointments);
 });
 

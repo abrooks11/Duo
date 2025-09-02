@@ -1,47 +1,39 @@
 // import react hooks
 import { useEffect } from 'react';
 
-// import state
-import useGlobalContext from '../../hooks/useGlobalContext';
-
 // import custom components
 import AppointmentTable from '../tables/AppointmentTable';
 
 // import custom hooks
-import useApi from '../../hooks/useApi';
 import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 
 // import custom hooks/utilities
-import { formatDate } from '../../utils/dataTransformers';
+import { formatDate } from '../../utils/stateHelpers';
 import { appointmentRowFilterMap } from '../../utils/keyMappings';
-import InsuranceSlector from '../resource-components/appointments/InsuranceSlector';
+
+import { useAppointment } from '../../hooks/useAppointment';
 
 const Appointments = () => {
-  // get global state from context
-  const { state } = useGlobalContext();
-  
-  
-  // destructure appointment object from global state
   const {
-    data,
-    rowFilterDetails, 
+    appointments,
     allColumnHeaders,
-  } = state.appointments;
-  
+    rowFilterDetails,
+    isLoading,
+    error,
+    loadAppointments,
+  } = useAppointment();
+  console.log('appointments:', appointments);
+
   // use custom hook
-  const api = useApi();
-  
   useEffect(() => {
-    if (!data.length) {
-      api.getAll('appointments');
+    if (!appointments.length) {
+      loadAppointments();
     }
-  }, []);
-  
-console.log('data', data)
+  }, [appointments.length, loadAppointments]);
 
   // prep data: format the dates
-  const formattedDateData = data.map((row) => {
-    const {createdDate, lastModifiedDate, startDate, dob} = row
+  const formattedDateData = appointments.map((row) => {
+    const { createdDate, lastModifiedDate, startDate, dob } = row;
 
     return {
       ...row,
@@ -52,38 +44,42 @@ console.log('data', data)
     };
   });
 
-// Get active filters
-const activeFilters = Object.entries(rowFilterDetails)
-.filter(([_, details]) => details.isSelected)
-.map(([key]) => key);
+  // Get active filters
+  const activeFilters = Object.entries(rowFilterDetails)
+    .filter(([_, details]) => details.isSelected)
+    .map(([key]) => key);
 
+  // Filter the data based on active filters
+  const filteredData = formattedDateData.filter((row) => {
+    // If no filters are selected, show all data
+    if (activeFilters.length === 0) return true;
 
-// Filter the data based on active filters
-const filteredData = formattedDateData.filter(row => {
-  // If no filters are selected, show all data
-  if (activeFilters.length === 0) return true;
-  
-  // Check if the row matches any of the selected filters
-  return activeFilters.some(filterKey => {
-    if (appointmentRowFilterMap[filterKey]) {
-      return appointmentRowFilterMap[filterKey].includes(row.confirmationStatus);
-    }
-    return false;
+    // Check if the row matches any of the selected filters
+    return activeFilters.some((filterKey) => {
+      if (appointmentRowFilterMap[filterKey]) {
+        return appointmentRowFilterMap[filterKey].includes(
+          row.confirmationStatus
+        );
+      }
+      return false;
+    });
   });
-});
 
-const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
+  // const dateFilteredData = useDateRangeFilter(filteredData, 'startDate')
 
-
-// console.log({activeFilters});
-// console.log({filteredData});
+  // console.log({activeFilters});
+  // console.log({filteredData});
 
   return (
     <div>
       {/* <h1>Appointments</h1> */}
       {/* <InsuranceSlector /> */}
       {formattedDateData.length > 0 && (
-        <AppointmentTable columns={allColumnHeaders} data={dateFilteredData} styling="w-full h-full" />
+        <AppointmentTable
+          columns={allColumnHeaders}
+          data={filteredData}
+          styling="w-full h-full"
+        />
       )}
     </div>
   );

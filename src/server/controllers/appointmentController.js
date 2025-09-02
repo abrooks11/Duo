@@ -4,16 +4,30 @@ const prisma = new PrismaClient();
 const appointmentController = {
   getAppointments: async (req, res, next) => {
     try {
- // Get the current date
- const now = new Date();
-      
- // Calculate first day of current month (set to beginning of day)
- const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
- 
- // Calculate last day of next month (set to end of day)
- const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
- 
- // Get appointments from the database with date filtering
+      // Get the current date
+      const now = new Date();
+
+      // Calculate first day of current month (set to beginning of day)
+      const firstDayOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1,
+        0,
+        0,
+        0
+      );
+
+      // Calculate last day of next month (set to end of day)
+      const lastDayOfNextMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 2,
+        0,
+        23,
+        59,
+        59
+      );
+
+      // Get appointments from the database with date filtering
       const appointments = await prisma.appointment.findMany({
         relationLoadStrategy: 'join',
         // take: 100,
@@ -38,9 +52,19 @@ const appointmentController = {
           },
         },
       });
-      console.log(appointments.length)
+      console.log('Total appointments', appointments.length);
+      // console.log(appointments[0]);
 
-      res.locals.appointments = appointments;
+      if (appointments) {
+        const flattenedAppointments = appointments.map(
+          ({ patient, ...rest }) => {
+            return { ...rest, ...patient };
+          }
+        );
+        console.log('Flattened Appointment', flattenedAppointments[0])
+        res.locals.appointments = flattenedAppointments;
+      }
+
       return next();
     } catch (error) {
       next({
@@ -57,21 +81,20 @@ const appointmentController = {
     // update matching db appointment with copay
     // invoke next
     try {
-      const {id, copay} = req.body
-      console.log({id, copay})
+      const { id, copay } = req.body;
+      console.log({ id, copay });
 
       const currentAppointment = await prisma.appointment.findUnique({
         where: {
-          id: Number(id)
-        }
-      }
-      )
-
-    if (!currentAppointment) {
-      return res.status(404).json({
-        error: 'Appointment not found',
+          id: Number(id),
+        },
       });
-    }
+
+      if (!currentAppointment) {
+        return res.status(404).json({
+          error: 'Appointment not found',
+        });
+      }
 
       console.log(currentAppointment);
       if (currentAppointment) {
@@ -83,15 +106,9 @@ const appointmentController = {
         });
       }
 
-
-      next()
-    } catch (error) {
-
-    }
-
-
-  }
+      next();
+    } catch (error) {}
+  },
 };
-
 
 export default appointmentController;

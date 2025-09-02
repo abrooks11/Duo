@@ -1,47 +1,127 @@
 // import context and action types
 import useGlobalContext from './useGlobalContext';
-import { ActionTypes } from '../context/GlobalContext';
 
-import { requestVoicemail } from '../utils/voicemailApi';
-
-const BASE_URL = 'http://localhost:3000/api';
-
-interface apiRequests {
-  getAll: (endpoint: string) => Promise<any>;
+interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  error?: string;
 }
 
-const useApi = () => {
-  // get global state from context
-  const { dispatch } = useGlobalContext();
+interface ApiConfig {
+  baseUrl?: string;
+  timeout?: number;
+  retries?: number;
+}
 
-  const api: apiRequests = {
-    getAll: async (endpoint) => {
-      try {
-        let serverData = {};
+class ApiClient {
+  private baseUrl: string;
+  private timeout: number;
+  private retries: number;
 
-        if (endpoint === 'voicemail') {
-          serverData = await requestVoicemail();
-        } else {
-          const response = await fetch(`${BASE_URL}/${endpoint}`);
-          serverData = await response.json();
-        }
+  constructor(config: ApiConfig = {}) {
+    this.baseUrl = config.baseUrl || 'http://localhost:3000/api';
+    this.timeout = config.timeout || 10000;
+    this.retries = config.retries || 3;
+  }
 
-        if (serverData) {
-          // console.log(`REQUEST FOR ${endpoint} successful`)
-          dispatch({
-            type: ActionTypes.GET_DATA,
-            payload: { resourceType: endpoint, data: serverData },
-          });
-        }
-        // console.log({serverData})
-        return serverData;
-      } catch (error) {
-        console.error(`Error fetching ${endpoint}: `, error);
+  async get<T>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>('GET', endpoint);
+  }
+
+  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>('POST', endpoint, data);
+  }
+
+  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>('PUT', endpoint, data);
+  }
+
+  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>('DELETE', endpoint);
+  }
+
+  private async request<T>(
+    method: string,
+    endpoint: string,
+    data?: any,
+    attempt = 1
+  ): Promise<ApiResponse<T>> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+      const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: data ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    },
+
+      const responseData = await response.json();
+      console.log('Successful fetch from', endpoint);
+      console.log('Total records:', responseData.length);
+      console.log('Sample record:', responseData[0]);
+
+      return {
+        data: responseData,
+        success: true,
+      };
+    } catch (error) {
+      if (attempt < this.retries && (error as Error).name !== 'AbortError') {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        return this.request<T>(method, endpoint, data, attempt + 1);
+      }
+
+      return {
+        data: {} as T,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+}
+
+// Hook that integrates API client with state management
+export const useApiWithState = () => {
+  const { dispatch } = useGlobalContext();
+  
+  const fetchAndDispatch = async <T>(
+    endpoint: string,
+    actionCreator: (data: T) => any,
+    setLoading?: (loading: boolean) => any,
+    setError?: (error: string | null) => any
+  ) => {
+    if (setLoading) dispatch(setLoading(true));
+
+    try {
+      const response = await apiClient.get<T>(endpoint);
+      if (response.success) {
+        dispatch(actionCreator(response.data));
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      if (setError) {
+        dispatch(
+          setError(error instanceof Error ? error.message : 'Unknown error')
+        );
+      }
+    }
   };
 
-  return api;
+  return {
+    apiClient,
+    fetchAndDispatch
+  };
 };
 
-export default useApi;
+export const apiClient = new ApiClient();
+export type { ApiResponse };
