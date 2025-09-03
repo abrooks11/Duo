@@ -12,6 +12,9 @@ import { formatDate } from '../../utils/stateHelpers';
 import { appointmentRowFilterMap } from '../../utils/keyMappings';
 import { useAppointment } from '../../hooks/useAppointment';
 
+import InsuranceSelector from '../resource-components/appointments/InsuranceSlector';
+import CopaySummary from '../resource-components/appointments/CopaySummary';
+
 const Appointments = () => {
   const {
     appointments,
@@ -71,7 +74,10 @@ const Appointments = () => {
   return (
     <div>
       {/* <h1>Appointments</h1> */}
-      {/* <InsuranceSlector /> */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <InsuranceSelector />
+        <CopaySummary />
+      </div>
       {formattedDateData.length > 0 && (
         <AppointmentTable
           columns={allColumnHeaders}

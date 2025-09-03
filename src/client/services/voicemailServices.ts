@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { apiClient, useApiWithState } from '../hooks/useApi';
-import { requestVoicemail } from '../utils/voicemailApi'; // Keep existing logic
+import { requestVoicemail, deleteVoicemail } from '../utils/voicemailApi'; // Keep existing logic
 import { voicemailActions } from '../context/reducers/voicemailReducer';
 import type { VoicemailData } from '../context/types/state';
 
@@ -26,9 +26,9 @@ export const voicemailServices = {
   },
 
   async delete(id: string): Promise<void> {
-    const response = await apiClient.delete(`voicemail/${id}`);
-    if (!response.success) {
-      throw new Error(response.error || 'Failed to delete voicemail');
+    const result = await deleteVoicemail(id);
+    if (result.status !== 200) {
+      throw new Error('Failed to delete voicemail');
     }
   },
 

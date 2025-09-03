@@ -37,13 +37,13 @@ const FullCalendar = () => {
       if (DATERANGE && DATERANGE.selection) {
         SETRANGE({ selection: { ...DATERANGE.selection } })
       }
-      console.log({currentPage, DATERANGE});
+      // console.log({currentPage, DATERANGE});
     }
 }, [currentPage, state]); // Update dependency array
 
 
   const setRange = (item) => {
-    console.log(item);
+    // console.log(item);
     SETRANGE(item)
     
     // Only handle appointments for now since that's the only implemented reducer

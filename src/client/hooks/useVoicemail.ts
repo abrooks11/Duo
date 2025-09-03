@@ -17,7 +17,9 @@ export const useVoicemail = () => {
 
        try {
          await voicemailServices.delete(id);
-         await loadVoicemail(); // Refresh list
+         // Update UI immediately by removing from state
+         dispatch(voicemailActions.deleteVoicemail(id));
+         dispatch(voicemailActions.setLoading(false));
        } catch (error) {
          dispatch(
            voicemailActions.setError(
@@ -29,7 +31,7 @@ export const useVoicemail = () => {
          throw error;
        }
      },
-     [dispatch, loadVoicemail]
+     [dispatch]
    );
 
   const toggleFilter = useCallback(

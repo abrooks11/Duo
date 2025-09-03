@@ -83,6 +83,35 @@ export const voicemailReducer = (
         }
         break;
 
+      case 'voicemail/DELETE_VOICEMAIL':
+        const { id } = action.payload;
+        // Preserve current filter selections
+        const currentSelections: Record<string, boolean> = {};
+        Object.entries(draft.rowFilterDetails).forEach(([key, details]) => {
+          currentSelections[key] = details.isSelected;
+        });
+        
+        draft.data = draft.data.filter(voicemail => voicemail.id !== id);
+        
+        // Regenerate filter details after deletion
+        if (draft.data.length > 0) {
+          draft.rowFilterDetails = generateRowFilterDetails(
+            draft.data,
+            voicemailRowDisplayNames,
+            'reason',
+          );
+          
+          // Restore previous selections
+          Object.keys(draft.rowFilterDetails).forEach(key => {
+            if (currentSelections[key] !== undefined) {
+              draft.rowFilterDetails[key].isSelected = currentSelections[key];
+            }
+          });
+        } else {
+          draft.rowFilterDetails = {};
+        }
+        break;
+
       case 'voicemail/SET_DATE_RANGE':
         draft.selectedDateRange = action.payload.dateRange;
         break;
@@ -99,6 +128,11 @@ export const voicemailActions = {
   getVoicemail: (data: VoicemailData[]): VoicemailAction => ({
     type: 'voicemail/GET_VOICEMAIL',
     payload: { data }
+  }),
+  
+  deleteVoicemail: (id: string): VoicemailAction => ({
+    type: 'voicemail/DELETE_VOICEMAIL',
+    payload: { id }
   }),
   
   setLoading: (isLoading: boolean): VoicemailAction => ({

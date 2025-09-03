@@ -74,9 +74,9 @@ class ApiClient {
         result = await response.json();
       }
 
-      console.log('Successful fetch from', endpoint);
-      console.log('Total records:', result.length);
-      console.log('Sample record:', result[0]);
+      // console.log('Successful fetch from', endpoint);
+      // console.log('Total records:', result.length);
+      // console.log('Sample record:', result[0]);
 
       return {
         data: result,

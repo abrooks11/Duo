@@ -33,6 +33,7 @@ export type AppointmentAction =
 
 export interface VoicemailActions {
   GET_VOICEMAIL: 'voicemail/GET_VOICEMAIL';
+  DELETE_VOICEMAIL: 'voicemail/DELETE_VOICEMAIL';
   TOGGLE_VOICEMAIL_FILTER: 'voicemail/TOGGLE_FILTER';
   SET_VOICEMAIL_DATE_RANGE: 'voicemail/SET_DATE_RANGE';
   SET_VOICEMAIL_LOADING: 'voicemail/SET_LOADING';
@@ -41,6 +42,7 @@ export interface VoicemailActions {
 
 export type VoicemailAction =
   | { type: 'voicemail/GET_VOICEMAIL'; payload: { data: VoicemailData[] } }
+  | { type: 'voicemail/DELETE_VOICEMAIL'; payload: { id: string } }
   | { type: 'voicemail/TOGGLE_FILTER'; payload: { filterKey: string } }
   | {
       type: 'voicemail/SET_DATE_RANGE';
