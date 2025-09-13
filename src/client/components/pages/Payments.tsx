@@ -69,27 +69,7 @@ const Payments = () => {
 
         {/* Top Row - Two Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Left Column - EOBs Need Payments */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <button className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 transition-colors">
-              + Upload EOBs
-            </button>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <span className="mr-2">📄</span>
-                EOBs (Need Payments)
-              </h2>
-              <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                {unmatchedEobs.length} pending
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              <PaymentList data={unmatchedEobs} />
-            </div>
-          </div>
-
-          {/* Right Column - Bank Deposits Need EOBs */}
+          {/* Left Column - Bank Deposits Need EOBs */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <button className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 transition-colors">
               + Upload Bank File
@@ -108,6 +88,26 @@ const Payments = () => {
               <PaymentList data={unmatchedDeposits} />
             </div>
           </div>
+
+          {/* Right Column - EOBs Need Payments */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <button className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 transition-colors">
+              + Upload EOBs
+            </button>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <span className="mr-2">📄</span>
+                EOBs (Need Payments)
+              </h2>
+              <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                {unmatchedEobs.length} pending
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <PaymentList data={unmatchedEobs} />
+            </div>
+          </div>
         </div>
 
         {/* Bottom Row - Matched Payments */}
@@ -122,9 +122,11 @@ const Payments = () => {
               {matchedEobs.length} matched
             </span>
           </div>
-          <button className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 transition-colors"
-          onClick={ matchDeposits}>
-           Match Deposits
+          <button
+            className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 transition-colors"
+            onClick={matchDeposits}
+          >
+            Match Deposits
           </button>
           <div className="space-y-3">
             <PaymentList data={matchedEobs} />

@@ -5,29 +5,51 @@ type PaymentListProps = {
 }
 
 const PaymentList = ({data}: PaymentListProps) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-500">
+        No payments to display
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {data &&
-        data.map((row) => {
-          return <div
-            key={`${row.id}-${row.reference}`}
-            className="border border-red-200 rounded-lg p-4 bg-red-50"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <span className="font-medium text-gray-900">{new Date(row.createdDate).toLocaleDateString()}</span>
-                <span className="font-medium text-gray-900">{row.payerName}</span>
-                <span className="font-medium text-gray-900">{row.reference}</span>
-                <span className="font-bold text-green-600 ml-3">
-                  {/* ${row.amount.toFixed(2)} */}
-                  ${row.amount}
-                </span>
-              </div>
-              <span className="text-red-600 text-xl">❌</span>
-            </div>
-            
-          </div>;
-        })}
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">Payer</th>
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">Amount</th>
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">Reference</th>
+            <th className="text-center py-3 px-4 font-semibold text-gray-700">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row) => (
+            <tr
+              key={`${row.id}-${row.reference}`}
+              className="border-b border-gray-100 hover:bg-gray-50"
+            >
+              <td className="py-3 px-4 text-gray-900">
+                {new Date(row.createdDate).toLocaleDateString()}
+              </td>
+              <td className="py-3 px-4 text-gray-900">
+                {row.payerName}
+              </td>
+              <td className="py-3 px-4 font-bold text-green-600">
+                ${row.amount}
+              </td>
+              <td className="py-3 px-4 text-gray-900">
+                {row.reference}
+              </td>
+              <td className="py-3 px-4 text-center">
+                <span className="text-red-600 text-xl">❌</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

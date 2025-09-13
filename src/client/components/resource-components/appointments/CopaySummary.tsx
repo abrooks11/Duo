@@ -70,18 +70,20 @@ const CopaySummary = () => {
       return isScheduledOrConfirmed && hasCopay;
     });
 
-    const patientsOwingCopays = appointmentsWithCopays.map((appointment) => ({
-      patientId: appointment.patientId,
-      patientName: appointment.patientFullName || 'Unknown Patient',
-      appointmentDate: formatDate(appointment.startDate),
-      copayAmount: appointment.patientCopay || 0,
-      insuranceCompany: appointment.patientCaseName || 'Unknown Insurance',
-    }));
+    const patientsOwingCopays = appointmentsWithCopays
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+      .map((appointment) => ({
+        patientId: appointment.patientId,
+        patientName: appointment.patientFullName || 'Unknown Patient',
+        appointmentDate: formatDate(appointment.startDate),
+        copayAmount: appointment.patientCopay || 0,
+        insuranceCompany: appointment.patientCaseName || 'Unknown Insurance',
+      }));
 
     return {
       totalCopays: appointmentsWithCopays.length,
       totalAmount: appointmentsWithCopays.reduce((sum, apt) => sum + (apt.patientCopay || 0), 0),
-      patientsOwingCopays: patientsOwingCopays.sort((a, b) => a.patientName.localeCompare(b.patientName))
+      patientsOwingCopays: patientsOwingCopays
     };
   };
 
