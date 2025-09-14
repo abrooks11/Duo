@@ -1,9 +1,7 @@
-import express, {Router, Request} from 'express';
-import type { PaymentResponse } from '../../shared/types/payment.types';
+import express from 'express';
+import paymentController from '../controllers/paymentController.js';
 
-import paymentController from '../controllers/paymentController';
-
-const paymentRouter: Router = express.Router();
+const paymentRouter = express.Router();
 
 const { 
   getEobs, 
@@ -15,13 +13,11 @@ const {
   getEobsNeedingDeposits,
   getCreditCardEobs,
   getEobsByPaymentMethod,
-  validatePaymentCompleteness,
-  debugEobPaymentMethods,
-  fixEobPaymentMethods
+  validatePaymentCompleteness
 } = paymentController;
 
 /** Fetch all un-matched eobs from database */
-paymentRouter.get('/eobs', getEobs, (req: Request, res: PaymentResponse): void => {
+paymentRouter.get('/eobs', getEobs, (req, res) => {
  res.status(200).json({ eobs: res.eobs });
 });
 
@@ -29,7 +25,7 @@ paymentRouter.get('/eobs', getEobs, (req: Request, res: PaymentResponse): void =
 paymentRouter.get(
   '/deposits',
   getBankDeposits,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
    res.status(200).json({ deposits: res.deposits });
   }
 );
@@ -38,7 +34,7 @@ paymentRouter.get(
 paymentRouter.get(
   '/matched',
   getMatchedEobs,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
    res.status(200).json({ matchedEobs: res.matchedEobs });
   }
 );
@@ -47,7 +43,7 @@ paymentRouter.get(
 paymentRouter.post(
   '/match',
   matchEobs,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
    res.status(200).json({ 
      message: 'Matching complete',
      result: res.locals.matchResult 
@@ -59,7 +55,7 @@ paymentRouter.post(
 paymentRouter.get(
   '/eobs/needing-deposits',
   getEobsNeedingDeposits,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
     res.status(200).json({ eobs: res.eobs });
   }
 );
@@ -68,7 +64,7 @@ paymentRouter.get(
 paymentRouter.get(
   '/eobs/credit-card',
   getCreditCardEobs,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
     res.status(200).json({ eobs: res.eobs });
   }
 );
@@ -77,7 +73,7 @@ paymentRouter.get(
 paymentRouter.get(
   '/eobs/method/:paymentMethod',
   getEobsByPaymentMethod,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
     res.status(200).json({ eobs: res.eobs });
   }
 );
@@ -86,32 +82,8 @@ paymentRouter.get(
 paymentRouter.get(
   '/validation/completeness',
   validatePaymentCompleteness,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
     res.status(200).json({ validation: res.locals.validationResults });
-  }
-);
-
-/** Debug EOB payment methods */
-paymentRouter.get(
-  '/debug/payment-methods',
-  debugEobPaymentMethods,
-  (req: Request, res: PaymentResponse): void => {
-    res.status(200).json({
-      message: 'Payment method debug info retrieved',
-      debug: res.locals.debugResults
-    });
-  }
-);
-
-/** Fix EOB payment methods */
-paymentRouter.post(
-  '/fix/payment-methods',
-  fixEobPaymentMethods,
-  (req: Request, res: PaymentResponse): void => {
-    res.status(200).json({
-      message: 'Payment methods fixed successfully',
-      results: res.locals.fixResults
-    });
   }
 );
 
@@ -119,7 +91,7 @@ paymentRouter.post(
 paymentRouter.post(
   '/clear',
   clearTables,
-  (req: Request, res: PaymentResponse): void => {
+  (req, res) => {
     res.status(200).json({
       message: 'Tables cleared successfully',
       results: res.locals.clearResults
@@ -128,7 +100,7 @@ paymentRouter.post(
 );
 
 /** Legacy delete endpoint */
-paymentRouter.delete('/', deleteAll, (req: Request, res: PaymentResponse): void => {
+paymentRouter.delete('/', deleteAll, (req, res) => {
   res.status(200).json({
     message: 'Records deleted successfully',
     results: res.locals.clearResults

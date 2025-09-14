@@ -8,7 +8,7 @@ const apiRouter = express.Router();
 import appointmentRouter from './appointmentRouter.js';
 import claimRouter from './claimRouter.js';
 import patientRouter from './patientRouter.js';
-import paymentRouter from './paymentRouter.js';
+import paymentRouter from './paymentRouter.ts';
 import voicemailRouter from './voicemailRouter.js';
 
 // service routes

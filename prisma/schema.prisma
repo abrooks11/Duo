@@ -132,6 +132,8 @@ model PatientVoicemail {
 model Deposit {
   id String @id @unique
   createdDate DateTime
+  postDate DateTime?
+  description String?
   reference String @unique
   payerName String
   amount Float
@@ -149,14 +151,11 @@ model Eob {
   amount Float
   deposit Deposit? @relation(fields: [depositId], references: [id])
   depositId String? @unique
+  isMatched        Boolean  @default(false)
 }
 
-model Payment {
-  id String @id @unique
-  createdDate DateTime
-  reference String @unique
-  payerType String @default("insurance")
-  payerName String
-  amount Float
-  isPaid Boolean @default(false)
+enum PaymentMethod {
+  CHECK         // "1"
+  CREDIT_CARD   // "3" 
+  EFT           // "4"
 }
