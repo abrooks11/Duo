@@ -43,8 +43,23 @@ const paymentController: PaymentController = {
     try {
       // fetch data from database and store in res
       // invoke next
+      // Exclude processed credit card EOBs from unmatched EOBs
       const eobs: Eob[] = await prisma.eob.findMany({
-        where: { depositId: null },
+        where: {
+          depositId: null,
+          NOT: {
+            AND: [
+              {
+                OR: [
+                  { paymentMethod: "3" },
+                  { paymentMethod: "3 - Credit Card" },
+                  { paymentMethod: { startsWith: "3" } }
+                ]
+              },
+              { isProcessed: true }
+            ]
+          }
+        },
       });
 
       res.eobs = eobs;
@@ -83,9 +98,24 @@ const paymentController: PaymentController = {
 
   getMatchedEobs: async (req, res, next) => {
     try {
+      // Include EOBs that are either matched with deposits OR are processed credit card payments
       const matchedEobs: Eob[] = await prisma.eob.findMany({
         where: {
-          depositId: { not: null },
+          OR: [
+            { depositId: { not: null } },
+            {
+              AND: [
+                {
+                  OR: [
+                    { paymentMethod: "3" },
+                    { paymentMethod: "3 - Credit Card" },
+                    { paymentMethod: { startsWith: "3" } }
+                  ]
+                },
+                { isProcessed: true }
+              ]
+            }
+          ]
         },
       });
 
@@ -456,6 +486,97 @@ const paymentController: PaymentController = {
         status: 500,
         message: { err: 'Failed to fix EOB payment methods' },
         log: `PaymentController.fixEobPaymentMethods: ${error}`,
+      });
+    }
+  },
+
+  // Toggle EOB processed status (for credit cards)
+  toggleEobProcessed: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eobId } = req.params;
+      const { isProcessed } = req.body;
+
+      if (!eobId) {
+        return next({
+          status: 400,
+          message: { err: 'EOB ID is required' },
+          log: `PaymentController.toggleEobProcessed: Missing EOB ID`,
+        });
+      }
+
+      // Find the EOB first
+      const existingEob = await prisma.eob.findUnique({
+        where: { id: parseInt(eobId) }
+      });
+
+      if (!existingEob) {
+        return next({
+          status: 404,
+          message: { err: 'EOB not found' },
+          log: `PaymentController.toggleEobProcessed: EOB ${eobId} not found`,
+        });
+      }
+
+      // Toggle or set the processed status
+      const newProcessedStatus = isProcessed !== undefined ? isProcessed : !existingEob.isProcessed;
+
+      const updatedEob = await prisma.eob.update({
+        where: { id: parseInt(eobId) },
+        data: { isProcessed: newProcessedStatus }
+      });
+
+      res.locals.toggleResult = {
+        eobId: updatedEob.id,
+        previousStatus: existingEob.isProcessed,
+        newStatus: updatedEob.isProcessed,
+        paymentMethod: updatedEob.paymentMethod,
+        amount: updatedEob.amount
+      };
+
+      return next();
+    } catch (error) {
+      console.error('Error in toggleEobProcessed:', error);
+      return next({
+        status: 500,
+        message: { err: 'Failed to toggle EOB processed status' },
+        log: `PaymentController.toggleEobProcessed: ${error}`,
+      });
+    }
+  },
+
+  // Bulk toggle for multiple EOBs
+  bulkToggleProcessed: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eobIds, isProcessed } = req.body;
+
+      if (!eobIds || !Array.isArray(eobIds)) {
+        return next({
+          status: 400,
+          message: { err: 'EOB IDs array is required' },
+          log: `PaymentController.bulkToggleProcessed: Invalid eobIds`,
+        });
+      }
+
+      const updateResult = await prisma.eob.updateMany({
+        where: {
+          id: { in: eobIds.map((id: string) => parseInt(id)) }
+        },
+        data: { isProcessed }
+      });
+
+      res.locals.bulkToggleResult = {
+        eobIds,
+        updatedCount: updateResult.count,
+        newStatus: isProcessed
+      };
+
+      return next();
+    } catch (error) {
+      console.error('Error in bulkToggleProcessed:', error);
+      return next({
+        status: 500,
+        message: { err: 'Failed to bulk toggle EOB processed status' },
+        log: `PaymentController.bulkToggleProcessed: ${error}`,
       });
     }
   },

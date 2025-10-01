@@ -11,6 +11,8 @@ export interface Eob {
   paymentMethod: string;
   amount: number;
   depositId: string | null;
+  isMatched?: boolean;
+  isProcessed?: boolean;
 }
 
 export interface Deposit {

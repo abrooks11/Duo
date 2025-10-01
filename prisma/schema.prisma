@@ -151,7 +151,8 @@ model Eob {
   amount Float
   deposit Deposit? @relation(fields: [depositId], references: [id])
   depositId String? @unique
-  isMatched        Boolean  @default(false)
+  isMatched Boolean @default(false)
+  isProcessed Boolean @default(false)
 }
 
 enum PaymentMethod {

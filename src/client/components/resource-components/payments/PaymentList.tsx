@@ -41,12 +41,40 @@ const PaymentList = ({data}: PaymentListProps) => {
     if ('depositId' in item) {
       // This is an EOB
       const eob = item as Eob;
-      if (eob.depositId) return "✅";
-      if (eob.paymentMethod === "3") return "💳"; // Credit card doesn't need deposit
-      return "❌";
+      if (eob.depositId) return "✅"; // Matched with deposit
+      
+      // Check if it's a credit card and if it's been processed
+      const methodStr = String(eob.paymentMethod).toLowerCase();
+      const isCreditCard = methodStr.includes('credit') || methodStr.includes('card') || methodStr.charAt(0) === '3';
+      
+      if (isCreditCard && eob.isProcessed) return "✅"; // Credit card processed
+      if (isCreditCard && !eob.isProcessed) return "💳"; // Credit card not processed
+      
+      return "❌"; // Needs deposit/processing
     }
     // This is a Deposit
     return "❌";
+  };
+
+  const toggleProcessed = async (eobId: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/payments/eobs/${eobId}/processed`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isProcessed: !currentStatus }),
+      });
+
+      if (response.ok) {
+        // Refresh the parent component data
+        window.location.reload(); // Simple refresh - could be improved with state management
+      } else {
+        console.error('Failed to toggle processed status');
+      }
+    } catch (error) {
+      console.error('Error toggling processed status:', error);
+    }
   };
 
   if (!data || data.length === 0) {
@@ -96,7 +124,26 @@ const PaymentList = ({data}: PaymentListProps) => {
                 </td>
               )}
               <td className="py-3 px-4 text-center">
-                <span className="text-xl">{getStatusIcon(row)}</span>
+                {'paymentMethod' in row && (() => {
+                  const eob = row as Eob;
+                  const methodStr = String(eob.paymentMethod).toLowerCase();
+                  const isCreditCard = methodStr.includes('credit') || methodStr.includes('card') || methodStr.charAt(0) === '3';
+                  
+                  if (isCreditCard) {
+                    return (
+                      <button
+                        onClick={() => toggleProcessed(eob.id, eob.isProcessed || false)}
+                        className={`text-xl hover:scale-110 transition-transform cursor-pointer ${
+                          eob.isProcessed ? 'text-green-600' : 'text-orange-500'
+                        }`}
+                        title={eob.isProcessed ? 'Mark as unprocessed' : 'Mark as processed'}
+                      >
+                        {eob.isProcessed ? '✅' : '💳'}
+                      </button>
+                    );
+                  }
+                  return <span className="text-xl">{getStatusIcon(row)}</span>;
+                })() || <span className="text-xl">{getStatusIcon(row)}</span>}
               </td>
             </tr>
           ))}

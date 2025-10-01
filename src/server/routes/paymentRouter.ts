@@ -17,7 +17,9 @@ const {
   getEobsByPaymentMethod,
   validatePaymentCompleteness,
   debugEobPaymentMethods,
-  fixEobPaymentMethods
+  fixEobPaymentMethods,
+  toggleEobProcessed,
+  bulkToggleProcessed
 } = paymentController;
 
 /** Fetch all un-matched eobs from database */
@@ -111,6 +113,30 @@ paymentRouter.post(
     res.status(200).json({
       message: 'Payment methods fixed successfully',
       results: res.locals.fixResults
+    });
+  }
+);
+
+/** Toggle single EOB processed status */
+paymentRouter.patch(
+  '/eobs/:eobId/processed',
+  toggleEobProcessed,
+  (req: Request, res: PaymentResponse): void => {
+    res.status(200).json({
+      message: 'EOB processed status updated',
+      result: res.locals.toggleResult
+    });
+  }
+);
+
+/** Bulk toggle EOB processed status */
+paymentRouter.patch(
+  '/eobs/bulk/processed',
+  bulkToggleProcessed,
+  (req: Request, res: PaymentResponse): void => {
+    res.status(200).json({
+      message: 'EOBs processed status updated',
+      result: res.locals.bulkToggleResult
     });
   }
 );
