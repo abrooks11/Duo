@@ -9,3 +9,9 @@
 // }
 
 // export * as types from './types';
+
+
+export interface SMS {
+    phoneNumber: string;
+    message: string;
+}

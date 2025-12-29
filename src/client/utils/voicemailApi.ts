@@ -1,4 +1,5 @@
-import { toast } from "react-toastify";
+import { toast } from 'react-toastify';
+import type { SMS } from '../types/types';
 
 const baseURL = 'http://localhost:3000/api';
 
@@ -13,12 +14,12 @@ export const requestVoicemail = async () => {
   });
 
   await getAuthToken.json();
-  
-  // get voicemail 
+
+  // get voicemail
   const getVoicemail = await fetch(`${baseURL}/voicemail`, {
-    method: "POST", 
+    method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
     credentials: 'include',
   });
@@ -27,44 +28,76 @@ export const requestVoicemail = async () => {
   return data.data;
 };
 
+export const sendRingSms = async (smsInfo: SMS) => {
+  // get auth cookie
+  const {phoneNumber, message} = smsInfo
+  console.log('fetching cookie . . . ');
+  const getAuthToken = await fetch(`${baseURL}/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
+
+  await getAuthToken.json();
+
+  console.log('sending sms to ', phoneNumber);
+  // try {
+  const sendSms = await fetch(`${baseURL}/sms`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ phoneNumber, message }),
+    credentials: 'include',
+  });
+console.log('SMS set')
+  const data = await sendSms.json();
+  console.log('message data:', data);
+  return data;
+  // } catch (error) {
+  //   console.error(error.message);
+  // }
+};
+
 export const updateVoicemailNote = async (vmId: string, note: string) => {
   // console.log('Attempting to update note to ', note)
   const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
-  method: "PATCH", 
-  headers: {
-    'Content-Type': 'application/json'
-  }, 
-  body: JSON.stringify({vmId, note}), 
-  credentials: 'include'
-})
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ vmId, note }),
+    credentials: 'include',
+  });
 
-await response.json()
-if (response.status === 200) {
-  toast.success("Message note successfully updated")
-}
-return {status: response.status}
-}
+  await response.json();
+  if (response.status === 200) {
+    toast.success('Message note successfully updated');
+  }
+  return { status: response.status };
+};
 
 export const updateVoicemailReason = async (vmId: string, reason: string) => {
-// console.log('Attempting to update reason to ', reason)
+  // console.log('Attempting to update reason to ', reason)
 
-const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
-  method: "PATCH", 
-  headers: {
-    'Content-Type': 'application/json'
-  }, 
-  body: JSON.stringify({vmId, reason}), 
-  credentials: 'include'
-})
+  const response = await fetch(`${baseURL}/voicemail/${vmId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ vmId, reason }),
+    credentials: 'include',
+  });
 
-await response.json()
+  await response.json();
 
-if (response.status === 200) {
-  toast.success("Message reason successfully updated")
-}
-return {status: response.status}
-
-}
+  if (response.status === 200) {
+    toast.success('Message reason successfully updated');
+  }
+  return { status: response.status };
+};
 
 export const deleteVoicemail = async (id: string) => {
   // console.log('Attempting to move message to trash');
@@ -93,7 +126,7 @@ export const deleteVoicemail = async (id: string) => {
     toast.success('Message successfully moved to Trash');
   }
   return { status: response.status };
-}
+};
 
 export const requestAiResponse = async (type: string, transcript: string) => {
   try {
@@ -113,4 +146,3 @@ export const requestAiResponse = async (type: string, transcript: string) => {
     console.error('Error requesting AI response:', error);
   }
 };
-

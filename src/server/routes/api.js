@@ -16,6 +16,7 @@ import authRouter from './authRouter.js';
 import uploadRouter from './uploadRouter.js';
 import openAiRouter from './openAiRouter.js';
 import insuranceRouter from './insuranceRouter.js';
+import smsRouter from '../domains/sms/smsRouter.ts';
 
 // apiRouter.post("/upload/:resourceType/:sheetName", userActionsController.uploadFile, (req, res) => {
 //   res.status(200).send("File was uploaded successfully");
@@ -37,5 +38,8 @@ apiRouter.use('/voicemail', voicemailRouter);
 apiRouter.use('/openai', openAiRouter);
 
 apiRouter.use('/insurance', insuranceRouter)
+
+// UNDER DEVELOPMENT
+apiRouter.use('/sms', smsRouter)
 
 export default apiRouter;

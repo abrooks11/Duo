@@ -9,6 +9,9 @@ import useDateRangeFilter from '../../hooks/useDateRangeFilter';
 // import custom hooks/utilities
 import { useVoicemail } from '../../hooks/useVoicemail';
 
+
+import {SmsWrapper} from '../resource-components/smsComponent'
+
 const Voicemail = () => {
   const {
     voicemail,
@@ -68,6 +71,8 @@ const Voicemail = () => {
   return (
     <div className="voicemail-container">
       <div className="voicemail-section">
+        <h1>Send Message</h1>
+        <SmsWrapper />
         <h1>({inbox.length || 0}) Unread</h1>
         {inbox.length > 0 && (
           <div className="table-container">
