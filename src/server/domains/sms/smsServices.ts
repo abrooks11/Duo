@@ -1,4 +1,4 @@
-import type { SmsResponse } from "./smsTypes";
+import type { SmsResponse } from "../../types/sms.types";
 
 export async function sendSMS(to: string, message: string): Promise<SmsResponse> {
 

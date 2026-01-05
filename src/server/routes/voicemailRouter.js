@@ -8,7 +8,8 @@ import {
 const voicemailRouter = express.Router();
 
 voicemailRouter.post('/', getVoicemail, (req, res) => {
-  return res.status(200).json({ data: res.locals.voicemail });
+  // console.log("VOICEMAIL", res.locals.voicemail)
+  return res.status(200).json({ data: res.locals.voicemailList });
 });
 
 voicemailRouter.patch('/:vmId', updateVoicemail, (req, res) => {

@@ -1,3 +1,4 @@
+import { VoicemailSchema } from './../types/voicemail.types';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -134,14 +135,14 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
 };
 
 export const getDbVoicemail = async () => {
-  const result = await prisma.voicemail.findMany({
+  const result: VoicemailSchema[] = await prisma.voicemail.findMany({
     where: { messageFolder: 'inbox' },
     orderBy: {
       createdDate: 'desc',
     },
   });
 
-  console.log("voicemail", result[0])
+  // console.log("voicemail", result[0])
 
   return result
 };
@@ -186,7 +187,7 @@ await prisma.voicemail.update({
 return 'Reason updated'
 }
 
-export const changeFolder = async (vmId : string) => {
+export const moveVoicemailToTrash = async (vmId : string) => {
   await prisma.voicemail.update({
     where: {
       id: vmId
