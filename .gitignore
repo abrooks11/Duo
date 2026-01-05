@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
+PROMPTING
 .env
 package_lock.json
