@@ -1,6 +1,6 @@
 export interface Sms {
-    to: string;
-    message: string; // must be URL encoded
+  phoneNumber: string;
+  message: string; // must be URL encoded
 }
 
 export interface SmsRequest {
