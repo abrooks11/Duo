@@ -28,9 +28,9 @@ export const requestVoicemail = async () => {
   return data.data;
 };
 
-export const sendRingSms = async (smsInfo: SMS) => {
+export const sendSms = async (smsData: SMS) => {
   // get auth cookie
-  const {phoneNumber, message} = smsInfo
+  const {phoneNumber, message} = smsData
   console.log('fetching cookie . . . ');
   const getAuthToken = await fetch(`${baseURL}/login`, {
     method: 'POST',

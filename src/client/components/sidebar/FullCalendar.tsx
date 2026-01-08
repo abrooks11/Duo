@@ -53,7 +53,7 @@ const FullCalendar = () => {
   };
 
   return (
-    <div className="w-100%">
+    <div className="calendar">
       {/* <h1>Calendar</h1> */}
       <DateRange
         editableDateInputs={true}

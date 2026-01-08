@@ -4,7 +4,7 @@ import type {
   Eob,
   Deposit,
   PaymentResponse,
-} from '../../shared/types/payment.types';
+} from '../types/payment.types';
 
 const prisma = new PrismaClient();
 

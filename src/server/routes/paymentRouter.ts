@@ -1,5 +1,5 @@
 import express, {Router, Request} from 'express';
-import type { PaymentResponse } from '../../shared/types/payment.types';
+import type { PaymentResponse } from '../types/payment.types';
 
 import paymentController from '../controllers/paymentController';
 

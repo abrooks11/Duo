@@ -4,6 +4,8 @@ export const sendSms = async (req: Request, res: Response, next: NextFunction) =
 
     try {
       const { phoneNumber, message } = req.body;
+      const encodedMessage = encodeURIComponent(message);
+
       console.log('SMS controller called');
       console.log({ phoneNumber, message });
 
@@ -18,8 +20,8 @@ export const sendSms = async (req: Request, res: Response, next: NextFunction) =
       }
 
       // SEND SMS
-      const sendSmsResponse = await fetch(
-        `https://portal.ringrx.com/messaging/send_message?to=${phoneNumber}&message=${message}`,
+      const smsResponse = await fetch(
+        `https://portal.ringrx.com/messaging/send_message?to=${phoneNumber}&message=${encodedMessage}`,
         {
           method: 'POST',
           headers: {
@@ -29,9 +31,9 @@ export const sendSms = async (req: Request, res: Response, next: NextFunction) =
         }
       );
 
-      const sendSmsData = await sendSmsResponse.json();
+      const smsData: any = await smsResponse.json();
 
-if (sendSmsData.sms_id) {
+if (smsData.sms_id) {
   res.locals.isSuccessful = true;
 }
   
