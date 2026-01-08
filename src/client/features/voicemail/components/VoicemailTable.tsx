@@ -1,11 +1,12 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-import VoicemailActions from '../ui/VoicemailActions';
-import DropDown from '../ui/DropDown';
-import { voicemailRowDisplayNames } from '../../utils/keyMappings';
+import {VoicemailActionList} from '../index_voicemail';
+
+import DropDown from '@client/components/ui/DropDown';
+import { voicemailRowDisplayNames } from '@client/utils/keyMappings';
 import {
   updateVoicemailNote,
   updateVoicemailReason,
-} from '../../utils/voicemailApi';
+} from '../services/voicemailApi';
 
 interface Props {
   columns: any[];
@@ -59,7 +60,7 @@ const VoicemailTable = ({
         headerName: displayName,
         width: 100,
         renderCell: (params) => {
-          return <VoicemailActions vmId={params.row.id} />;
+          return <VoicemailActionList vmId={params.row.id} />;
         },
       };
     }

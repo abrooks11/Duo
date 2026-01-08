@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { apiClient, useApiWithState } from '../hooks/useApi';
-import { requestVoicemail, deleteVoicemail } from '../utils/voicemailApi'; // Keep existing logic
-import { voicemailActions } from '../context/reducers/voicemailReducer';
-import type { VoicemailData } from '../context/types/state';
+import { apiClient, useApiWithState } from '../../../hooks/useApi';
+import { requestVoicemail, deleteVoicemail } from './voicemailApi'; // Keep existing logic
+import { voicemailActions } from '../../../context/reducers/voicemailReducer';
+import type { VoicemailData } from '../../../context/types/state';
 
 export const voicemailServices = {
   async getAll(): Promise<VoicemailData[]> {
@@ -43,7 +43,7 @@ export const voicemailServices = {
 //   },
 };
 
-export const useVoicemailService = () => {
+export const useVoicemailServices = () => {
   const { fetchAndDispatch } = useApiWithState();
 
   const fetchVoicemail = useCallback(() =>

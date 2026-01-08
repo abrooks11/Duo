@@ -1,14 +1,14 @@
 
 import { useState } from 'react';
-import { useVoicemail } from '../../hooks/useVoicemail';
-import textBubble from '../../assets/text-bubble.svg';
-import trashCan from '../../assets/trash-can.svg';
+import { useVoicemail } from '../index_voicemail';
+import textBubble from '@client/assets/text-bubble.svg';
+import trashCan from '@client/assets/trash-can.svg';
 
 interface Props {
   vmId: string
 }
 
-const VoicemailActions = ({ vmId }: Props) => {
+const VoicemailActionList = ({ vmId }: Props) => {
   const { deleteVoicemail } = useVoicemail();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -60,4 +60,4 @@ const handleReply = () => {
   );
 };
 
-export default VoicemailActions;
+export default VoicemailActionList;

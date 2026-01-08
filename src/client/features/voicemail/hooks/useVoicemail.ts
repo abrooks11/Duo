@@ -1,11 +1,13 @@
 import { useCallback } from 'react';
-import useGlobalContext from './useGlobalContext';
-import { voicemailServices, useVoicemailService } from '../services/voicemailServices';
-import { voicemailActions } from '../context/reducers/voicemailReducer';
+import useGlobalContext from '@client/hooks/useGlobalContext';
 
+import { voicemailServices, useVoicemailServices } from '../index_voicemail';
+
+import { voicemailActions } from '@client/context/reducers/voicemailReducer';
+// import {voicemailActions} from 'context'
 export const useVoicemail = () => {
   const { state, dispatch } = useGlobalContext();
-  const { fetchVoicemail } = useVoicemailService();
+  const { fetchVoicemail } = useVoicemailServices();
 
   const loadVoicemail = useCallback(async () => {
     await fetchVoicemail();

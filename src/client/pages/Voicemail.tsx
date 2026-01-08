@@ -1,16 +1,12 @@
 import { useState, useEffect } from 'react';
 
 // import custom components
-import VoicemailTable from '../tables/VoicemailTable';
+import {VoicemailTable, useVoicemail} from '../features/voicemail/index_voicemail';
 
 // import custom hooks
-import useDateRangeFilter from '../../hooks/useDateRangeFilter';
+import useDateRangeFilter from '../hooks/useDateRangeFilter';
 
-// import custom hooks/utilities
-import { useVoicemail } from '../../hooks/useVoicemail';
-
-
-import {SmsForm} from '../resource-components/smsForm'
+import {SmsForm} from '../features/sms/components/SmsForm'
 
 const Voicemail = () => {
   const {

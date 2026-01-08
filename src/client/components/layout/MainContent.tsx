@@ -6,7 +6,7 @@ import Home from '../pages/Home';
 import Appointments from '../pages/Appointments';
 import Claims from '../pages/Claims';
 import Patients from '../pages/Patients';
-import Voicemail from '../pages/Voicemail';
+import Voicemail from '../../pages/Voicemail';
 import Demo from '../pages/Demo';
 import Payments from '../pages/Payments';
 

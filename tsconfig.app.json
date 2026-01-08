@@ -20,7 +20,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    
+    "paths": {
+      "@client/*": ["./src/client/*"]
+    }
   },
   "include": ["src/client"], 
   "exclude": ["node_modules"]

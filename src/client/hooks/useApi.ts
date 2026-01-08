@@ -1,6 +1,6 @@
 // import context and action types
 import { useCallback } from 'react';
-import { requestVoicemail } from '../utils/voicemailApi';
+import { requestVoicemail } from '../features/voicemail/services/voicemailApi';
 import useGlobalContext from './useGlobalContext';
 
 interface ApiResponse<T> {

@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { sendSms } from "../../utils/voicemailApi";
-import type { SMS } from "../../types/types";
+import { sendSms } from "../services/smsApi";
+import type { SMS } from "../../../types/types";
 
 export const SmsForm = () => {
 
