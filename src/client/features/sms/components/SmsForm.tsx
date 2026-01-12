@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { sendSms } from "../services/smsApi";
+import "../smsStyles.css"
 import type { SMS } from "../../../types/types";
 
 export const SmsForm = () => {
@@ -7,14 +8,18 @@ export const SmsForm = () => {
     const [phoneNumber, setPhoneNumber] = useState('8177230336'); 
     const [message, setMessage] = useState('Test SMS'); 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault()
-      console.log('submit button working');
+
       const smsData: SMS = {
         phoneNumber, message
       }
-      console.log(smsData)
-      sendSms(smsData)
+      console.log("phone number and message:", smsData)
+      const sentSmsStatus = await sendSms(smsData)
+      if (sentSmsStatus === 200) {
+        setPhoneNumber('')
+        setMessage("")
+      }
     };
 
     const handlePhoneNumberChange = (e) => {
