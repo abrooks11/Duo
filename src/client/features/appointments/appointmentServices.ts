@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { apiClient, useApiWithState } from '../hooks/useApi';
-import { appointmentActions } from '../context/reducers/appointmentReducer';
-import type { AppointmentData } from '../context/types/state';
+import { apiClient, useApiWithState } from '@client/hooks/useApi';
+import { appointmentActions } from '@client/context/reducers/appointmentReducer';
+import type { AppointmentData } from '@client/context/types/state';
 
 
 export const appointmentServices = {

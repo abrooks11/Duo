@@ -2,18 +2,18 @@
 import { useEffect } from 'react';
 
 // import custom components
-import AppointmentTable from '../tables/AppointmentTable';
+import AppointmentTable from '../features/appointments/components/AppointmentTable';
 
 // import custom hooks
-import useDateRangeFilter from '../../hooks/useDateRangeFilter';
+import useDateRangeFilter from '../hooks/useDateRangeFilter';
 
 // import custom hooks/utilities
-import { formatDate } from '../../utils/stateHelpers';
-import { appointmentRowFilterMap } from '../../utils/keyMappings';
-import { useAppointment } from '../../hooks/useAppointment';
+import { formatDate } from '../utils/stateHelpers';
+import { appointmentRowFilterMap } from '../utils/keyMappings';
+import { useAppointment } from '@client/features/appointments/hooks/useAppointment'
 
-import InsuranceSelector from '../resource-components/appointments/InsuranceSlector';
-import CopaySummary from '../resource-components/appointments/CopaySummary';
+import InsuranceSelector from '../features/appointments/components/InsuranceSlector';
+import CopaySummary from '../features/appointments/components/CopaySummary';
 
 const Appointments = () => {
   const {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppointment } from '../../../hooks/useAppointment';
+import { useAppointment } from '../hooks/useAppointment';
 import { formatDate } from '../../../utils/stateHelpers';
 
 interface CopaySummaryData {

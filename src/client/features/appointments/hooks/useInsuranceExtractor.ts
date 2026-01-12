@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAppointment } from './useAppointment';
-import { formatDate } from '../utils/stateHelpers';
+import { formatDate } from '@client/utils/stateHelpers';
 
 interface InsuranceCompany {
   name: string;

@@ -3,7 +3,7 @@ import { ToastContainer } from 'react-toastify';
 
 // import pages
 import Home from '../pages/Home';
-import Appointments from '../pages/Appointments';
+import Appointments from '../../pages/Appointments';
 import Claims from '../pages/Claims';
 import Patients from '../pages/Patients';
 import Voicemail from '../../pages/Voicemail';

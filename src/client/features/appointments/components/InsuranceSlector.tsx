@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useInsuranceExtractor } from '../../../hooks/useInsuranceExtractor';
+import { useInsuranceExtractor } from '../hooks/useInsuranceExtractor';
 
 const InsuranceSelector = () => {
   const { 

@@ -1,5 +1,5 @@
-import clipboard from '../../assets/clipboard-text.svg'
-import scan from '../../assets/scan-1.svg'
+import clipboard from '@client/assets/clipboard-text.svg'
+import scan from '@client/assets/scan-1.svg'
 
 interface Props {
     patientId: number
