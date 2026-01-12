@@ -1,17 +1,17 @@
 // import react hooks
 import { useEffect, useMemo } from 'react';
 // import context and action types
-import useGlobalContext from '../../hooks/useGlobalContext';
+import useGlobalContext from '../hooks/useGlobalContext';
 
 // import custom components
-import Table from '../tables/Table';
+import Table from '../components/tables/Table';
 
 // import custom hooks
-import {apiClient} from '../../hooks/useApi';
+import {apiClient} from '../hooks/useApi';
 
 // import custom utilities
-import dataTransformers from '../../utils/dataTransformers';
-import { formatDate } from '../../utils/stateHelpers';
+import dataTransformers from '../utils/dataTransformers';
+import { formatDate } from '../utils/stateHelpers';
 
 
 function Patients() {

@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react';
-import useGlobalContext from '../../hooks/useGlobalContext';
-import Table from '../tables/Table';
-import {apiClient} from '../../hooks/useApi';
-import dataTransformers from '../../utils/dataTransformers';
+import useGlobalContext from '../hooks/useGlobalContext';
+import Table from '../components/tables/Table';
+import {apiClient} from '../hooks/useApi';
+import dataTransformers from '../utils/dataTransformers';
 
 function Claims() {
   const { state } = useGlobalContext();
