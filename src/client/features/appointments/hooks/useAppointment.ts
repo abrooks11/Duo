@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import  useGlobalContext from '@client/hooks/useGlobalContext';
 import { appointmentActions } from '@client/context/reducers/appointmentReducer';
-import { appointmentServices, useAppointmentService } from '../appointmentServices';
+import { appointmentServices, useAppointmentService } from '../services/appointmentServices';
 import type { AppointmentData, DateRangeObject } from '@client/context/types/state';
 
 export const useAppointment = () => {

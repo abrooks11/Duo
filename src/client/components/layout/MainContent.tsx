@@ -8,7 +8,7 @@ import Claims from '../pages/Claims';
 import Patients from '../pages/Patients';
 import Voicemail from '../../pages/Voicemail';
 import Demo from '../pages/Demo';
-import Payments from '../pages/Payments';
+import Payments from '../../pages/Payments';
 
 function MainContent() {
   return (

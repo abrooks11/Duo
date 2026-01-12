@@ -1,7 +1,7 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import DropDown from '@client/components/ui/DropDown'
 import AppointmentActions from './AppointmentActions';
-import { updateCopay } from '../appointmentApi';
+import { updateCopay } from '../services/appointmentApi';
 
 interface Props {
   columns: any[];
