@@ -1,5 +1,5 @@
 import express from 'express';
-import { sendSms } from './smsController';
+import { sendSms } from './smsController.ts';
 const smsRouter = express.Router();
 
 // FEAT: SEND SMS MESSAGE 

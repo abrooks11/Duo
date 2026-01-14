@@ -1,7 +1,7 @@
 import express, {Router, Request} from 'express';
-import type { PaymentResponse } from '../types/payment.types';
+import type { PaymentResponse } from './paymentTypes.ts';
 
-import paymentController from '../controllers/paymentController';
+import paymentController from './paymentController.ts';
 
 const paymentRouter: Router = express.Router();
 

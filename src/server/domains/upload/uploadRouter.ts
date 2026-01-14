@@ -6,7 +6,7 @@ import express from 'express';
 import multer from 'multer';
 const upload = multer();
 
-import excelServices from '../services/excelServices.js';
+import excelServices from './excelServices.ts';
 
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();

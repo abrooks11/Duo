@@ -1,4 +1,6 @@
-import { VoicemailSchema } from '../types/voicemail.types.ts';
+import { NextFunction } from 'express';
+
+import { VoicemailSchema } from './voicemailTypes.ts';
 
 import {
   createVoicemail,
@@ -6,8 +8,7 @@ import {
   moveVoicemailToTrash,
   updateVoicemailNote,
   updateVoicemailReason,
-} from '../services/voicemailServices.ts';
-import { NextFunction } from 'express';
+} from './voicemailServices';
 
 
 /** getVoicemail
@@ -142,11 +143,13 @@ export const deleteVoicemail = async (req: Request, res: Response, next: NextFun
       },
     });
 
-    const deleteVoicemailData: any = await deleteVoicemailFromRingRXResponse.json()
+    console.log("delete voicemail status:", deleteVoicemailFromRingRXResponse.status)
 
-    if (deleteVoicemailData.data !== 204) {
-    // global error handler 
-    }
+    // const deleteVoicemailData: any = await deleteVoicemailFromRingRXResponse.json()
+
+    // if (deleteVoicemailData.data !== 204) {
+    // // global error handler 
+    // }
     
     await moveVoicemailToTrash(id);
 

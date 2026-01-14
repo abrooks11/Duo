@@ -1,6 +1,6 @@
 // import xlsx to read excel files and parse data
 import xlsx from 'xlsx';
-import fieldMap from '../utils/fieldMap.js';
+import fieldMap from './fieldMap.ts';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 

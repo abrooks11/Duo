@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PaymentList from '../features/payments/components/PaymentList';
-import type { Eob, Deposit } from '../../server/types/payment.types';
+import type { Eob, Deposit } from '../../server/domains/payments/paymentTypes';
 
 const Payments = () => {
   type Resource = 'eobs' | 'deposits' | 'matched';

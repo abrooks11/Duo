@@ -1,4 +1,4 @@
-import { VoicemailSchema } from './../types/voicemail.types';
+import { VoicemailSchema } from './voicemailTypes';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 

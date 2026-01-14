@@ -3,7 +3,7 @@ import {
   getVoicemail,
   deleteVoicemail,
   updateVoicemail,
-} from '../controllers/voicemailController.js';
+} from './voicemailController';
 
 const voicemailRouter = express.Router();
 

@@ -1,4 +1,4 @@
-import type {Eob, Deposit } from '../../../../server/types/payment.types'
+import type {Eob, Deposit } from '../../../../server/domains/payments/paymentTypes'
 
 type PaymentListProps = {
   data: Eob[] | Deposit[]

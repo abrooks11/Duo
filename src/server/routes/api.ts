@@ -5,17 +5,17 @@ const apiRouter = express.Router();
 
 // import custom routes
 // resource routes
-import appointmentRouter from './appointmentRouter.js';
-import claimRouter from './claimRouter.js';
-import patientRouter from './patientRouter.js';
-import paymentRouter from './paymentRouter.ts';
-import voicemailRouter from './voicemailRouter.js';
+import appointmentRouter from '../domains/appointments/appointmentRouter.ts';
+import claimRouter from '../domains/claims/claimRouter.ts';
+import patientRouter from '../domains/patients/patientRouter.ts';
+import paymentRouter from '../domains/payments/paymentRouter.ts';
+import voicemailRouter from '../domains/voicemail/voicemailRouter.ts';
 
 // service routes
-import authRouter from './authRouter.js';
-import uploadRouter from './uploadRouter.js';
-import openAiRouter from './openAiRouter.js';
-import insuranceRouter from './insuranceRouter.js';
+import authRouter from '../domains/auth/authRouter.ts';
+import uploadRouter from '../domains/upload/uploadRouter.ts';
+import openAiRouter from '../domains/ai/openAiRouter.ts';
+import insuranceRouter from '../domains/estimates/insuranceRouter.ts';
 import smsRouter from '../domains/sms/smsRouter.ts';
 
 // apiRouter.post("/upload/:resourceType/:sheetName", userActionsController.uploadFile, (req, res) => {

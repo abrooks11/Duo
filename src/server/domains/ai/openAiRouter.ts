@@ -1,7 +1,7 @@
 import express from 'express';
 
 // import controller functions
-import { generateResponse } from '../controllers/openAiController.js';
+import { generateResponse } from './openAiController.js';
 
 const openAiRouter = express.Router();
 

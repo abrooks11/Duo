@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { VoicemailSchema } from "./voicemail.types";
+import { VoicemailSchema } from "../domains/voicemail/voicemailTypes";
 
 export interface TypedResponse<T = any> extends Response {
     locals: T;
