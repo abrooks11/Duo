@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+
 // import custom components
 import {VoicemailTable, useVoicemail} from '../features/voicemail/index_voicemail';
 
@@ -7,6 +8,7 @@ import {VoicemailTable, useVoicemail} from '../features/voicemail/index_voicemai
 import useDateRangeFilter from '../hooks/useDateRangeFilter';
 
 import {SmsForm} from '../features/sms/components/SmsForm'
+import { SmsFormProvider } from '@client/context/shared/smsFormcontext';
 
 const Voicemail = () => {
   const {
@@ -62,26 +64,37 @@ const Voicemail = () => {
     });
   });
 
-  const dateFilteredInboxData = useDateRangeFilter(filteredInboxData, 'createdDate')
+  const dateFilteredInboxData = useDateRangeFilter(
+    filteredInboxData,
+    'createdDate'
+  );
 
   return (
-    <div className="voicemail-container">
-      <div className="voicemail-section">
-        <h1>Send Message</h1>
-        <SmsForm />
-        <h1>({inbox.length || 0}) Unread</h1>
-        {inbox.length > 0 && (
-          <div className="table-container">
-            <VoicemailTable
-              columns={allColumnHeaders}
-              data={dateFilteredInboxData}
-              className="w-full h-full"
-              dynamicHeight={true}
-            />
-          </div>
-        )}
+    <SmsFormProvider
+      initialValues={{
+        fullName: 'Banana',
+        phoneNumber: '817-723-0336',
+        message: 'Testing. . .',
+      }}
+    >
+      <div className="voicemail-container">
+        <div className="voicemail-section">
+          <h1>Send Message</h1>
+          <SmsForm />
+          <h1>({inbox.length || 0}) Unread</h1>
+          {inbox.length > 0 && (
+            <div className="table-container">
+              <VoicemailTable
+                columns={allColumnHeaders}
+                data={dateFilteredInboxData}
+                className="w-full h-full"
+                dynamicHeight={true}
+              />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </SmsFormProvider>
   );
 };
 

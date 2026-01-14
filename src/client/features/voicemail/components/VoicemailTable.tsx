@@ -13,6 +13,7 @@ interface Props {
   data: any[];
   className: string;
   dynamicHeight?: boolean;
+  helpers: any;
 }
 
 interface VoicemailRow {
@@ -60,7 +61,7 @@ const VoicemailTable = ({
         headerName: displayName,
         width: 100,
         renderCell: (params) => {
-          return <VoicemailActionList vmId={params.row.id} />;
+          return <VoicemailActionList vmId={params.row.id} rowData={params.row}/>;
         },
       };
     }

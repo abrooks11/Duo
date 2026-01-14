@@ -1,14 +1,18 @@
 
 import { useState } from 'react';
 import { useVoicemail } from '../index_voicemail';
+import { useSmsForm } from '@client/context/shared/smsFormcontext';
 import textBubble from '@client/assets/text-bubble.svg';
 import trashCan from '@client/assets/trash-can.svg';
 
 interface Props {
   vmId: string
+  rowData: any;
 }
 
-const VoicemailActionList = ({ vmId }: Props) => {
+const VoicemailActionList = ({ vmId, rowData }: Props) => {
+  const {populateForm} = useSmsForm()
+
   const { deleteVoicemail } = useVoicemail();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -26,9 +30,15 @@ const VoicemailActionList = ({ vmId }: Props) => {
     }
   };
 
-const handleReply = () => {
-  console.log('REPLYING . . . ');
-  
+  const handleReply = () => {
+    console.log('REPLYING . . . ');
+    console.log(rowData)
+  populateForm({
+    fullName: rowData.callerName,
+    phoneNumber: rowData.callerNumber,
+    transcript: rowData.transcription,
+  });
+
 }
 
   return (

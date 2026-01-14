@@ -1,10 +1,8 @@
 import { toast } from 'react-toastify';
 
-
-import type { SMS } from '../../../types/types';
 const baseURL = 'http://localhost:3000/api';
 
-export const sendSms = async (smsData: SMS) => {
+export const sendSms = async (phoneNumber: string, message:string): Promise<number> => {
   // get auth cookie
   
   const getAuthToken = await fetch(`${baseURL}/login`, {
@@ -17,7 +15,6 @@ export const sendSms = async (smsData: SMS) => {
     
     await getAuthToken.json();
     
-    const { phoneNumber, message } = smsData;
   console.log('sending sms to ', phoneNumber);
   // try {
   const smsResponse = await fetch(`${baseURL}/sms`, {
