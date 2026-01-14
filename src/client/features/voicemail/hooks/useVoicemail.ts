@@ -1,0 +1,64 @@
+import { useCallback } from 'react';
+import useGlobalContext from '@client/hooks/useGlobalContext';
+
+import { voicemailServices, useVoicemailServices } from '../index_voicemail';
+
+import { voicemailActions } from '@client/context/reducers/voicemailReducer';
+// import {voicemailActions} from 'context'
+export const useVoicemail = () => {
+  const { state, dispatch } = useGlobalContext();
+  const { fetchVoicemail } = useVoicemailServices();
+
+  const loadVoicemail = useCallback(async () => {
+    await fetchVoicemail();
+  }, [fetchVoicemail]);
+
+   const deleteVoicemail = useCallback(
+     async (id: string) => {
+       dispatch(voicemailActions.setLoading(true));
+
+       try {
+         await voicemailServices.delete(id);
+         // Update UI immediately by removing from state
+         dispatch(voicemailActions.deleteVoicemail(id));
+         dispatch(voicemailActions.setLoading(false));
+       } catch (error) {
+         dispatch(
+           voicemailActions.setError(
+             error instanceof Error
+               ? error.message
+               : 'Failed to delete voicemail'
+           )
+         );
+         throw error;
+       }
+     },
+     [dispatch]
+   );
+
+  const toggleFilter = useCallback(
+    (filterKey: string) => {
+      dispatch(voicemailActions.toggleFilter(filterKey));
+    },
+    [dispatch]
+  );
+
+  return {
+    // State
+    voicemail: state.voicemail.data,
+    rowFilterDetails: state.voicemail.rowFilterDetails,
+    allColumnHeaders: state.voicemail.allColumnHeaders,
+    isLoading: state.voicemail.isLoading,
+    error: state.voicemail.error,
+
+    // Actions
+    loadVoicemail,
+    deleteVoicemail,
+    toggleFilter,
+
+    // Computed
+    voicemailCount: state.voicemail.data.length,
+    hasError: !!state.voicemail.error,
+    isEmpty: state.voicemail.data.length === 0,
+  };
+};

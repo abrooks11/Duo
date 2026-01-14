@@ -1,16 +1,20 @@
 import { Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 
 // import pages
-import Home from '../pages/Home';
-import Appointments from '../pages/Appointments';
-import Claims from '../pages/Claims';
-import Patients from '../pages/Patients';
-import Voicemail from '../pages/Voicemail';
+import Home from '../../pages/Home';
+import Appointments from '../../pages/Appointments';
+import Claims from '../../pages/Claims';
+import Patients from '../../pages/Patients';
+import Voicemail from '../../pages/Voicemail';
+import Demo from '../../pages/Demo';
+import Payments from '../../pages/Payments';
 
 function MainContent() {
   return (
     <div className="main-content-wrapper">
       {/* <h1>--MainContent--</h1> */}
+      <ToastContainer />
       <Routes>
         {/* <Route path="/" exact element={<Home />} /> */}
         <Route path="/" element={<Home />} />
@@ -18,6 +22,8 @@ function MainContent() {
         <Route path="/claims" element={<Claims />} />
         <Route path="/patients" element={<Patients />} />
         <Route path="/voicemail" element={<Voicemail />} />
+        <Route path="/demo" element={<Demo />} />
+        <Route path="/payments" element={<Payments />} />
       </Routes>
     </div>
   );

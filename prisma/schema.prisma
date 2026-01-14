@@ -18,6 +18,9 @@ model Appointment {
   patientCaseName    String?
   startDate          DateTime
   notes              String?
+  // CUSTOM FIELDS
+  insEligibility  String?
+  patientCopay Int?
   // RELATED FIELDS
   patientId          Int
   patient            Patient  @relation(fields: [patientId], references: [id])
@@ -86,10 +89,10 @@ model Patient {
 }
 
 model Voicemail {
-  id                String             @id @unique // id: "4cbda5b4-4d14-48dc-a82e-aed957e788cf"
-  callerNumber      String // caller: "18177342041"
-  callerName        String // caller_name: "+18177342041"
-  createdDate       DateTime           @default(now()) // created_at: "2025-04-21T12:24:18.431-05:00"
+  id                String             @id @unique 
+  callerNumber      String 
+  callerName        String 
+  createdDate       DateTime           @default(now())
   duration          Int // duration: 14260
   messageFolder     String // message_folder: "inbox"
   status            String // status: "new"
@@ -103,12 +106,12 @@ model Voicemail {
   // RELATED FIELDS
   patientVoicemails PatientVoicemail[] // Many-to-many relationship
   // EXTRA KEYS 
-  // voicemail: "b82ea82c-5086-41de-9403-cce701ef7b35.wav"
-  // called: "18174404338"; inbound RingRX number 
+  // voicemail: 
+  // called: 
   // contact: null
   // fax: null
   // history: [{…}]
-  // mailbox: "abrooks@jenniferbrooksmd.ringrx.com"
+  // mailbox:
   // message: null
   // message_type: "voicemail"
   // notes: null
@@ -124,4 +127,36 @@ model PatientVoicemail {
   voicemailId String
 
   @@unique([patientId, voicemailId]) // Prevent duplicate associations
+}
+
+model Deposit {
+  id String @id @unique
+  createdDate DateTime
+  postDate DateTime?
+  description String?
+  reference String @unique
+  payerName String
+  amount Float
+  eob    Eob?
+}
+
+model Eob {
+  id Int @id @unique
+  createdDate DateTime
+  lastModifiedDate DateTime
+  reference String? @unique
+  payerType String @default("insurance")
+  payerName String
+  paymentMethod String
+  amount Float
+  deposit Deposit? @relation(fields: [depositId], references: [id])
+  depositId String? @unique
+  isMatched Boolean @default(false)
+  isProcessed Boolean @default(false)
+}
+
+enum PaymentMethod {
+  CHECK         // "1"
+  CREDIT_CARD   // "3" 
+  EFT           // "4"
 }
