@@ -12,7 +12,6 @@ import paymentRouter from '../domains/payments/paymentRouter.ts';
 import voicemailRouter from '../domains/voicemail/voicemailRouter.ts';
 
 // service routes
-import authRouter from '../domains/auth/authRouter.ts';
 import uploadRouter from '../domains/upload/uploadRouter.ts';
 import openAiRouter from '../domains/ai/openAiRouter.ts';
 import insuranceRouter from '../domains/estimates/insuranceRouter.ts';
@@ -31,7 +30,6 @@ apiRouter.use('/patients', patientRouter);
 apiRouter.use('/payments', paymentRouter);
 
 // voicemail routes
-apiRouter.use('/login', authRouter);
 apiRouter.use('/voicemail', voicemailRouter);
 
 // LLM routes
