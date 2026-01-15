@@ -53,18 +53,7 @@ export const updateVoicemailReason = async (vmId: string, reason: string) => {
 };
 
 export const deleteVoicemail = async (id: string) => {
-  // console.log('Attempting to move message to trash');
-  // get auth cookie
-  const getAuthToken = await fetch(`${baseURL}/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-  });
-
-  await getAuthToken.json();
-
+ 
   const response = await fetch(`${baseURL}/voicemail/${id}`, {
     method: 'DELETE',
     headers: {

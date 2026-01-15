@@ -1,6 +1,7 @@
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 import { VoicemailSchema } from './voicemailTypes.ts';
+import { makeAuthenticatedRingRequest, makeAuthenticatedRingDelete } from '../auth/authUtils.ts';
 
 import {
   createVoicemail,
@@ -10,85 +11,35 @@ import {
   updateVoicemailReason,
 } from './voicemailServices';
 
-
-
 /** getVoicemail
- * 
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- * @returns 
- * 
- * 
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @returns
+ *
+ *
  */
 
-export const getVoicemail = async (req: Request, res: Response, next: NextFunction) => {
+export const getVoicemail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    // ACQUIRE AUTH - check if token exists, if not, get it
-    let ringToken = req.cookies['ring-token']; // Get the token from cookies
-    console.log("RING TOKEN: ", ringToken)
-    
-    if (ringToken) {
-      // LOGIN TO RINGRX AND GET TOKEN
-
-      // PREP PARAMS
-      const loginParams = {
-        username: process.env.RING_USER_NAME,
-        password: process.env.RING_PASSWORD,
-      };
-
-      const params = new URLSearchParams(loginParams).toString();
-
-      // CREATE TOKEN
-      const loginResponse = await fetch(
-        `https://portal.ringrx.com/auth/token?${params}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!loginResponse.ok) {
-        return next({
-          status: 401,
-          message: { err: 'Failed to authenticate with RingRX' },
-          log: 'RingRX login failed',
-        });
-      }
-
-      const loginData = await loginResponse.json();
-
-      ringToken = loginData.access_token
-
-    res.cookie('ring-token', ringToken, {
-      httpOnly: true,
-      secure: true, // for HTTPS
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours, adjust as needed
-    });
-    }
-
-    // FETCH VOICEMAIL FROM RINGRX
-    const ringResponse = await fetch(
-      `https://portal.ringrx.com/voicemails?message_folder=inbox`,
-      {
-        headers: {
-          Authorization: `Bearer ${ringToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
+    const ringResponse = await makeAuthenticatedRingRequest(
+      'https://portal.ringrx.com/voicemails?message_folder=inbox',
+      req.ringToken!,
+      req.refreshRingToken!
     );
 
-        if (!ringResponse.ok) {
-          return next({
-            status: ringResponse.status,
-            message: { err: 'Failed to fetch voicemail from RingRX' },
-            log: `RingRX API error: ${ringResponse.status}`,
-          });
-        }
+    if (!ringResponse.ok) {
+      return next({
+        status: ringResponse.status,
+        message: { err: 'Failed to fetch voicemail from RingRX' },
+        log: `RingRX API error: ${ringResponse.status}`,
+      });
+    }
 
     const ringData: any = await ringResponse.json();
 
@@ -98,15 +49,11 @@ export const getVoicemail = async (req: Request, res: Response, next: NextFuncti
         ringData.map((voicemail: any) => createVoicemail(voicemail))
       );
     }
-    // FETCH VOICEMAIL FROM RINGRX
-    const trashResponse = await fetch(
-      `https://portal.ringrx.com/voicemails?message_folder=trash`,
-      {
-        headers: {
-          Authorization: `Bearer ${ringToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
+
+    const trashResponse = await makeAuthenticatedRingRequest(
+      'https://portal.ringrx.com/voicemails?message_folder=trash',
+      req.ringToken!,
+      req.refreshRingToken!
     );
 
     const trashData: any = await trashResponse.json();
@@ -134,28 +81,32 @@ export const getVoicemail = async (req: Request, res: Response, next: NextFuncti
 };
 
 /**
- * 
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
  */
-export const updateVoicemail = async (req: Request, res: Response, next: NextFunction) => {
+export const updateVoicemail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { vmId } = req.params;
     const { note, reason } = req.body;
 
-    let response; 
-    // CHECK DATABASE FOR VOICEMAIL WITH MATCHING ID 
+    let response;
+    // CHECK DATABASE FOR VOICEMAIL WITH MATCHING ID
     // IF NO MATCH, RETURN ERROR
-    // IF MATCH, UPDATE IN DATABASE 
+    // IF MATCH, UPDATE IN DATABASE
     if (note) {
-      response = await updateVoicemailNote(vmId, note)
+      response = await updateVoicemailNote(vmId, note);
     }
     if (reason) {
-      response = await updateVoicemailReason(vmId, reason)
+      response = await updateVoicemailReason(vmId, reason);
     }
-    
-    res.locals.updateResponse = response 
+
+    res.locals.updateResponse = response;
     next();
   } catch (error) {
     next({
@@ -166,39 +117,38 @@ export const updateVoicemail = async (req: Request, res: Response, next: NextFun
   }
 };
 
-export const deleteVoicemail = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteVoicemail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    // ACQUIRE AUTH
-    const token = req.cookies['ring-token']; // Get the token from cookies
-    if (!token) {
+    // Get the voicemail ID from URL parameters
+    const id = req.params.vmId;
+
+    // Call makeAuthenticatedRingDelete to delete the voicemail from RingRX
+
+    //  SEND REQUEST TO RING RX TO DELETE VOICEMAIL
+    const deleteResponse = await makeAuthenticatedRingDelete(
+      `https://portal.ringrx.com/voicemails/${id}`,
+      req.ringToken!,
+      req.refreshRingToken!
+    );
+
+    console.log('delete voicemail status:', deleteResponse.status);
+    // Check if the delete request was successful
+    if (!deleteResponse.ok && deleteResponse.status !== 204) {
       return next({
-        status: 401,
-        message: { err: 'Authentication required' },
-        log: 'Missing or invalid ring-token cookie',
+        status: deleteResponse.status,
+        message: { err: 'Failed to delete voicemail from RingRX' },
+        log: `RingRX delete API error: ${deleteResponse.status}`,
       });
     }
 
-    const id = req.params.vmId;
-
-    //  SEND REQUEST TO RING RX TO DELETE VOICEMAIL
-    const deleteVoicemailFromRingRXResponse = await fetch(`https://portal.ringrx.com/voicemails/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log("delete voicemail status:", deleteVoicemailFromRingRXResponse.status)
-
-    // const deleteVoicemailData: any = await deleteVoicemailFromRingRXResponse.json()
-
-    // if (deleteVoicemailData.data !== 204) {
-    // // global error handler 
-    // }
-    
+    // Move the voicemail to trash in the database
     await moveVoicemailToTrash(id);
 
+    // Call next() to proceed to response handler
     return next();
   } catch (error) {
     next({
