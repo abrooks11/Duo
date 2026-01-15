@@ -11,6 +11,7 @@ import {
 } from './voicemailServices';
 
 
+
 /** getVoicemail
  * 
  * @param {*} req 
@@ -23,14 +24,51 @@ import {
 
 export const getVoicemail = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // ACQUIRE AUTH
-    const ringToken = req.cookies['ring-token']; // Get the token from cookies
-    if (!ringToken) {
-      return next({
-        status: 401,
-        message: { err: 'Authentication required' },
-        log: 'Missing or invalid ring-token cookie',
-      });
+    // ACQUIRE AUTH - check if token exists, if not, get it
+    let ringToken = req.cookies['ring-token']; // Get the token from cookies
+    console.log("RING TOKEN: ", ringToken)
+    
+    if (ringToken) {
+      // LOGIN TO RINGRX AND GET TOKEN
+
+      // PREP PARAMS
+      const loginParams = {
+        username: process.env.RING_USER_NAME,
+        password: process.env.RING_PASSWORD,
+      };
+
+      const params = new URLSearchParams(loginParams).toString();
+
+      // CREATE TOKEN
+      const loginResponse = await fetch(
+        `https://portal.ringrx.com/auth/token?${params}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!loginResponse.ok) {
+        return next({
+          status: 401,
+          message: { err: 'Failed to authenticate with RingRX' },
+          log: 'RingRX login failed',
+        });
+      }
+
+      const loginData = await loginResponse.json();
+
+      ringToken = loginData.access_token
+
+    res.cookie('ring-token', ringToken, {
+      httpOnly: true,
+      secure: true, // for HTTPS
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours, adjust as needed
+    });
     }
 
     // FETCH VOICEMAIL FROM RINGRX
@@ -43,6 +81,14 @@ export const getVoicemail = async (req: Request, res: Response, next: NextFuncti
         },
       }
     );
+
+        if (!ringResponse.ok) {
+          return next({
+            status: ringResponse.status,
+            message: { err: 'Failed to fetch voicemail from RingRX' },
+            log: `RingRX API error: ${ringResponse.status}`,
+          });
+        }
 
     const ringData: any = await ringResponse.json();
 
@@ -68,7 +114,7 @@ export const getVoicemail = async (req: Request, res: Response, next: NextFuncti
     // SAVE RING VOICEMAIL TO DATABASE
     if (trashData.length > 0) {
       await Promise.all(
-        trashData.map((voicemail:any) => createVoicemail(voicemail))
+        trashData.map((voicemail: any) => createVoicemail(voicemail))
       );
     }
 

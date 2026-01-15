@@ -1,12 +1,19 @@
-export const login = async (req, res, next) => {
+import { Request, Response, NextFunction } from 'express';
+
+
+
+
+
+export const createRingToken = async () => {
   try {
     const loginParams = {
       username: process.env.RING_USER_NAME,
       password: process.env.RING_PASSWORD,
     };
+
     const params = new URLSearchParams(loginParams).toString();
 
-    // fetch voicemail from ringRX
+    // create token
     const response = await fetch(
       `https://portal.ringrx.com/auth/token?${params}`,
       {
@@ -17,6 +24,7 @@ export const login = async (req, res, next) => {
       }
     );
 
+    
     const data = await response.json();
     // console.log('RESPONSE', response);
     // console.log('DATA', data);
@@ -26,15 +34,11 @@ export const login = async (req, res, next) => {
       secure: true, // for HTTPS
       sameSite: 'strict',
       path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours, adjust as needed
     });
 
-    return next();
+    return
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error authorizing Ring API' }, // message to client
-      log: `Error in authController: ${error}`, // log to server
-    });
-    // res.status(500).json({ error: 'Failed to authenticate with Ring API' });
+    
   }
 };

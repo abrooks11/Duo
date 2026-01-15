@@ -7,7 +7,7 @@ import {
 
 const voicemailRouter = express.Router();
 
-voicemailRouter.post('/', getVoicemail, (req, res) => {
+voicemailRouter.get('/', getVoicemail, (req, res) => {
   // console.log("VOICEMAIL", res.locals.voicemail)
   return res.status(200).json({ data: res.locals.voicemailList });
 });
