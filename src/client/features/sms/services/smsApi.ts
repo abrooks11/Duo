@@ -3,17 +3,6 @@ import { toast } from 'react-toastify';
 const baseURL = 'http://localhost:3000/api';
 
 export const sendSms = async (phoneNumber: string, message:string): Promise<number> => {
-  // get auth cookie
-  
-  const getAuthToken = await fetch(`${baseURL}/login`, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-    });
-    
-    await getAuthToken.json();
     
   console.log('sending sms to ', phoneNumber);
   // try {
@@ -31,8 +20,4 @@ export const sendSms = async (phoneNumber: string, message:string): Promise<numb
     } 
     return smsResponse.status;
 
-
-  // } catch (error) {
-  //   console.error(error.message);
-  // }
 };

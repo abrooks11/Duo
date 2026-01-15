@@ -35,7 +35,6 @@ export const loginToRingRx = async (): Promise<string> => {
   return token;
 };
 
-
 export const refreshRingToken = async (res: Response): Promise<string> => {
   // Call loginToRingRX() to get a fresh token
   const token = await loginToRingRx();
@@ -67,28 +66,28 @@ export const makeAuthenticatedRingRequest = async (
   });
 
   // Check if response status indicates authentication failure
-   if (response.status === 401 || response.status === 403) {
-     // Token is expired or invalid
-     // Call the refreshTokenFunc to get a new token
-     const newToken = await refreshTokenFunc();
+  if (response.status === 401 || response.status === 403) {
+    // Token is expired or invalid
+    // Call the refreshTokenFunc to get a new token
+    const newToken = await refreshTokenFunc();
 
-     // Retry the request with the new token
-         response = await fetch(url, {
-           headers: {
-             Authorization: `Bearer ${newToken}`,
-             'Content-Type': 'application/json',
-           },
-         });
-   }
+    // Retry the request with the new token
+    response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${newToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 
-   return response
-}
+  return response;
+};
 
 export const makeAuthenticatedRingDelete = async (
-    url: string, 
-    ringToken: string,
+  url: string,
+  ringToken: string,
   refreshTokenFunc: () => Promise<string>
-  ): Promise<Response> => {
+): Promise<Response> => {
   let response = await fetch(url, {
     method: 'DELETE',
     headers: {
@@ -97,21 +96,68 @@ export const makeAuthenticatedRingDelete = async (
     },
   });
 
-   // Check if response status indicates authentication failure
-   if (response.status === 401 || response.status === 403) {
-     // Token is expired or invalid
-     // Call the refreshTokenFunc to get a new token
-     const newToken = await refreshTokenFunc();
+  // Check if response status indicates authentication failure
+  if (response.status === 401 || response.status === 403) {
+    // Token is expired or invalid
+    // Call the refreshTokenFunc to get a new token
+    const newToken = await refreshTokenFunc();
 
-     // Retry the request with the new token
-         response = await fetch(url, {
-    method: 'DELETE',
+    // Retry the request with the new token
+    response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${ringToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  return response;
+};
+
+export const makeAuthenticatedRingPost = async (
+  url: string,
+  ringToken: string,
+  refreshTokenFunc: () => Promise<string>,
+  body?: any
+): Promise<Response> => {
+  // Prepare fetch options
+  const fetchOptions: RequestInit = {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${ringToken}`,
       'Content-Type': 'application/json',
-    }
-        })
+    },
+  };
+
+  // Add body if provided
+  if (body) {
+    fetchOptions.body = JSON.stringify(body);
   }
-  
-return response
-}
+
+  // Make initial POST request to the provided URL
+  let response = await fetch(url, fetchOptions);
+
+  // Check if response status indicates authentication failure
+  // If status is 401 (Unauthorized) OR 403 (Forbidden):
+  //   - Token is expired or invalid
+  //   - Call the refreshTokenFunc to get a new token
+  //   - Retry the request
+  if (response.status === 401 || response.status === 403) {
+    // Token is expired or invalid
+    // Call the refreshTokenFunc to get a new token
+    const newToken = await refreshTokenFunc();
+
+    // Update the Authorization header with new token
+    fetchOptions.headers = {
+      Authorization: `Bearer ${newToken}`,
+      'Content-Type': 'application/json',
+    };
+
+    // Retry the POST request with the new token
+    response = await fetch(url, fetchOptions);
+  }
+
+  // Return the final response (either original if successful, or retry response)
+  return response;
+};
