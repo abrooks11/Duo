@@ -1,44 +1,67 @@
 import { Request, Response, NextFunction } from 'express';
 
+// Import utility functions from ringAuth
+import {refreshRingToken} from './authUtils.ts'
 
+// ============================================================================
+// TYPE EXTENSION: Extend Express Request interface
+// PURPOSE: Add custom properties that will be attached by middleware
+// ============================================================================
 
+// Declare global namespace to extend Express types
+// Inside Express.Request interface, add:
+//   - ringToken?: string (optional because it might not exist before middleware)
+//   - refreshRingToken?: () => Promise<string> (function to refresh token)
+declare global {
+  namespace Express {
+    interface Request {
+      ringToken?: string;
+      refreshRingToken?: () => Promise<string>;
+    }
+  }
+}
 
-
-export const createRingToken = async () => {
+export const ensureRingAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const loginParams = {
-      username: process.env.RING_USER_NAME,
-      password: process.env.RING_PASSWORD,
+    // Define a helper function to refresh the token when needed
+    // This function will:
+    //   - Call refreshRingToken from utils, passing the res object
+    //   - Update req.ringToken with the new token
+    //   - Return the new token
+    // This helper will be attached to req so controllers can use it
+    const refreshTokenHelper = async (): Promise<string> => {
+      const newToken = await refreshRingToken(res);
+      req.ringToken = newToken;
+      return newToken;
     };
 
-    const params = new URLSearchParams(loginParams).toString();
+    // Attempt to get existing token from cookies
+    let ringToken = req.cookies['ring-token'];
+    // Check if token exists
 
-    // create token
-    const response = await fetch(
-      `https://portal.ringrx.com/auth/token?${params}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    if (!ringToken) {
+      ringToken = await refreshTokenHelper();
+    }
 
-    
-    const data = await response.json();
-    // console.log('RESPONSE', response);
-    // console.log('DATA', data);
+    // Attach token to request object for use in controllers
+    req.ringToken = ringToken;
 
-    res.cookie('ring-token', data.access_token, {
-      httpOnly: true,
-      secure: true, // for HTTPS
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours, adjust as needed
-    });
+    // Attach refresh function to request object for use in controllers
+    // Set req.refreshRingToken = the helper function we defined
+    // This allows controllers to refresh token if it becomes invalid during their execution
+    req.refreshRingToken = refreshTokenHelper;
 
-    return
+    // Call next() to proceed to the next middleware/controller in the chain
+    return next();
   } catch (error) {
-    
+        return next({
+          status: 500,
+          message: { err: 'Failed to authenticate with RingRX' },
+          log: `Error in ringAuthMiddleware: ${error}`,
+        });
   }
 };
