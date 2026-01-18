@@ -106,7 +106,7 @@ export const makeAuthenticatedRingDelete = async (
     response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${ringToken}`,
+        Authorization: `Bearer ${newToken}`,
         'Content-Type': 'application/json',
       },
     });
