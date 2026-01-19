@@ -1,7 +1,5 @@
 import "../smsStyles.css"
 import { useSmsForm } from "@client/context/shared/smsFormcontext";
-import { sendSms } from "../services/smsApi";
-import type { SMS } from "../../../types/types";
 
 
 

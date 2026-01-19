@@ -42,16 +42,24 @@ interface SmsFormContextValue {
 
 interface SmsFormProviderProps {
     children: ReactNode;
-    initialValues?: Partial<SmsFormState>
 }
 
 const SmsFormContext = createContext<SmsFormContextValue | undefined>(undefined);
 
-export const SmsFormProvider: React.FC<SmsFormProviderProps> = ({children, initialValues={}}) => {
-  const [fullName, setFullName] = useState('Banana');
-  const [phoneNumber, setPhoneNumber] = useState('817-723-0336');
-  const [transcript, setTranscript] = useState('Initial voicemail . . .');
-  const [message, setMessage] = useState('Typed reply . . . ');
+export const SmsFormProvider: React.FC<SmsFormProviderProps> = ({children}) => {
+
+  const defaultValues = {
+    name: import.meta.env.VITE_DEFAULT_NAME, 
+    phoneNumber: import.meta.env.VITE_DEFAULT_PHONE_NUMBER,
+    transcript: import.meta.env.VITE_DEFAULT_VOICEMAIL_TRANSCRIPT,
+    smsReply: import.meta.env.VITE_DEFAULT_SMS_REPLY
+    
+  }
+
+  const [fullName, setFullName] = useState(defaultValues.name);
+  const [phoneNumber, setPhoneNumber] = useState(defaultValues.phoneNumber);
+  const [transcript, setTranscript] = useState(defaultValues.transcript);
+  const [message, setMessage] = useState(defaultValues.smsReply);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFullName(e.target.value);
@@ -91,10 +99,10 @@ export const SmsFormProvider: React.FC<SmsFormProviderProps> = ({children, initi
 
   // Reset form to initial state
   const resetForm = () => {
-    setFullName(initialValues.fullName || '');
-    setPhoneNumber(initialValues.phoneNumber || '');
-    setTranscript(initialValues.transcript || '');
-    setMessage(initialValues.message || '');
+    setFullName(defaultValues.name || '');
+    setPhoneNumber(defaultValues.phoneNumber || '');
+    setTranscript('');
+    setMessage(defaultValues.smsReply || '');
   };
 
   const value: SmsFormContextValue = {

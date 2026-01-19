@@ -70,13 +70,7 @@ const Voicemail = () => {
   );
 
   return (
-    <SmsFormProvider
-      initialValues={{
-        fullName: 'Banana',
-        phoneNumber: '817-723-0336',
-        message: 'Testing. . .',
-      }}
-    >
+    <SmsFormProvider>
       <div className="voicemail-container">
         <div className="voicemail-section">
           <h1>Send Message</h1>

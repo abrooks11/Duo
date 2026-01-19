@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 
 export const createVoicemail = async (voicemailObj: any): Promise<void> => {
   // Extract core voicemail properties from the incoming object
-  const { id, created_at, duration, message_folder, status, transcription } =
+  const { id, created_at, duration, message_folder, status, transcription, message } =
     voicemailObj;
 
   // Extract caller information (will be modified by formatting functions)
@@ -127,7 +127,7 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
       duration: duration || 0, // Call duration in seconds, default to 0
       messageFolder: message_folder, // Folder classification from phone system
       status: status, // Message status (new, read, etc.)
-      transcription: transcription || '', // Voice-to-text transcription, empty if unavailable
+      transcription: transcription || message || '', // Voice-to-text transcription, empty if unavailable
       callerType: callDetails.callerType, // 'patient' or 'other' based on database lookup
       reason: callDetails.reason, // Call category based on transcription analysis
     },
