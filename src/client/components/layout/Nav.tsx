@@ -43,6 +43,12 @@ function Nav() {
         >
           <li>Voicemail</li>
         </NavLink>
+        <NavLink
+          to="/reports"
+          className={({ isActive }) => (isActive ? 'active-page' : '')}
+        >
+          <li>Reports</li>
+        </NavLink>
 
         {/* <NavLink
           to="/demo"
