@@ -16,6 +16,7 @@ import uploadRouter from '../domains/upload/uploadRouter.ts';
 import openAiRouter from '../domains/ai/openAiRouter.ts';
 import insuranceRouter from '../domains/estimates/insuranceRouter.ts';
 import smsRouter from '../domains/sms/smsRouter.ts';
+import tebraRouter from '../domains/tebra-api/tebraRouter.ts';
 
 // apiRouter.post("/upload/:resourceType/:sheetName", userActionsController.uploadFile, (req, res) => {
 //   res.status(200).send("File was uploaded successfully");
@@ -31,13 +32,13 @@ apiRouter.use('/payments', paymentRouter);
 
 // voicemail routes
 apiRouter.use('/voicemail', voicemailRouter);
+apiRouter.use('/sms', smsRouter)
+
+apiRouter.use('/tebra', tebraRouter)
 
 // LLM routes
 apiRouter.use('/openai', openAiRouter);
-
 apiRouter.use('/insurance', insuranceRouter)
 
-// UNDER DEVELOPMENT
-apiRouter.use('/sms', smsRouter)
 
 export default apiRouter;
