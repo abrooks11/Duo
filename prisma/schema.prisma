@@ -157,6 +157,29 @@ model Eob {
 
 enum PaymentMethod {
   CHECK         // "1"
-  CREDIT_CARD   // "3" 
+  CREDIT_CARD   // "3"
   EFT           // "4"
+}
+
+model Report {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  sqlQuery    String
+  cachedData  Json?
+  cachedAt    DateTime?
+  folderId    String?
+  folder      ReportFolder? @relation(fields: [folderId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ReportFolder {
+  id        String   @id @default(cuid())
+  name      String
+  isDefault Boolean  @default(false)
+  sortOrder Int      @default(0)
+  reports   Report[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
