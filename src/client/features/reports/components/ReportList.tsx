@@ -1,19 +1,6 @@
-import { useState } from "react"
-import { sampleReportList } from "./sampledata"
-import ReportListItem from "./ReportListItem"
+// This file is deprecated - use ReportsSidebar instead
+// Keeping for backwards compatibility
 
-const ReportList = () => {
-const [reportList, setReportList] = useState(sampleReportList)
+import ReportsSidebar from './ReportsSidebar';
 
-const reportItems = reportList.map(report => <div>{report.title}</div>)
-
-  return (
-    <div>
-        <div>Side Bar Title</div>
-            {reportItems}
-    </div>
-
-  )
-}
-
-export default ReportList
+export default ReportsSidebar;
