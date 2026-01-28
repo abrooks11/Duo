@@ -1,5 +1,5 @@
 // All action types
-import type { AppointmentData, VoicemailData, DateRangeObject } from './state';
+import type { AppointmentData, VoicemailData, DateRangeObject, ReportFolder, ReportData } from './state';
 
 export interface UIActions {
   DISPLAY_UPLOAD_MODAL: 'ui/DISPLAY_UPLOAD_MODAL';
@@ -50,5 +50,36 @@ export type VoicemailAction =
   | { type: 'voicemail/SET_LOADING'; payload: { isLoading: boolean } }
   | { type: 'voicemail/SET_ERROR'; payload: { error: string | null } };
 
+export interface ReportActions {
+  GET_FOLDERS: 'reports/GET_FOLDERS';
+  SELECT_REPORT: 'reports/SELECT_REPORT';
+  SET_CREATING: 'reports/SET_CREATING';
+  SET_RUNNING: 'reports/SET_RUNNING';
+  ADD_REPORT: 'reports/ADD_REPORT';
+  UPDATE_REPORT: 'reports/UPDATE_REPORT';
+  DELETE_REPORT: 'reports/DELETE_REPORT';
+  ADD_FOLDER: 'reports/ADD_FOLDER';
+  UPDATE_FOLDER: 'reports/UPDATE_FOLDER';
+  DELETE_FOLDER: 'reports/DELETE_FOLDER';
+  SET_UNSAVED: 'reports/SET_UNSAVED';
+  SET_LOADING: 'reports/SET_LOADING';
+  SET_ERROR: 'reports/SET_ERROR';
+}
+
+export type ReportAction =
+  | { type: 'reports/GET_FOLDERS'; payload: { folders: ReportFolder[] } }
+  | { type: 'reports/SELECT_REPORT'; payload: { reportId: string | null } }
+  | { type: 'reports/SET_CREATING'; payload: { isCreating: boolean } }
+  | { type: 'reports/SET_RUNNING'; payload: { isRunning: boolean } }
+  | { type: 'reports/ADD_REPORT'; payload: { report: ReportData } }
+  | { type: 'reports/UPDATE_REPORT'; payload: { report: ReportData } }
+  | { type: 'reports/DELETE_REPORT'; payload: { reportId: string } }
+  | { type: 'reports/ADD_FOLDER'; payload: { folder: ReportFolder } }
+  | { type: 'reports/UPDATE_FOLDER'; payload: { folder: ReportFolder } }
+  | { type: 'reports/DELETE_FOLDER'; payload: { folderId: string } }
+  | { type: 'reports/SET_UNSAVED'; payload: { hasUnsavedChanges: boolean } }
+  | { type: 'reports/SET_LOADING'; payload: { isLoading: boolean } }
+  | { type: 'reports/SET_ERROR'; payload: { error: string | null } };
+
 // Combined action type
-export type AppAction = UIAction | AppointmentAction | VoicemailAction;
+export type AppAction = UIAction | AppointmentAction | VoicemailAction | ReportAction;

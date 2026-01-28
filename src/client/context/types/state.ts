@@ -7,6 +7,7 @@ export interface GlobalState {
   claims: ClaimState;
   patients: PatientState;
   voicemail: VoicemailState;
+  reports: ReportState;
 }
 
 export interface UIState {
@@ -47,6 +48,16 @@ export interface PatientState extends BaseResourceState<PatientData> {
 export interface VoicemailState extends BaseResourceState<VoicemailData> {
   // Voicemail-specific properties if needed
   selectedFilters: string[];
+}
+
+export interface ReportState {
+  folders: ReportFolder[];
+  selectedReportId: string | null;
+  isCreating: boolean;
+  isRunning: boolean;
+  hasUnsavedChanges: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export interface AppointmentData {
@@ -118,6 +129,35 @@ export interface VoicemailData {
   notes: null;
   officeId: null;
   officeName: null;
+}
+
+export interface ReportData {
+  id: string;
+  name: string;
+  description: string;
+  sqlQuery: string;
+  cachedData: any[] | null;
+  cachedAt: string | null;
+  folderId: string | null;
+  folder?: ReportFolder | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportFolder {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  sortOrder: number;
+  reports: ReportData[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportTemplate {
+  id: string;
+  label: string;
+  description: string;
 }
 
 export interface DateRangeObject {

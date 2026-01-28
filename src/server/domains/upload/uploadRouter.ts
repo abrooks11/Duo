@@ -189,7 +189,7 @@ uploadRouter.post(
                       notes: String(appointmentData.notes),
                     },
                   });
-                  console.log('Updated patient record with more recent data');
+                  console.log('Updated appointment record with more recent data');
                 } else {
                   // console.log('Skipping update - existing data is more recent');
                 }
