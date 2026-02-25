@@ -14,16 +14,6 @@ export const updateAppointmentNote = async (id: number, notes: string) => {
   return { status: response.status };
 };
 
-export const syncFromTebra = async (startDate: string, endDate: string) => {
-  const response = await fetch(`${baseURL}/tebra/sync`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ startDate, endDate }),
-  });
-  const data = await response.json();
-  return { status: response.status, data };
-};
-
 export const updateCopay = async (id:number, copay:number) => {
   const response = await fetch(`${baseURL}/appointments/copay`, {
     method: 'POST',
