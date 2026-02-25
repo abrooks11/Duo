@@ -60,7 +60,7 @@ model Patient {
   createdDate      DateTime @default(now())
   lastModifiedDate DateTime
   patientFullName  String
-  dob              DateTime
+  dob              DateTime?
   mobilePhone      String?
 
   primaryInsurancePolicyCompanyId        Int?

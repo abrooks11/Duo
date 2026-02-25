@@ -28,6 +28,7 @@ async function soapPost(action: string, body: string): Promise<string> {
       SOAPAction: `http://www.kareo.com/api/schemas/KareoServices/${action}`,
     },
     body,
+    signal: AbortSignal.timeout(30_000),
   });
   return response.text();
 }
@@ -135,6 +136,79 @@ export async function fetchPayments(fromDate: string, toDate: string): Promise<a
   const payments = result?.Payments?.PaymentData;
   if (!payments) return [];
   return Array.isArray(payments) ? payments : [payments];
+}
+
+/**
+ * Fetch patients from Tebra for the given date range.
+ * @param fromDate - "YYYY-MM-DD"
+ * @param toDate   - "YYYY-MM-DD"
+ * @returns Array of PatientData objects
+ */
+export async function fetchPatients(fromDate: string, toDate: string): Promise<any[]> {
+  const envelope = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:sch="http://www.kareo.com/api/schemas/">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <sch:GetPatients>
+      <sch:request>
+        ${buildRequestHeader()}
+        <sch:Fields>
+          <sch:AlertMessage>true</sch:AlertMessage>
+          <sch:CreatedDate>true</sch:CreatedDate>
+          <sch:DOB>true</sch:DOB>
+          <sch:ID>true</sch:ID>
+          <sch:InsuranceBalance>true</sch:InsuranceBalance>
+          <sch:LastAppointmentDate>true</sch:LastAppointmentDate>
+          <sch:LastEncounterDate>true</sch:LastEncounterDate>
+          <sch:LastModifiedDate>true</sch:LastModifiedDate>
+          <sch:LastStatementDate>true</sch:LastStatementDate>
+          <sch:MobilePhone>true</sch:MobilePhone>
+          <sch:PatientBalance>true</sch:PatientBalance>
+          <sch:PatientFullName>true</sch:PatientFullName>
+          <sch:PrimaryInsurancePolicyCompanyID>true</sch:PrimaryInsurancePolicyCompanyID>
+          <sch:PrimaryInsurancePolicyCompanyName>true</sch:PrimaryInsurancePolicyCompanyName>
+          <sch:PrimaryInsurancePolicyNumber>true</sch:PrimaryInsurancePolicyNumber>
+          <sch:PrimaryInsurancePolicyPlanAddressLine1>true</sch:PrimaryInsurancePolicyPlanAddressLine1>
+          <sch:PrimaryInsurancePolicyPlanCity>true</sch:PrimaryInsurancePolicyPlanCity>
+          <sch:PrimaryInsurancePolicyPlanID>true</sch:PrimaryInsurancePolicyPlanID>
+          <sch:PrimaryInsurancePolicyPlanName>true</sch:PrimaryInsurancePolicyPlanName>
+          <sch:PrimaryInsurancePolicyPlanState>true</sch:PrimaryInsurancePolicyPlanState>
+          <sch:PrimaryInsurancePolicyPlanZipCode>true</sch:PrimaryInsurancePolicyPlanZipCode>
+          <sch:SecondaryInsurancePolicyCompanyID>true</sch:SecondaryInsurancePolicyCompanyID>
+          <sch:SecondaryInsurancePolicyCompanyName>true</sch:SecondaryInsurancePolicyCompanyName>
+          <sch:SecondaryInsurancePolicyNumber>true</sch:SecondaryInsurancePolicyNumber>
+          <sch:SecondaryInsurancePolicyPlanAddressLine1>true</sch:SecondaryInsurancePolicyPlanAddressLine1>
+          <sch:SecondaryInsurancePolicyPlanCity>true</sch:SecondaryInsurancePolicyPlanCity>
+          <sch:SecondaryInsurancePolicyPlanID>true</sch:SecondaryInsurancePolicyPlanID>
+          <sch:SecondaryInsurancePolicyPlanName>true</sch:SecondaryInsurancePolicyPlanName>
+          <sch:SecondaryInsurancePolicyPlanState>true</sch:SecondaryInsurancePolicyPlanState>
+          <sch:SecondaryInsurancePolicyPlanZipCode>true</sch:SecondaryInsurancePolicyPlanZipCode>
+          <sch:TotalBalance>true</sch:TotalBalance>
+        </sch:Fields>
+        <sch:Filter>
+          <sch:FromCreatedDate>${fromDate}</sch:FromCreatedDate>
+          <sch:ToCreatedDate>${toDate}</sch:ToCreatedDate>
+          <sch:PracticeName>${process.env.TEBRA_PRACTICE_NAME}</sch:PracticeName>
+        </sch:Filter>
+      </sch:request>
+    </sch:GetPatients>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+  const rawXml = await soapPost('GetPatients', envelope);
+  const parsed = parser.parse(rawXml);
+  const result = parsed?.Envelope?.Body?.GetPatientsResponse?.GetPatientsResult;
+
+  if (!result) throw new Error('Could not locate GetPatientsResult in response');
+  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+    throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
+  }
+
+  const patients = result?.Patients?.PatientData;
+  if (!patients) return [];
+  return Array.isArray(patients) ? patients : [patients];
 }
 
 /**

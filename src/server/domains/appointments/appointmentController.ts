@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { syncAppointments } from '../tebra-api/tebraSync.ts';
+
 const prisma = new PrismaClient();
 
 const appointmentController = {
@@ -26,6 +28,16 @@ const appointmentController = {
         59,
         59
       );
+
+      // Sync appointments from Tebra before querying the DB
+      const fromDate = `${firstDayOfMonth.getFullYear()}-${String(firstDayOfMonth.getMonth() + 1).padStart(2, '0')}-${String(firstDayOfMonth.getDate()).padStart(2, '0')}`;
+      const toDate = `${lastDayOfNextMonth.getFullYear()}-${String(lastDayOfNextMonth.getMonth() + 1).padStart(2, '0')}-${String(lastDayOfNextMonth.getDate()).padStart(2, '0')}`;
+
+      try {
+        await syncAppointments(fromDate, toDate);
+      } catch (syncErr) {
+        console.error('Tebra sync failed, returning cached data:', syncErr);
+      }
 
       // Get appointments from the database with date filtering
       const appointments = await prisma.appointment.findMany({
