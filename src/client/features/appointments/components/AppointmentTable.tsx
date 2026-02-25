@@ -1,7 +1,7 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import DropDown from '@client/components/ui/DropDown'
 import AppointmentActions from './AppointmentActions';
-import { updateCopay } from '../services/appointmentApi';
+import { updateCopay, updateAppointmentNote } from '../services/appointmentApi';
 
 interface Props {
   columns: any[];
@@ -21,6 +21,7 @@ interface AppointmentRow {
     primaryInsurancePolicyNumber: string;
     appointmentReason: string;
     alertMessage: string;
+    notes: string;
     id: number;
     createdDate: string;
     lastModifiedDate: string;
@@ -58,7 +59,14 @@ const AppointmentTable = ({
         },
       };
     }
-    // Special handling for the transcription column to show overflow
+    if (key === 'notes') {
+      return {
+        field: key,
+        headerName: displayName,
+        width: 250,
+        editable: true,
+      };
+    }
     if (key === 'patientCopay') {
       return {
         field: key,
@@ -83,11 +91,12 @@ const AppointmentTable = ({
     //   updateVoicemailNote(originalRow.id, updatedRow.notes);
       return updatedRow;
     }
+    if (updatedRow.notes !== originalRow.notes) {
+      updateAppointmentNote(originalRow.id, updatedRow.notes);
+      return updatedRow;
+    }
     if (updatedRow.patientCopay !== originalRow.patientCopay) {
-      console.log('Original row: ', originalRow)
       updateCopay(originalRow.id, updatedRow.patientCopay);
-    //   updateVoicemailNote(originalRow.id, updatedRow.notes);
-  
       return updatedRow;
     }
     return originalRow;

@@ -6,7 +6,7 @@ const appointmentRouter = express.Router();
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-const { getAppointments, updateCopay } = appointmentController;
+const { getAppointments, updateCopay, updateNote } = appointmentController;
 
 appointmentRouter.get('/', getAppointments, (req, res) => {
   const appointments = res.locals.appointments;
@@ -17,6 +17,8 @@ appointmentRouter.get('/', getAppointments, (req, res) => {
 appointmentRouter.post('/copay', updateCopay, (req, res) => {
   return res.status(200).json({message: 'Copay updated'})
 })
+
+appointmentRouter.patch('/:id/notes', updateNote);
 
 appointmentRouter.delete('/', async (req, res) => {
   await prisma.appointment.deleteMany({});

@@ -75,6 +75,31 @@ const appointmentController = {
     }
   },
 
+  updateNote: async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const { notes } = req.body;
+
+      const appointment = await prisma.appointment.findUnique({ where: { id } });
+      if (!appointment) {
+        return res.status(404).json({ err: 'Appointment not found' });
+      }
+
+      await prisma.appointment.update({
+        where: { id },
+        data: { notes: notes ?? null },
+      });
+
+      return res.status(200).json({ message: 'Note updated' });
+    } catch (error) {
+      next({
+        status: 500,
+        message: { err: 'Error updating appointment note' },
+        log: `Error in updateNote: ${error}`,
+      });
+    }
+  },
+
   updateCopay: async (req, res, next) => {
     // deconstruct appointment id and copay from req.body
     // query db for appointment using appointment id

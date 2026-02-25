@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 import { parseStringPromise } from 'xml2js';
+import { syncAppointments } from './tebraSync.ts';
 
 const tebraController = {
   testTebraApi: async (req, res, next) => {
@@ -166,6 +167,24 @@ const tebraController = {
         status: 500,
         message: { err: 'Error: getAppointments Request failed' },
         log: `Error in getAppointments: ${error}`,
+      });
+    }
+  },
+  syncAppointments: async (req, res, next) => {
+    try {
+      const { startDate, endDate } = req.body;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({ err: 'startDate and endDate are required in the request body (YYYY-MM-DD)' });
+      }
+
+      const result = await syncAppointments(startDate, endDate);
+      return res.status(200).json(result);
+    } catch (error) {
+      next({
+        status: 500,
+        message: { err: 'Tebra sync failed' },
+        log: `Error in syncAppointments: ${error}`,
       });
     }
   },

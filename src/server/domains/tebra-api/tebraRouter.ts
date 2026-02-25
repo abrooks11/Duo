@@ -1,7 +1,7 @@
 import express from 'express';
 import tebraController from './tebraController.ts';
 
-const { testTebraApi, getAppointments } = tebraController;
+const { testTebraApi, getAppointments, syncAppointments } = tebraController;
 
 const tebraRouter = express.Router();
 
@@ -12,5 +12,7 @@ tebraRouter.post('/test', testTebraApi, (req, res) => {
 tebraRouter.get('/appointments', getAppointments, (req, res) => {
   // Response already sent in controller
 });
+
+tebraRouter.post('/sync', syncAppointments);
 
 export default tebraRouter;

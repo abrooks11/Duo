@@ -1,5 +1,5 @@
 // import react hooks
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // import custom components
 import AppointmentTable from '../features/appointments/components/AppointmentTable';
@@ -14,6 +14,7 @@ import { useAppointment } from '@client/features/appointments/hooks/useAppointme
 
 import InsuranceSelector from '../features/appointments/components/InsuranceSlector';
 import CopaySummary from '../features/appointments/components/CopaySummary';
+import { syncFromTebra } from '../features/appointments/services/appointmentApi';
 
 const Appointments = () => {
   const {
@@ -24,6 +25,25 @@ const Appointments = () => {
     // error,
     loadAppointments,
   } = useAppointment();
+
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10);
+    const { status, data } = await syncFromTebra(startDate, endDate);
+    setSyncing(false);
+    if (status === 200) {
+      setSyncMessage(`Synced ${data.synced} appointments, skipped ${data.skipped}`);
+      loadAppointments();
+    } else {
+      setSyncMessage('Sync failed');
+    }
+  };
 
   // use custom hook
   useEffect(() => {
@@ -77,6 +97,16 @@ const Appointments = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <InsuranceSelector />
         <CopaySummary />
+      </div>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+        >
+          {syncing ? 'Syncing...' : 'Sync from Tebra'}
+        </button>
+        {syncMessage && <span className="text-sm text-gray-600">{syncMessage}</span>}
       </div>
       {formattedDateData.length > 0 && (
         <AppointmentTable
