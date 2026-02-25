@@ -10,6 +10,7 @@ import Voicemail from '../../pages/Voicemail';
 import Demo from '../../pages/Demo';
 import Payments from '../../pages/Payments';
 import Reports from '../../pages/Reports';
+import Tebra from '../../pages/Tebra';
 
 function MainContent() {
   return (
@@ -25,6 +26,7 @@ function MainContent() {
         <Route path="/payments" element={<Payments />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/voicemail" element={<Voicemail />} />
+        <Route path="/tebra" element={<Tebra />} />
         <Route path="/demo" element={<Demo />} />
       </Routes>
     </div>

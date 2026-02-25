@@ -1,6 +1,7 @@
 import express from 'express'; // Import the Express framework to create a web server
 import cors from 'cors'; // Import the CORS middleware
 import cookieParser from 'cookie-parser';
+// import xmlparser from 'express-xml-bodyparser';
 
 // import fileUpload from "express-fileupload";
 import path from 'path'; // Import the path module to handle file and directory paths
@@ -27,6 +28,8 @@ app.use(
 );
 
 app.use(cookieParser());
+
+// app.use(xmlparser());
 
 // Enable file upload middleware
 // app.use(fileUpload());

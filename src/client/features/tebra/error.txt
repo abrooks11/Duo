@@ -1,0 +1,42 @@
+Sending SOAP request for date range: { startDate: '2026-01-01', endDate: '2026-12-31' }
+XML Request: <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <GetAppointments xmlns="http://www.kareo.com/api/schemas/2.1/">
+      <request>
+        <RequestHeader>
+          <CustomerKey>i39bs24ex78c</CustomerKey>
+          <User>alicia@exclusivelygyn.com</User>
+          <Password>Friday!13</Password>
+        </RequestHeader>
+        <Fields>
+          <Field>AppointmentID</Field>
+          <Field>PatientID</Field>
+          <Field>PatientFullName</Field>
+          <Field>StartDate</Field>
+          <Field>EndDate</Field>
+          <Field>AppointmentStatus</Field>
+          <Field>AppointmentConfirmationStatus</Field>
+          <Field>ReasonForVisit</Field>
+          <Field>ResourceName</Field>
+          <Field>Duration</Field>
+          <Field>Notes</Field>
+        </Fields>
+        <Filter>
+          <StartDate>2026-01-01</StartDate>
+          <EndDate>2026-12-31</EndDate>
+        </Filter>
+      </request>
+    </GetAppointments>
+  </s:Body>
+</s:Envelope>
+Response status: 500
+Raw XML response: <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultcode xmlns:a="http://schemas.microsoft.com/ws/2005/05/addressing/none">a:ActionNotSupported</faultcode><faultstring xml:lang="en-US">The message with Action 'http://www.kareo.com/api/schemas/2.1/IKareoService/GetAppointments' cannot be processed at the receiver, due to a ContractFilter mismatch at the EndpointDispatcher. This may be because of either a contract mismatch (mismatched Actions between sender and receiver) or a binding/security mismatch between the sender and the receiver.  Check that sender and receiver have the same contract and the same binding (including security requirements, e.g. Message, Transport, None).</faultstring></s:Fault></s:Body></s:Envelope>
+SOAP Fault detected in response
+GLOBAL ERROR HANDLER:  {
+  log: `SOAP Fault: <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultcode xmlns:a="http://schemas.microsoft.com/ws/2005/05/addressing/none">a:ActionNotSupported</faultcode><faultstring xml:lang="en-US">The message with Action 'http://www.kareo.com/api/schemas/2.1/IKareoService/GetAppointments' cannot be processed at the receiver, due to a ContractFilter mismatch at the EndpointDispatcher. This may be because of either a contract mismatch (mismatched Actions between sender and receiver) or a binding/security mismatch between the sender and the receiver.  Check that sender and receiver have the same contract and the same binding (including security requirements, e.g. Message, Transport, None).</faultstring></s:Fault></s:Body></s:Envelope>`,
+  status: 500,
+  message: { err: 'SOAP fault returned from Tebra API' },
+  stack: undefined,
+  path: '/api/tebra/appointments',
+  method: 'GET'
+}

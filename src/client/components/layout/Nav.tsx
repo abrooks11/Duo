@@ -50,6 +50,13 @@ function Nav() {
           <li>Reports</li>
         </NavLink>
 
+        <NavLink
+          to="/tebra"
+          className={({ isActive }) => (isActive ? 'active-page' : '')}
+        >
+          <li>Tebra</li>
+        </NavLink>
+
         {/* <NavLink
           to="/demo"
           className={({ isActive }) => (isActive ? 'active-page' : '')}
