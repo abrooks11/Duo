@@ -4,217 +4,83 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Duo is a full-stack healthcare data integration platform designed for small to mid-size healthcare facilities. It ingests CSV and XML exports from various healthcare systems (practice management, billing, voicemail) and consolidates them into a unified PostgreSQL database with a React-based frontend for data management.
+Duo is a full-stack healthcare data integration platform for small to mid-size facilities. It ingests Excel/CSV exports from healthcare systems (appointments, patients, payments, voicemails) into a PostgreSQL database via Prisma, and presents the data through filterable tables.
 
 ## Development Commands
 
-### Starting the Application
 ```bash
-# Start both frontend and backend concurrently
-npm run start
-
-# Start frontend only (Vite dev server on port 5173)
-npm run dev
-
-# Start backend only (Express server on port 3000)
-npm run server
+npm run start         # Start both frontend (port 5173) and backend (port 3000) concurrently
+npm run dev           # Frontend only (Vite dev server)
+npm run server        # Backend only (nodemon with tsx, watches src/server)
+npm run build         # TypeScript compile + Vite build
+npm run lint          # ESLint
+npm run format        # Prettier write
+npm run format:check  # Prettier check
 ```
 
-### Database Operations
+**Database:**
 ```bash
-# Open Prisma Studio (database GUI)
-npx prisma studio
-
-# Apply database migrations
-npx prisma migrate dev
-
-# Generate Prisma client after schema changes
-npx prisma generate
-```
-
-### Code Quality
-```bash
-# Run ESLint
-npm run lint
-
-# Format code with Prettier
-npm run format
-
-# Check formatting without modifying files
-npm run format:check
-```
-
-### Building
-```bash
-# Build frontend for production
-npm run build
-
-# Preview production build
-npm run preview
+npx prisma migrate dev    # Apply or create migrations
+npx prisma studio         # Open Prisma GUI
+npx prisma generate       # Regenerate Prisma client
 ```
 
 ## Architecture
 
-### Technology Stack
-- **Frontend**: React 18, TypeScript, Vite, Material-UI (MUI), Tailwind CSS
-- **Backend**: Express.js, Node.js (ES modules)
-- **Database**: PostgreSQL with Prisma ORM
-- **State Management**: React Context API with Immer for immutable updates
-- **Build Tool**: Vite with SWC for fast compilation
-
-### Project Structure
-
-#### Backend (`src/server/`)
-The backend follows a **domain-driven architecture** where each business domain is self-contained:
-
-```
-src/server/
-├── server.js                    # Express app entry point
-├── routes/
-│   └── api.ts                   # Main API router that aggregates domain routers
-└── domains/
-    ├── appointments/            # Appointment management
-    ├── patients/                # Patient records
-    ├── claims/                  # Insurance claims
-    ├── payments/                # Payment processing
-    ├── voicemail/               # RingRX voicemail integration
-    ├── sms/                     # SMS functionality
-    ├── upload/                  # Excel/CSV file ingestion
-    ├── ai/                      # OpenAI integration
-    ├── estimates/               # Insurance estimates
-    ├── auth/                    # Authentication utilities
-    └── tebra-api/               # Tebra API integration (in progress)
-```
-
-Each domain typically contains:
-- `{domain}Router.ts` - Express router for the domain's endpoints
-- `{domain}Controller.ts` - Request handlers and business logic
-- `{domain}Services.ts` - Database operations and external API calls
-
-**Authentication Pattern**: The `auth/` domain contains middleware for third-party API authentication. Example: `ensureRingAuth` middleware in `authMiddleware.ts` handles RingRX token management by:
-- Checking for existing token in cookies
-- Refreshing token if missing/expired
-- Attaching token and refresh function to `req` object for controllers
-
-#### Frontend (`src/client/`)
-The frontend uses a **feature-based architecture**:
-
-```
-src/client/
-├── main.tsx                     # React entry point
-├── App.tsx                      # Root component with routing
-├── context/
-│   ├── GlobalContext.tsx        # Global state provider using Immer
-│   ├── reducers/                # State reducers by domain
-│   └── types/                   # TypeScript types for state/actions
-├── features/                    # Feature modules
-│   ├── appointments/
-│   ├── voicemail/
-│   ├── sms/
-│   ├── payments/
-│   ├── reports/
-│   └── tebra/
-├── components/
-│   ├── layout/                  # Nav, Sidebar, TopNav, Footer
-│   ├── tables/                  # Reusable Table component
-│   ├── ui/                      # UI primitives (DropDown, ActionMenu, etc.)
-│   └── sidebar/                 # Filtering/calendar components
-├── pages/                       # Top-level page components
-└── hooks/                       # Shared custom hooks
-```
-
-Each feature typically contains:
-- `components/` - Feature-specific React components
-- `hooks/` - Feature-specific React hooks
-- `services/` - API calls and business logic
-  - `{feature}Api.ts` - API endpoint calls
-  - `{feature}Services.ts` - Additional service logic
-
-**State Management Pattern**: The application uses Context + Reducers with Immer for immutable state updates. Global state is divided by domain (appointments, patients, claims, voicemail). Each domain in the global state typically includes:
-- `data`: Array of records from the database
-- `allColumnHeaders`: Column configuration for tables
-- `rowFilterDetails`: Filter options and their state
-- `selectedDateRange`: Date range for filtering (where applicable)
-
-#### Database (`prisma/`)
-Prisma schema defines the relational model:
-- **Core Resources**: `Patient`, `Appointment`, `Charge`, `Voicemail`
-- **Payment Processing**: `Deposit`, `Eob` (Explanation of Benefits)
-- **Relationships**: `PatientVoicemail` junction table for many-to-many
+### Stack
+- **Frontend:** React 18 + TypeScript, Vite, Tailwind CSS v4, Material-UI (MUI X DataGrid for tables), React Router v7
+- **Backend:** Express.js (ESM), Prisma ORM, PostgreSQL
+- **State:** React Context + `useReducer` + Immer (Redux-like pattern in `src/client/context/`)
+- **File Ingestion:** `xlsx` library parses Excel/CSV uploads; Multer handles multipart
 
 ### Key Architectural Patterns
 
-#### 1. File Upload and Data Ingestion
-The `/upload` domain handles Excel/CSV imports with resource-specific logic:
-- Route pattern: `POST /api/upload/:resourceType/:sheetName`
-- Supports: `patient`, `appointment`, `deposit`, `eob`
-- Uses `excelServices.ts` to parse files and `fieldMap.ts` to normalize column names
-- Implements upsert logic: compares `lastModifiedDate` to update only if incoming data is newer
-- Patient relationships validated before creating appointments
+**Frontend (`src/client/`):**
+- Global state lives in `context/` — uses Immer for immutable updates
+- Custom hooks in `hooks/` wrap API calls (`useApi`) and context access (`useGlobalContext`)
+- Resource-specific API utilities in `utils/` (e.g., `appointmentApi.ts`, `voicemailApi.ts`)
+- Vite proxies `/api` requests to `http://localhost:3000`, so frontend fetches use relative `/api/...` paths
 
-#### 2. Third-Party API Integration
-**RingRX Voicemail**:
-- Authentication handled by `ensureRingAuth` middleware
-- Token stored in HTTP-only cookies
-- Controllers access token via `req.ringToken`
-- Can refresh token mid-request using `req.refreshRingToken()`
+**Backend (`src/server/`):**
+- Router → Controller → Service layering
+- `routes/api.js` mounts all sub-routers under `/api`
+- `services/fieldMap.js` maps Excel column headers to Prisma field names — critical for upload processing
+- `services/excelServices.js` handles Excel serial date → ISO string conversion
+- Upload endpoint: `POST /api/upload/:resourceType/:sheetName` — supports `patient`, `appointment`, `payment`, `eob`
+- Upsert logic in upload controllers: skips records if incoming `lastModifiedDate` is not newer than existing
 
-**OpenAI Integration**:
-- Used for AI-enhanced features (insurance eligibility extraction, etc.)
-- Accessed via `/api/openai` routes
+**Database (`prisma/schema.prisma`):**
+- Core models: `Patient`, `Appointment`, `Charge`, `Voicemail`, `Payment`, `PatientVoicemail` (junction)
+- `PatientVoicemail` is a many-to-many join between Patient and Voicemail
+- `relationJoins` preview feature is enabled
 
-#### 3. Frontend Data Flow
-1. Component calls API via feature service (e.g., `appointmentApi.ts`)
-2. Service makes fetch request to backend
-3. Response dispatched to global context reducer
-4. Reducer updates relevant domain state (e.g., `appointments.data`)
-5. Components re-render with new data from context
-
-#### 4. API Proxy Configuration
-Vite dev server proxies `/api` requests to Express backend (port 3000), enabling seamless development without CORS issues.
-
-## Environment Configuration
-
-Required environment variables (see `.env.example`):
-```env
-PORT=3000                                    # Backend server port
+### Environment Variables (`.env`)
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/duo
+OPENAI_API_KEY=
+RINGRX_API_KEY=
+RINGRX_BASE_URL=https://portal.ringrx.com
+PORT=3000
 NODE_ENV=development
-DATABASE_URL=postgresql://...                # PostgreSQL connection string
-RING_USER_NAME=...                           # RingRX credentials
-RING_PASSWORD=...
-OPENAI_API_KEY=...                           # OpenAI API key
 ```
 
-## Key Conventions
+## Key File Locations
 
-### Backend
-- Use ES modules (`import`/`export`) consistently
-- Error handling: Pass errors to Express error handler with format:
-  ```typescript
-  next({
-    status: number,
-    message: { err: string },
-    log: string
-  })
-  ```
-- Prisma client import: `import { PrismaClient } from '@prisma/client'`
-- TypeScript files use `.ts` extension and must be imported with `.ts` extension in import statements
+| Purpose | Path |
+|---------|------|
+| Express server entry | `src/server/server.js` |
+| API router mount | `src/server/routes/api.js` |
+| Excel column → Prisma field map | `src/server/services/fieldMap.js` |
+| Upload controller (upsert logic) | `src/server/controllers/uploadController.js` |
+| Prisma schema | `prisma/schema.prisma` |
+| React entry | `src/client/main.tsx` |
+| Global state context | `src/client/context/` |
+| Vite config (proxy setup) | `vite.config.ts` |
 
-### Frontend
-- Import alias: `@client` maps to `src/client/` (configured in `vite.config.ts`)
-- API calls should handle loading and error states
-- Use Material-UI components for consistent styling
-- Tailwind CSS available for utility-based styling
+## Notes
 
-### Database
-- All models have `id` as primary key
-- Use `lastModifiedDate` for conflict resolution during upserts
-- Foreign key relationships use Prisma's `@relation` decorator
-- Apply migrations with `npx prisma migrate dev`
-
-## Integration Points
-
-- **RingRX Portal**: Voicemail system integration via REST API
-- **Tebra**: Patient management system integration (in development)
-- **OpenAI**: Used for intelligent data extraction and analysis
-- **Healthcare Exports**: Imports from practice management systems via Excel/CSV
+- The backend runs as ESM (`"type": "module"` in package.json); use `import`/`export`, not `require`/`module.exports` in server files
+- Appointments query defaults to current month + next month date range
+- Payments GET returns only unpaid EOBs (`isPaid: false`)
+- Voicemail integrates with RingRX API; the `openAiController` handles AI-assisted features
+- Timezone adjustment of +2 hours is applied to appointment dates during upload processing
