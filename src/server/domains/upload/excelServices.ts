@@ -66,7 +66,7 @@ const transformKeys = (row) => {
             prismaKey
           )
         ) {
-          acc[prismaKey] = value ? parseFloat(value) : null;
+          acc[prismaKey] = value != null ? String(value) : null;
         } else if (prismaKey.includes('ZipCode')) {
           acc[prismaKey] =
             value && typeof value === 'string' ? value.slice(0, 5) : null;

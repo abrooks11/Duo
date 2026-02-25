@@ -13,7 +13,7 @@ interface Props {
 interface AppointmentRow {
     insEligibility: string;
     patientCopay: number;
-    patientBalance: number;
+    patientBalance: string | number;
     startDate: string;
     confirmationStatus: string;
     patientFullName: string;

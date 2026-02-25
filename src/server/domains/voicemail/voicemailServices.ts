@@ -81,7 +81,7 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
       return;
     }
     if (recordRequestKeywords.some((keyword) => lowerStr.includes(keyword))) {
-      callDetails.reason = 'records';
+      callDetails.reason = 'recordRequest';
       return;
     }
   };

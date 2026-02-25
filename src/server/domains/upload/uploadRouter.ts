@@ -238,7 +238,7 @@ uploadRouter.post(
                 createdDate: new Date(date), // DateTime
                 reference: referenceNumber, // String @unique
                 payerName: getPayerName(description), // String
-                amount: credit, // Float
+                amount: credit != null ? String(credit) : null, // Decimal
               };
             });
           console.log('filteredDeposits', deposits.length);
