@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Duo is a full-stack healthcare data integration platform for small to mid-size facilities. It ingests Excel/CSV exports from healthcare systems (appointments, patients, payments, voicemails) into a PostgreSQL database via Prisma, and presents the data through filterable tables.
+Duo is a full-stack healthcare data integration platform for small to mid-size facilities. It ingests Excel/CSV exports and syncs data from EHR systems (Tebra/Kareo) into a PostgreSQL database via Prisma, and presents the data through filterable tables. Features include AI-powered reporting, SMS messaging via RingRX, voicemail management, and Tebra appointment sync.
 
 ## Development Commands
 
@@ -32,6 +32,9 @@ npx prisma generate       # Regenerate Prisma client
 - **Backend:** Express.js (ESM), Prisma ORM, PostgreSQL
 - **State:** React Context + `useReducer` + Immer (Redux-like pattern in `src/client/context/`)
 - **File Ingestion:** `xlsx` library parses Excel/CSV uploads; Multer handles multipart
+- **EHR Integration:** Tebra (Kareo) SOAP API sync for appointments and payments (`fast-xml-parser`)
+- **AI:** OpenAI for natural-language SQL report generation and voicemail features
+- **Validation:** Zod for input validation
 
 ### Key Architectural Patterns
 
@@ -42,26 +45,46 @@ npx prisma generate       # Regenerate Prisma client
 - Vite proxies `/api` requests to `http://localhost:3000`, so frontend fetches use relative `/api/...` paths
 
 **Backend (`src/server/`):**
-- Router → Controller → Service layering
-- `routes/api.js` mounts all sub-routers under `/api`
+- **Domain-based organization** under `src/server/domains/` — each domain has Router, Controller, Services, Types files
+- Domains: `auth/`, `ai/`, `appointments/`, `claims/`, `patients/`, `payments/`, `voicemail/`, `upload/`, `reports/`, `sms/`, `tebra-api/`, `estimates/`
+- `routes/api.js` mounts all domain routers under `/api`
 - `services/fieldMap.js` maps Excel column headers to Prisma field names — critical for upload processing
 - `services/excelServices.js` handles Excel serial date → ISO string conversion
 - Upload endpoint: `POST /api/upload/:resourceType/:sheetName` — supports `patient`, `appointment`, `payment`, `eob`
 - Upsert logic in upload controllers: skips records if incoming `lastModifiedDate` is not newer than existing
+- **RingRX auth middleware** (`domains/auth/`): cookie-based token management with auto-refresh on 401/403
+- **Tebra sync** (`domains/tebra-api/`): SOAP API client that fetches appointments/payments, upserts with patient validation
+- **Reports** (`domains/reports/`): AI generates SQL from natural language descriptions, SQL validator ensures SELECT-only queries
+- **SMS** (`domains/sms/`): sends messages via RingRX API
 
 **Database (`prisma/schema.prisma`):**
-- Core models: `Patient`, `Appointment`, `Charge`, `Voicemail`, `Payment`, `PatientVoicemail` (junction)
+- Core models: `Patient`, `Appointment`, `Charge`, `Voicemail`, `Payment`, `PatientVoicemail` (junction), `Report`, `ReportFolder`, `Eob`, `Deposit`
 - `PatientVoicemail` is a many-to-many join between Patient and Voicemail
+- `Charge` has explicit foreign keys to `Patient` and `Appointment` with indexes
+- Monetary fields use `Decimal(65,30)` (not Float)
+- Voicemail uses enums: `CallerType` (patient, other, clinic, pharmacy, insurance) and `VoicemailReason` (appointment, prescription, referral, etc.)
 - `relationJoins` preview feature is enabled
 
 ### Environment Variables (`.env`)
 ```
 DATABASE_URL=postgresql://username:password@localhost:5432/duo
-OPENAI_API_KEY=
-RINGRX_API_KEY=
-RINGRX_BASE_URL=https://portal.ringrx.com
 PORT=3000
 NODE_ENV=development
+
+# OpenAI (reports AI, voicemail features)
+OPENAI_API_KEY=
+
+# RingRX (voicemail, SMS)
+RING_USER_NAME=
+RING_PASSWORD=
+RINGRX_BASE_URL=https://portal.ringrx.com
+
+# Tebra/Kareo (EHR sync)
+TEBRA_API_URL=
+TEBRA_CUSTOMER_KEY=
+TEBRA_USER_ID=
+TEBRA_PASSWORD=
+TEBRA_PRACTICE_NAME=
 ```
 
 ## Key File Locations
@@ -70,17 +93,26 @@ NODE_ENV=development
 |---------|------|
 | Express server entry | `src/server/server.js` |
 | API router mount | `src/server/routes/api.js` |
+| Backend domains | `src/server/domains/` |
 | Excel column → Prisma field map | `src/server/services/fieldMap.js` |
-| Upload controller (upsert logic) | `src/server/controllers/uploadController.js` |
+| Upload domain | `src/server/domains/upload/` |
+| Tebra integration | `src/server/domains/tebra-api/` |
+| Reports (AI SQL) | `src/server/domains/reports/` |
+| RingRX auth middleware | `src/server/domains/auth/` |
+| SMS feature | `src/server/domains/sms/` |
 | Prisma schema | `prisma/schema.prisma` |
 | React entry | `src/client/main.tsx` |
 | Global state context | `src/client/context/` |
+| Reports frontend | `src/client/features/reports/` |
 | Vite config (proxy setup) | `vite.config.ts` |
 
 ## Notes
 
 - The backend runs as ESM (`"type": "module"` in package.json); use `import`/`export`, not `require`/`module.exports` in server files
-- Appointments query defaults to current month + next month date range
+- Appointments query defaults to current month + next month date range; Tebra auto-syncs on GET
 - Payments GET returns only unpaid EOBs (`isPaid: false`)
 - Voicemail integrates with RingRX API; the `openAiController` handles AI-assisted features
 - Timezone adjustment of +2 hours is applied to appointment dates during upload processing
+- Tebra sync preserves custom fields (notes, insEligibility, patientCopay) on updates; seeds notes from Tebra on creation
+- Reports SQL validator blocks all non-SELECT statements to prevent destructive queries
+- RingRX auth uses httpOnly cookies with auto-refresh; all RingRX API calls go through authenticated helpers
