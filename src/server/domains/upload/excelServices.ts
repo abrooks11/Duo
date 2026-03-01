@@ -30,7 +30,7 @@ const excelServices = {
     return result = result.map((row) => transformKeys(row));
 
   } catch (error) {
-      console.error('ERROR', error);
+      throw error;
     }
   },
 };
@@ -77,11 +77,7 @@ const transformKeys = (row) => {
       return acc;
     }, {});
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error transforming keys' },
-      log: `Error in excelServices: ${error}`, // log to server
-    });
+    throw new Error(`Error transforming keys: ${error}`);
   }
 };
 

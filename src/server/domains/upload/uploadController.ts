@@ -32,7 +32,7 @@ const uploadController = {
       }
     } catch (error) {
       next({
-        status: 501,
+        status: 500,
         message: { err: 'Error uploading file' }, // message to client
         log: `Error in uploadController: ${error}`, // log to server
       });

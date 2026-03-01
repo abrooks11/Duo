@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { fetchAppointments, parseSoapDateTime } from './tebraApi.ts';
+import { createChildLogger } from '../../shared/logger.js';
 
 const prisma = new PrismaClient();
+const log = createChildLogger('tebra-sync');
 
 export interface SyncResult {
   synced: number;
@@ -22,7 +24,7 @@ export async function syncAppointments(fromDate: string, toDate: string): Promis
   const result: SyncResult = { synced: 0, skipped: 0, errors: [] };
 
   const appointments = await fetchAppointments(fromDate, toDate);
-  console.log(`Tebra sync: fetched ${appointments.length} appointments (${fromDate} → ${toDate})`);
+  log.info(`Fetched ${appointments.length} appointments (${fromDate} → ${toDate})`);
 
   for (const appt of appointments) {
     try {
@@ -73,6 +75,6 @@ export async function syncAppointments(fromDate: string, toDate: string): Promis
     }
   }
 
-  console.log(`Tebra sync complete: ${result.synced} synced, ${result.skipped} skipped`);
+  log.info(`Sync complete: ${result.synced} synced, ${result.skipped} skipped`);
   return result;
 }

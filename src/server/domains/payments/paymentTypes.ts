@@ -1,5 +1,3 @@
-import {Response} from 'express';
-
 // Shared types for EOB and Payment functionality
 export interface Eob {
   id: number;
@@ -23,12 +21,6 @@ export interface Deposit {
   amount: number;
 }
 
-export interface PaymentResponse extends Response {
-  eobs?: Eob[];
-  deposits?: Deposit[];
-  matchedEobs?: Eob[];
-}
-
 // API Response types
 export interface PaymentApiResponse {
   eobs: Eob[];
@@ -44,9 +36,3 @@ export interface MatchingResultResponse {
   matchesFound: number;
 }
 
-// API Error types
-export interface ApiError {
-  status: number;
-  message: { err: string };
-  log?: string;
-}

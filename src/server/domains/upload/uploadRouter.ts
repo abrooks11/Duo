@@ -1,7 +1,3 @@
-// ! fileUpload in server.js for browser
-// ! multer in uploadRouter for postman
-
-// import express
 import express from 'express';
 import multer from 'multer';
 const upload = multer();
@@ -11,7 +7,10 @@ import excelServices from './excelServices.ts';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-// create a router
+import { sendSuccess, sendError } from '../../shared/errorHandlers.js';
+import { createChildLogger } from '../../shared/logger.js';
+
+const log = createChildLogger('upload');
 const uploadRouter = express.Router();
 
 /**
@@ -67,7 +66,7 @@ uploadRouter.post(
           message: { err: 'Please upload a file' },
         });
       }
-      console.log('UPLOAD ROUTER req.params', req.params);
+      log.debug({ params: req.params }, 'Upload request received');
       const { resourceType, sheetName } = req.params;
       // console.log("UPLOAD ROUTER req.file", req.file);
       // const { file } = req.file; // for browser
@@ -85,11 +84,11 @@ uploadRouter.post(
         });
       }
 
-      console.log('excelData: total rows:', excelData.length);
+      log.info(`Excel data: ${excelData.length} total rows`);
 
       switch (resourceType) {
         case 'patient':
-          console.log('UPSERTING PATIENTS. . . ');
+          log.info('Upserting patients...');
 
           for (const patientObj of excelData) {
             const { id, ...patientData } = patientObj;
@@ -110,7 +109,7 @@ uploadRouter.post(
                   where: { id: id },
                   data: patientData,
                 });
-                console.log('Updated patient record with more recent data');
+                log.debug('Updated patient record with more recent data');
               } else {
                 // console.log('Skipping update - existing data is more recent');
               }
@@ -127,10 +126,8 @@ uploadRouter.post(
           const filteredRows = excelData.filter((row) => {
             return row.type === 'Patient';
           });
-          console.log('FILTERED APPOINTMENT ROWS', filteredRows.length);
-          console.log(typeof filteredRows[0].createdDate);
-
-          console.log('UPSERTING APPOINTMENTS. . . ');
+          log.info(`Filtered appointment rows: ${filteredRows.length}`);
+          log.info('Upserting appointments...');
 
           for (const appointmentObj of filteredRows) {
             // separate key fields from rest of appointment data
@@ -148,9 +145,7 @@ uploadRouter.post(
               });
 
               if (!currentPatient) {
-                console.log(
-                  `Skipping appointment - Patient ${patientFullName} ${patientId} not found`
-                );
+                log.debug(`Skipping appointment - Patient ${patientFullName} ${patientId} not found`);
                 continue;
               }
 
@@ -189,7 +184,7 @@ uploadRouter.post(
                       notes: String(appointmentData.notes),
                     },
                   });
-                  console.log('Updated appointment record with more recent data');
+                  log.debug('Updated appointment record with more recent data');
                 } else {
                   // console.log('Skipping update - existing data is more recent');
                 }
@@ -241,7 +236,7 @@ uploadRouter.post(
                 amount: credit != null ? String(credit) : null, // Decimal
               };
             });
-          console.log('filteredDeposits', deposits.length);
+          log.info(`Filtered deposits: ${deposits.length}`);
 
           // FOR EACH NEW DEPOSIT, CHECK IF IT EXISTS ON THE DEPOSITS TABLE, IF SO, SKIP,
 
@@ -249,7 +244,7 @@ uploadRouter.post(
             data: deposits,
             skipDuplicates: true,
           });
-          console.log('PAYMENTS UPLOADED', newDeposits.count);
+          log.info(`Deposits uploaded: ${newDeposits.count}`);
 
           break;
         case 'eob':
@@ -312,7 +307,7 @@ uploadRouter.post(
             });
 
           // console.log('EOB EXCEL DATA[0]:', excelData[0]);
-          console.log('EOB[0]', eobs[0]);
+          log.debug({ sample: eobs[0] }, 'First EOB record');
 
           // 2 - ADD/UPDATE TO DATABASE
           for (const incomingEOB of eobs) {
@@ -342,17 +337,14 @@ uploadRouter.post(
 
           break;
         default:
-          return res.status(400).json({message: "Invalid resource type"})
+          return sendError(res, 'Invalid resource type', 400);
         }
 
-      return res
-        .status(200)
-        .json({ message: 'File was uploaded successfully' });
+      return sendSuccess(res, null, 'File was uploaded successfully');
     } catch (error) {
-      console.error('UPLOAD ROUTER error', error);
-      // pass the error to the global error handler
+      log.error({ error }, 'Upload failed');
       next({
-        status: 501,
+        status: 500,
         message: { err: 'Error uploading file' },
         log: `Error in uploadRouter: ${error}`,
       });

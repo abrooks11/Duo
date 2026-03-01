@@ -1,11 +1,11 @@
 import express from 'express';
-const patientRouter = express.Router();
-
 import { PrismaClient } from '@prisma/client';
+import { sendSuccess, asyncHandler } from '../../shared/errorHandlers.js';
+
+const patientRouter = express.Router();
 const prisma = new PrismaClient();
 
-patientRouter.get('/', async (req, res) => {
-  // get patients from the database, contain to 100 rows and filter out duplicates
+patientRouter.get('/', asyncHandler(async (req, res) => {
   const newestPatients = await prisma.patient.findMany({
     take: 100,
     where: {
@@ -19,12 +19,12 @@ patientRouter.get('/', async (req, res) => {
       createdDate: 'desc',
     },
   });
-  return res.status(200).json(newestPatients);
-});
+  return sendSuccess(res, newestPatients);
+}));
 
-patientRouter.delete('/', async (req, res) => {
+patientRouter.delete('/', asyncHandler(async (req, res) => {
   await prisma.patient.deleteMany({});
-  return res.status(200).json({ message: 'Records deleted' });
-});
+  return sendSuccess(res, null, 'Records deleted');
+}));
 
 export default patientRouter;

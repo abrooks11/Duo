@@ -1,11 +1,9 @@
 import express from 'express';
+import { sendSuccess, asyncHandler } from '../../shared/errorHandlers.js';
+
 const claimRouter = express.Router();
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
-claimRouter.get('/', async (req, res) => {
-  // get appointments from the database
+claimRouter.get('/', asyncHandler(async (_req, res) => {
   const claims = {};
   //   const claims = await prisma.claim.findMany({
   //     take: 100,
@@ -13,7 +11,7 @@ claimRouter.get('/', async (req, res) => {
   //       startDate: 'desc'
   //     }
   //   });
-  return res.status(200).json(claims);
-});
+  return sendSuccess(res, claims);
+}));
 
 export default claimRouter;

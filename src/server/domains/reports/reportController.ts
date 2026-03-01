@@ -14,23 +14,18 @@ import {
   duplicateReport,
   getTemplates,
 } from './reportServices.ts';
+import { AppError, handleControllerError } from '../../shared/errorHandlers.js';
 
 // ============ FOLDER CONTROLLERS ============
 
 export const getFolders = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Ensure default folders exist
     await seedDefaultFolders();
-
     const folders = await getAllFolders();
     res.locals.folders = folders;
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error fetching folders' },
-      log: `Error in reportController.getFolders: ${error}`,
-    });
+    handleControllerError(error, 'getFolders', next, 'Error fetching folders');
   }
 };
 
@@ -38,22 +33,14 @@ export const postFolder = async (req: Request, res: Response, next: NextFunction
   try {
     const { name } = req.body;
     if (!name) {
-      return next({
-        status: 400,
-        message: { err: 'Folder name is required' },
-        log: 'Missing folder name in request body',
-      });
+      return next(new AppError('Folder name is required', 400, 'Missing folder name in request body'));
     }
 
     const folder = await createFolder({ name });
     res.locals.folder = folder;
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error creating folder' },
-      log: `Error in reportController.postFolder: ${error}`,
-    });
+    handleControllerError(error, 'postFolder', next, 'Error creating folder');
   }
 };
 
@@ -66,11 +53,7 @@ export const patchFolder = async (req: Request, res: Response, next: NextFunctio
     res.locals.folder = folder;
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error updating folder' },
-      log: `Error in reportController.patchFolder: ${error}`,
-    });
+    handleControllerError(error, 'patchFolder', next, 'Error updating folder');
   }
 };
 
@@ -80,11 +63,7 @@ export const removeFolder = async (req: Request, res: Response, next: NextFuncti
     await deleteFolder(id);
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error deleting folder' },
-      log: `Error in reportController.removeFolder: ${error}`,
-    });
+    handleControllerError(error, 'removeFolder', next, 'Error deleting folder');
   }
 };
 
@@ -96,11 +75,7 @@ export const getReports = async (req: Request, res: Response, next: NextFunction
     res.locals.reports = reports;
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error fetching reports' },
-      log: `Error in reportController.getReports: ${error}`,
-    });
+    handleControllerError(error, 'getReports', next, 'Error fetching reports');
   }
 };
 
@@ -110,21 +85,13 @@ export const getReport = async (req: Request, res: Response, next: NextFunction)
     const report = await getReportById(id);
 
     if (!report) {
-      return next({
-        status: 404,
-        message: { err: 'Report not found' },
-        log: `Report not found: ${id}`,
-      });
+      return next(new AppError('Report not found', 404, `Report not found: ${id}`));
     }
 
     res.locals.report = report;
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error fetching report' },
-      log: `Error in reportController.getReport: ${error}`,
-    });
+    handleControllerError(error, 'getReport', next, 'Error fetching report');
   }
 };
 
@@ -133,31 +100,18 @@ export const postReport = async (req: Request, res: Response, next: NextFunction
     const { name, description, folderId } = req.body;
 
     if (!description) {
-      return next({
-        status: 400,
-        message: { err: 'Report description is required' },
-        log: 'Missing description in request body',
-      });
+      return next(new AppError('Report description is required', 400, 'Missing description in request body'));
     }
 
     const report = await createReport({ name, description, folderId });
     res.locals.report = report;
     return next();
   } catch (error: any) {
-    // Check if it's a validation error from SQL
     if (error.message?.includes('Invalid query') || error.message?.includes('Query validation')) {
-      return next({
-        status: 400,
-        message: { err: error.message },
-        log: `SQL validation error: ${error.message}`,
-      });
+      return next(new AppError(error.message, 400, `SQL validation error: ${error.message}`));
     }
 
-    next({
-      status: 500,
-      message: { err: 'Error creating report' },
-      log: `Error in reportController.postReport: ${error}`,
-    });
+    handleControllerError(error, 'postReport', next, 'Error creating report');
   }
 };
 
@@ -171,18 +125,10 @@ export const patchReport = async (req: Request, res: Response, next: NextFunctio
     return next();
   } catch (error: any) {
     if (error.message === 'Report not found') {
-      return next({
-        status: 404,
-        message: { err: 'Report not found' },
-        log: `Report not found: ${req.params.id}`,
-      });
+      return next(new AppError('Report not found', 404, `Report not found: ${req.params.id}`));
     }
 
-    next({
-      status: 500,
-      message: { err: 'Error updating report' },
-      log: `Error in reportController.patchReport: ${error}`,
-    });
+    handleControllerError(error, 'patchReport', next, 'Error updating report');
   }
 };
 
@@ -192,11 +138,7 @@ export const removeReport = async (req: Request, res: Response, next: NextFuncti
     await deleteReport(id);
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error deleting report' },
-      log: `Error in reportController.removeReport: ${error}`,
-    });
+    handleControllerError(error, 'removeReport', next, 'Error deleting report');
   }
 };
 
@@ -208,18 +150,10 @@ export const refreshReport = async (req: Request, res: Response, next: NextFunct
     return next();
   } catch (error: any) {
     if (error.message === 'Report not found') {
-      return next({
-        status: 404,
-        message: { err: 'Report not found' },
-        log: `Report not found: ${req.params.id}`,
-      });
+      return next(new AppError('Report not found', 404, `Report not found: ${req.params.id}`));
     }
 
-    next({
-      status: 500,
-      message: { err: 'Error refreshing report' },
-      log: `Error in reportController.refreshReport: ${error}`,
-    });
+    handleControllerError(error, 'refreshReport', next, 'Error refreshing report');
   }
 };
 
@@ -231,18 +165,10 @@ export const cloneReport = async (req: Request, res: Response, next: NextFunctio
     return next();
   } catch (error: any) {
     if (error.message === 'Report not found') {
-      return next({
-        status: 404,
-        message: { err: 'Report not found' },
-        log: `Report not found: ${req.params.id}`,
-      });
+      return next(new AppError('Report not found', 404, `Report not found: ${req.params.id}`));
     }
 
-    next({
-      status: 500,
-      message: { err: 'Error duplicating report' },
-      log: `Error in reportController.cloneReport: ${error}`,
-    });
+    handleControllerError(error, 'cloneReport', next, 'Error duplicating report');
   }
 };
 
@@ -254,10 +180,6 @@ export const getReportTemplates = async (req: Request, res: Response, next: Next
     res.locals.templates = templates;
     return next();
   } catch (error) {
-    next({
-      status: 500,
-      message: { err: 'Error fetching templates' },
-      log: `Error in reportController.getReportTemplates: ${error}`,
-    });
+    handleControllerError(error, 'getReportTemplates', next, 'Error fetching templates');
   }
 };

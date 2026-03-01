@@ -3,11 +3,15 @@ const prisma = new PrismaClient();
 
 import { parseStringPromise } from 'xml2js';
 import { syncAppointments } from './tebraSync.ts';
+import { AppError, handleControllerError, sendSuccess, sendError } from '../../shared/errorHandlers.js';
+import { createChildLogger } from '../../shared/logger.js';
+
+const log = createChildLogger('tebra');
 
 const tebraController = {
   testTebraApi: async (req, res, next) => {
     try {
-      console.log('testTebraApi middleware');
+      log.debug('testTebraApi middleware called');
 
       const tebraInfo = {
         url: process.env.TEBRA_API_URL,
@@ -16,7 +20,6 @@ const tebraController = {
         password: process.env.TEBRA_PASSWORD,
       };
 
-      // SOAP request without SOAPAction - WCF often uses message-based routing
       const xmlRequest = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
     <GetPractices xmlns="http://www.kareo.com/api/schemas/2.1/">
@@ -40,43 +43,30 @@ const tebraController = {
         body: xmlRequest,
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers));
+      log.debug({ status: response.status }, 'Tebra test response');
 
       const xmlResponse = await response.text();
-      console.log('Raw XML response:', xmlResponse);
 
       if (xmlResponse && xmlResponse.trim().length > 0) {
         const parsedData = await parseStringPromise(xmlResponse);
-        console.log('parsedData:', JSON.stringify(parsedData, null, 2));
-
-        // Send parsed data to client
-        return res.json({ success: true, data: parsedData });
+        log.debug('Tebra test: parsed response successfully');
+        return sendSuccess(res, parsedData);
       }
 
       return next();
     } catch (error) {
-      next({
-        status: 500,
-        message: { err: 'Error: testTebraApi Request failed' }, // message to client
-        log: `Error in tebraController: ${error}`, // log to server
-      });
+      handleControllerError(error, 'testTebraApi', next, 'Tebra API test request failed');
     }
   },
 
   getAppointments: async (req, res, next) => {
     try {
-      console.log('getAppointments middleware');
+      log.debug('getAppointments middleware called');
 
       const { startDate, endDate } = req.query;
 
-      // Validate date parameters
       if (!startDate || !endDate) {
-        return next({
-          status: 400,
-          message: { err: 'startDate and endDate query parameters are required' },
-          log: 'Missing date range parameters in getAppointments',
-        });
+        return next(new AppError('startDate and endDate query parameters are required', 400, 'Missing date range parameters'));
       }
 
       const tebraInfo = {
@@ -86,7 +76,6 @@ const tebraController = {
         password: process.env.TEBRA_PASSWORD,
       };
 
-      // Construct SOAP envelope for GetAppointments
       const xmlRequest = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
     <GetAppointments xmlns="http://www.kareo.com/api/schemas/2.1/">
@@ -121,8 +110,7 @@ const tebraController = {
   </s:Body>
 </s:Envelope>`;
 
-      console.log('Sending SOAP request for date range:', { startDate, endDate });
-      console.log('XML Request:', xmlRequest);
+      log.debug({ startDate, endDate }, 'Sending SOAP request for date range');
 
       const response = await fetch(tebraInfo.url, {
         method: 'POST',
@@ -133,59 +121,39 @@ const tebraController = {
         body: xmlRequest,
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers));
+      log.debug({ status: response.status }, 'Tebra appointments response');
 
       const xmlResponse = await response.text();
-      console.log('Raw XML response:', xmlResponse);
 
       if (xmlResponse && xmlResponse.trim().length > 0) {
-        // Check for SOAP fault
         if (xmlResponse.includes('<s:Fault>')) {
-          console.error('SOAP Fault detected in response');
-          return next({
-            status: 500,
-            message: { err: 'SOAP fault returned from Tebra API' },
-            log: `SOAP Fault: ${xmlResponse}`,
-          });
+          log.error('SOAP Fault detected in response');
+          return next(new AppError('SOAP fault returned from Tebra API', 500, `SOAP Fault: ${xmlResponse}`));
         }
 
         const parsedData = await parseStringPromise(xmlResponse);
-        console.log('Parsed appointments data:', JSON.stringify(parsedData, null, 2));
-
-        // Send parsed data to client
-        return res.json({ success: true, data: parsedData });
+        log.debug('Parsed appointments data successfully');
+        return sendSuccess(res, parsedData);
       }
 
-      return next({
-        status: 500,
-        message: { err: 'Empty response from Tebra API' },
-        log: 'Received empty XML response',
-      });
+      return next(new AppError('Empty response from Tebra API', 500, 'Received empty XML response'));
     } catch (error) {
-      next({
-        status: 500,
-        message: { err: 'Error: getAppointments Request failed' },
-        log: `Error in getAppointments: ${error}`,
-      });
+      handleControllerError(error, 'getAppointments', next, 'Tebra getAppointments request failed');
     }
   },
+
   syncAppointments: async (req, res, next) => {
     try {
       const { startDate, endDate } = req.body;
 
       if (!startDate || !endDate) {
-        return res.status(400).json({ err: 'startDate and endDate are required in the request body (YYYY-MM-DD)' });
+        return sendError(res, 'startDate and endDate are required in the request body (YYYY-MM-DD)', 400);
       }
 
       const result = await syncAppointments(startDate, endDate);
-      return res.status(200).json(result);
+      return sendSuccess(res, result);
     } catch (error) {
-      next({
-        status: 500,
-        message: { err: 'Tebra sync failed' },
-        log: `Error in syncAppointments: ${error}`,
-      });
+      handleControllerError(error, 'syncAppointments', next, 'Tebra sync failed');
     }
   },
 };

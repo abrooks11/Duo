@@ -1,15 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { syncAppointments } from '../tebra-api/tebraSync.ts';
+import { handleControllerError, sendSuccess, sendError } from '../../shared/errorHandlers.js';
+import { createChildLogger } from '../../shared/logger.js';
 
 const prisma = new PrismaClient();
+const log = createChildLogger('appointments');
 
 const appointmentController = {
   getAppointments: async (req, res, next) => {
     try {
-      // Get the current date
       const now = new Date();
 
-      // Calculate first day of current month (set to beginning of day)
       const firstDayOfMonth = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -19,7 +20,6 @@ const appointmentController = {
         0
       );
 
-      // Calculate last day of next month (set to end of day)
       const lastDayOfNextMonth = new Date(
         now.getFullYear(),
         now.getMonth() + 2,
@@ -29,20 +29,17 @@ const appointmentController = {
         59
       );
 
-      // Sync appointments from Tebra before querying the DB
       const fromDate = `${firstDayOfMonth.getFullYear()}-${String(firstDayOfMonth.getMonth() + 1).padStart(2, '0')}-${String(firstDayOfMonth.getDate()).padStart(2, '0')}`;
       const toDate = `${lastDayOfNextMonth.getFullYear()}-${String(lastDayOfNextMonth.getMonth() + 1).padStart(2, '0')}-${String(lastDayOfNextMonth.getDate()).padStart(2, '0')}`;
 
       try {
         await syncAppointments(fromDate, toDate);
       } catch (syncErr) {
-        console.error('Tebra sync failed, returning cached data:', syncErr);
+        log.warn({ error: syncErr }, 'Tebra sync failed, returning cached data');
       }
 
-      // Get appointments from the database with date filtering
       const appointments = await prisma.appointment.findMany({
         relationLoadStrategy: 'join',
-        // take: 100,
         where: {
           startDate: {
             gte: firstDayOfMonth,
@@ -64,8 +61,7 @@ const appointmentController = {
           },
         },
       });
-      console.log('Total appointments', appointments.length);
-      // console.log(appointments[0]);
+      log.debug(`Total appointments: ${appointments.length}`);
 
       if (appointments) {
         const flattenedAppointments = appointments.map(
@@ -73,17 +69,12 @@ const appointmentController = {
             return { ...rest, ...patient };
           }
         );
-        console.log('Flattened Appointment', flattenedAppointments[0])
         res.locals.appointments = flattenedAppointments;
       }
 
       return next();
     } catch (error) {
-      next({
-        status: 500,
-        message: { err: 'Error fetching appointments' }, // message to client
-        log: `Error in appointmentController: ${error}`, // log to server
-      });
+      handleControllerError(error, 'getAppointments', next, 'Error fetching appointments');
     }
   },
 
@@ -94,7 +85,7 @@ const appointmentController = {
 
       const appointment = await prisma.appointment.findUnique({ where: { id } });
       if (!appointment) {
-        return res.status(404).json({ err: 'Appointment not found' });
+        return sendError(res, 'Appointment not found', 404);
       }
 
       await prisma.appointment.update({
@@ -102,24 +93,16 @@ const appointmentController = {
         data: { notes: notes ?? null },
       });
 
-      return res.status(200).json({ message: 'Note updated' });
+      return sendSuccess(res, null, 'Note updated');
     } catch (error) {
-      next({
-        status: 500,
-        message: { err: 'Error updating appointment note' },
-        log: `Error in updateNote: ${error}`,
-      });
+      handleControllerError(error, 'updateNote', next, 'Error updating appointment note');
     }
   },
 
   updateCopay: async (req, res, next) => {
-    // deconstruct appointment id and copay from req.body
-    // query db for appointment using appointment id
-    // update matching db appointment with copay
-    // invoke next
     try {
       const { id, copay } = req.body;
-      console.log({ id, copay });
+      log.debug({ id, copay }, 'Updating copay');
 
       const currentAppointment = await prisma.appointment.findUnique({
         where: {
@@ -128,23 +111,20 @@ const appointmentController = {
       });
 
       if (!currentAppointment) {
-        return res.status(404).json({
-          error: 'Appointment not found',
-        });
+        return sendError(res, 'Appointment not found', 404);
       }
 
-      console.log(currentAppointment);
-      if (currentAppointment) {
-        await prisma.appointment.update({
-          where: { id: id },
-          data: {
-            patientCopay: Number(copay),
-          },
-        });
-      }
+      await prisma.appointment.update({
+        where: { id: id },
+        data: {
+          patientCopay: Number(copay),
+        },
+      });
 
       next();
-    } catch (error) {}
+    } catch (error) {
+      handleControllerError(error, 'updateCopay', next, 'Error updating copay');
+    }
   },
 };
 

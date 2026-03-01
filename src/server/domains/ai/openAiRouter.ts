@@ -1,12 +1,11 @@
 import express from 'express';
-
-// import controller functions
 import { generateResponse } from './openAiController.js';
+import { sendSuccess } from '../../shared/errorHandlers.js';
 
 const openAiRouter = express.Router();
 
 openAiRouter.post('/', generateResponse, (req, res) => {
-  return res.status(200).json({ response: res.locals.aiResponse });
+  return sendSuccess(res, res.locals.aiResponse);
 });
 
 export default openAiRouter;

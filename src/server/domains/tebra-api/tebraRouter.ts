@@ -1,17 +1,14 @@
 import express from 'express';
 import tebraController from './tebraController.ts';
+import { sendSuccess } from '../../shared/errorHandlers.js';
 
 const { testTebraApi, getAppointments, syncAppointments } = tebraController;
 
 const tebraRouter = express.Router();
 
-tebraRouter.post('/test', testTebraApi, (req, res) => {
-  return res.status(200).json({ message: 'api working' });
-});
+tebraRouter.post('/test', testTebraApi);
 
-tebraRouter.get('/appointments', getAppointments, (req, res) => {
-  // Response already sent in controller
-});
+tebraRouter.get('/appointments', getAppointments);
 
 tebraRouter.post('/sync', syncAppointments);
 

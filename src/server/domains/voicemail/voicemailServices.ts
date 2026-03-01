@@ -1,6 +1,9 @@
 import { VoicemailSchema } from './voicemailTypes';
 import { PrismaClient } from '@prisma/client';
+import { createChildLogger } from '../../shared/logger.js';
+
 const prisma = new PrismaClient();
+const log = createChildLogger('voicemail-services');
 
 /** UPLOAD SINGLE VOICEMAIL TO DATABASE
  * 
@@ -149,9 +152,9 @@ export const getDbVoicemail = async () => {
 
 export const updateVoicemailNote = async (vmId: string, content: string) => {
 const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})
-console.log({vmId, content})
+log.debug({ vmId, content }, 'Updating voicemail note');
 if (!matchingVoicemail) {
-  console.error('NO MATCHING VOICEMAIL FOUND')
+  log.warn(`No matching voicemail found: ${vmId}`);
   return 
 }
 
@@ -169,9 +172,9 @@ return 'Note updated'
 
 export const updateVoicemailReason = async (vmId: string, reason: string) => {
 const matchingVoicemail = await prisma.voicemail.findUnique({where: {id: vmId}})
-console.log({vmId, reason})
+log.debug({ vmId, reason }, 'Updating voicemail reason');
 if (!matchingVoicemail) {
-  console.error('NO MATCHING VOICEMAIL FOUND')
+  log.warn(`No matching voicemail found: ${vmId}`);
   return 
 }
 

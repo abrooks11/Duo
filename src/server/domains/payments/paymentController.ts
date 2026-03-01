@@ -1,49 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import type {
-  Eob,
-  Deposit,
-  PaymentResponse,
-} from './paymentTypes.ts';
+import type { Eob, Deposit } from './paymentTypes.ts';
+import { AppError, handleControllerError } from '../../shared/errorHandlers.js';
+import { createChildLogger } from '../../shared/logger.js';
 
 const prisma = new PrismaClient();
+const log = createChildLogger('payments');
 
-
-
-interface PaymentController {
-  getEobs: (
-    req: Request,
-    res: PaymentResponse,
-    next: NextFunction
-  ) => Promise<void>;
-
-  getBankDeposits: (
-    req: Request,
-    res: PaymentResponse,
-    next: NextFunction
-  ) => Promise<void>;
-
-  getMatchedEobs: (
-    req: Request,
-    res: PaymentResponse,
-    next: NextFunction
-  ) => Promise<void>;
-
-  matchEobs: (
-    req: Request,
-    res: PaymentResponse,
-    next: NextFunction
-  ) => Promise<void>;
-
-  deleteAll: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-}
-
-const paymentController: PaymentController = {
-  getEobs: async (req, res, next) => {
+const paymentController = {
+  getEobs: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // fetch data from database and store in res
-      // invoke next
-      // Exclude processed credit card EOBs from unmatched EOBs
       const eobs: Eob[] = await prisma.eob.findMany({
         where: {
           depositId: null,
@@ -62,20 +28,14 @@ const paymentController: PaymentController = {
         },
       });
 
-      res.eobs = eobs;
-
+      res.locals.eobs = eobs;
       return next();
     } catch (error) {
-      console.error('Error in getEobs:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to fetch unmatched EOBs' },
-        log: `PaymentController.getEobs: ${error}`,
-      });
+      handleControllerError(error, 'getEobs', next, 'Failed to fetch unmatched EOBs');
     }
   },
 
-  getBankDeposits: async (req, res, next) => {
+  getBankDeposits: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const deposits: Deposit[] = await prisma.deposit.findMany({
         where: {
@@ -83,22 +43,15 @@ const paymentController: PaymentController = {
         },
       });
 
-      res.deposits = deposits;
-
+      res.locals.deposits = deposits;
       return next();
     } catch (error) {
-      console.error('Error in getBankDeposits:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to fetch unmatched bank deposits' },
-        log: `PaymentController.getBankDeposits: ${error}`,
-      });
+      handleControllerError(error, 'getBankDeposits', next, 'Failed to fetch unmatched bank deposits');
     }
   },
 
-  getMatchedEobs: async (req, res, next) => {
+  getMatchedEobs: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Include EOBs that are either matched with deposits OR are processed credit card payments
       const matchedEobs: Eob[] = await prisma.eob.findMany({
         where: {
           OR: [
@@ -119,27 +72,19 @@ const paymentController: PaymentController = {
         },
       });
 
-      res.matchedEobs = matchedEobs;
+      res.locals.matchedEobs = matchedEobs;
       return next();
     } catch (error) {
-      console.error('Error in getMatchedEobs:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to fetch matched  EOBs' },
-        log: `PaymentController.getMatchedEobs: ${error}`,
-      });
+      handleControllerError(error, 'getMatchedEobs', next, 'Failed to fetch matched EOBs');
     }
   },
 
-  matchEobs: async (req, res, next) => {
+  matchEobs: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Only match EOBs with payment method "4" (EFT)
-
         const unmatchedEobs = await tx.eob.findMany({
           where: {
             depositId: null,
-            // Handle both simple codes and descriptive payment methods
             OR: [
               { paymentMethod: '4' },
               { paymentMethod: { startsWith: '4' } },
@@ -162,7 +107,6 @@ const paymentController: PaymentController = {
             });
 
             if (deposit) {
-              // Validate amount match (within 1 cent tolerance)
               if (Math.abs(deposit.amount - eob.amount) < 0.01) {
                 matches.push({ eobId: eob.id, depositId: deposit.id });
               } else {
@@ -172,12 +116,11 @@ const paymentController: PaymentController = {
           }
         }
 
-        // Batch update all matches
         await Promise.all(
           matches.map(async (match) => {
             await tx.eob.update({
               where: { id: match.eobId },
-              data: { 
+              data: {
                 depositId: match.depositId,
                 isMatched: true,
               },
@@ -185,32 +128,26 @@ const paymentController: PaymentController = {
           })
         );
 
-        return { 
-          total: unmatchedEobs.length, 
+        return {
+          total: unmatchedEobs.length,
           matched: matches.length,
-          warnings 
+          warnings
         };
       });
 
-      console.log(`Matching complete: ${result.matched}/${result.total} matched`);
+      log.info(`Matching complete: ${result.matched}/${result.total} matched`);
       if (result.warnings.length > 0) {
-        console.warn('Matching warnings:', result.warnings);
+        log.warn({ warnings: result.warnings }, 'Matching warnings');
       }
 
       res.locals.matchResult = result;
       return next();
     } catch (error) {
-      console.error('Error in matchEobs:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to match EOBs' },
-        log: `PaymentController.matchEobs: ${error}`,
-      });
+      handleControllerError(error, 'matchEobs', next, 'Failed to match EOBs');
     }
   },
 
-  // Get EOBs that need deposits (payment method 4)
-  getEobsNeedingDeposits: async (req, res, next) => {
+  getEobsNeedingDeposits: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const eobs = await prisma.eob.findMany({
         where: {
@@ -218,70 +155,50 @@ const paymentController: PaymentController = {
           depositId: null,
         },
       });
-      res.eobs = eobs;
+      res.locals.eobs = eobs;
       return next();
     } catch (error) {
-      return next({
-        status: 500,
-        message: { err: 'Failed to fetch EOBs needing deposits' },
-        log: `PaymentController.getEobsNeedingDeposits: ${error}`,
-      });
+      handleControllerError(error, 'getEobsNeedingDeposits', next, 'Failed to fetch EOBs needing deposits');
     }
   },
 
-  // Get credit card EOBs (should not have deposits)
-  getCreditCardEobs: async (req, res, next) => {
+  getCreditCardEobs: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const eobs = await prisma.eob.findMany({
         where: {
           paymentMethod: "3",
         },
       });
-      res.eobs = eobs;
+      res.locals.eobs = eobs;
       return next();
     } catch (error) {
-      return next({
-        status: 500,
-        message: { err: 'Failed to fetch credit card EOBs' },
-        log: `PaymentController.getCreditCardEobs: ${error}`,
-      });
+      handleControllerError(error, 'getCreditCardEobs', next, 'Failed to fetch credit card EOBs');
     }
   },
 
-  // Get EOBs by specific payment method
-  getEobsByPaymentMethod: async (req, res, next) => {
+  getEobsByPaymentMethod: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { paymentMethod } = req.params;
-      
-      // Validate payment method
+
       if (!['1', '3', '4'].includes(paymentMethod)) {
-        return next({
-          status: 400,
-          message: { err: 'Invalid payment method. Must be 1, 3, or 4' },
-          log: `PaymentController.getEobsByPaymentMethod: Invalid payment method ${paymentMethod}`,
-        });
+        return next(new AppError('Invalid payment method. Must be 1, 3, or 4', 400, `Invalid payment method ${paymentMethod}`));
       }
 
       const eobs = await prisma.eob.findMany({
         where: {
           paymentMethod: paymentMethod,
-          depositId: null, // Only unmatched EOBs
+          depositId: null,
         },
       });
-      
-      res.eobs = eobs;
+
+      res.locals.eobs = eobs;
       return next();
     } catch (error) {
-      return next({
-        status: 500,
-        message: { err: 'Failed to fetch EOBs by payment method' },
-        log: `PaymentController.getEobsByPaymentMethod: ${error}`,
-      });
+      handleControllerError(error, 'getEobsByPaymentMethod', next, 'Failed to fetch EOBs by payment method');
     }
   },
 
-  // Phase 2: Monitor for missing payments
-  validatePaymentCompleteness: async (req, res, next) => {
+  validatePaymentCompleteness: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = {
         eftEobsWithoutDeposits: 0,
@@ -291,7 +208,6 @@ const paymentController: PaymentController = {
         matchedEobsCount: 0,
       };
 
-      // Count EFT EOBs without deposits
       results.eftEobsWithoutDeposits = await prisma.eob.count({
         where: {
           paymentMethod: "4",
@@ -299,22 +215,18 @@ const paymentController: PaymentController = {
         },
       });
 
-      // Count credit card EOBs (informational)
       results.creditCardEobsCount = await prisma.eob.count({
         where: { paymentMethod: "3" },
       });
 
-      // Count check EOBs (informational)
       results.checkEobsCount = await prisma.eob.count({
         where: { paymentMethod: "1" },
       });
 
-      // Total unmatched EOBs
       results.totalUnmatchedEobs = await prisma.eob.count({
         where: { depositId: null },
       });
 
-      // Matched EOBs count
       results.matchedEobsCount = await prisma.eob.count({
         where: { depositId: { not: null } },
       });
@@ -322,63 +234,47 @@ const paymentController: PaymentController = {
       res.locals.validationResults = results;
       return next();
     } catch (error) {
-      return next({
-        status: 500,
-        message: { err: 'Failed to validate payment completeness' },
-        log: `PaymentController.validatePaymentCompleteness: ${error}`,
-      });
+      handleControllerError(error, 'validatePaymentCompleteness', next, 'Failed to validate payment completeness');
     }
   },
 
   clearTables: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { tables, confirmCode } = req.body;
-      
-      // Safety check - require confirmation code
+
       if (confirmCode !== 'CLEAR_TABLES_CONFIRMED') {
-        return next({
-          status: 400,
-          message: { err: 'Invalid confirmation code. Use "CLEAR_TABLES_CONFIRMED" to proceed.' },
-          log: `PaymentController.clearTables: Invalid confirmation code`,
-        });
+        return next(new AppError('Invalid confirmation code. Use "CLEAR_TABLES_CONFIRMED" to proceed.', 400, 'Invalid confirmation code'));
       }
 
-      // Validate tables parameter
       const validTables = ['eob', 'deposit', 'payment'];
       const tablesToClear = tables || ['eob', 'deposit'];
-      
+
       const invalidTables = tablesToClear.filter((table: string) => !validTables.includes(table));
       if (invalidTables.length > 0) {
-        return next({
-          status: 400,
-          message: { err: `Invalid tables: ${invalidTables.join(', ')}. Valid options: ${validTables.join(', ')}` },
-          log: `PaymentController.clearTables: Invalid tables specified`,
-        });
+        return next(new AppError(`Invalid tables: ${invalidTables.join(', ')}. Valid options: ${validTables.join(', ')}`, 400, 'Invalid tables specified'));
       }
 
       const results: any = {};
 
-      // Clear tables in correct order (respect foreign key constraints)
       if (tablesToClear.includes('eob')) {
         const deletedEobs = await prisma.eob.deleteMany({});
         results.eobsDeleted = deletedEobs.count;
-        console.log(`Deleted ${deletedEobs.count} EOB records`);
+        log.info(`Deleted ${deletedEobs.count} EOB records`);
       }
 
       if (tablesToClear.includes('deposit')) {
         const deletedDeposits = await prisma.deposit.deleteMany({});
         results.depositsDeleted = deletedDeposits.count;
-        console.log(`Deleted ${deletedDeposits.count} Deposit records`);
+        log.info(`Deleted ${deletedDeposits.count} Deposit records`);
       }
 
       if (tablesToClear.includes('payment')) {
-        // Check if Payment model exists in current schema
         try {
           const deletedPayments = await prisma.payment.deleteMany({});
           results.paymentsDeleted = deletedPayments.count;
-          console.log(`Deleted ${deletedPayments.count} Payment records`);
+          log.info(`Deleted ${deletedPayments.count} Payment records`);
         } catch (error) {
-          console.log('Payment table not found in schema, skipping...');
+          log.debug('Payment table not found in schema, skipping...');
           results.paymentsDeleted = 'N/A - Table not in schema';
         }
       }
@@ -386,23 +282,17 @@ const paymentController: PaymentController = {
       res.locals.clearResults = results;
       return next();
     } catch (error) {
-      console.error('Error in clearTables:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to clear tables' },
-        log: `PaymentController.clearTables: ${error}`,
-      });
+      handleControllerError(error, 'clearTables', next, 'Failed to clear tables');
     }
   },
 
-  // Debug endpoint to check EOB payment methods
   debugEobPaymentMethods: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const paymentMethodCounts = await prisma.$queryRaw`
-        SELECT 
-          "paymentMethod", 
-          COUNT(*) as count 
-        FROM "Eob" 
+        SELECT
+          "paymentMethod",
+          COUNT(*) as count
+        FROM "Eob"
         GROUP BY "paymentMethod"
         ORDER BY count DESC
       `;
@@ -424,28 +314,18 @@ const paymentController: PaymentController = {
       };
       return next();
     } catch (error) {
-      return next({
-        status: 500,
-        message: { err: 'Failed to debug EOB payment methods' },
-        log: `PaymentController.debugEobPaymentMethods: ${error}`,
-      });
+      handleControllerError(error, 'debugEobPaymentMethods', next, 'Failed to debug EOB payment methods');
     }
   },
 
-  // Fix EOB payment methods - set default based on business rules
   fixEobPaymentMethods: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { defaultMethod = "4", confirmCode } = req.body;
-      
+
       if (confirmCode !== 'FIX_PAYMENT_METHODS_CONFIRMED') {
-        return next({
-          status: 400,
-          message: { err: 'Invalid confirmation code. Use "FIX_PAYMENT_METHODS_CONFIRMED" to proceed.' },
-          log: `PaymentController.fixEobPaymentMethods: Invalid confirmation code`,
-        });
+        return next(new AppError('Invalid confirmation code. Use "FIX_PAYMENT_METHODS_CONFIRMED" to proceed.', 400, 'Invalid confirmation code'));
       }
 
-      // Find EOBs with null/undefined/invalid payment methods
       const problematicEobs = await prisma.eob.findMany({
         where: {
           OR: [
@@ -457,9 +337,8 @@ const paymentController: PaymentController = {
         }
       });
 
-      console.log(`Found ${problematicEobs.length} EOBs with invalid payment methods`);
+      log.info(`Found ${problematicEobs.length} EOBs with invalid payment methods`);
 
-      // Update them to default method (usually "4" for EFT)
       const updateResult = await prisma.eob.updateMany({
         where: {
           OR: [
@@ -482,42 +361,27 @@ const paymentController: PaymentController = {
 
       return next();
     } catch (error) {
-      return next({
-        status: 500,
-        message: { err: 'Failed to fix EOB payment methods' },
-        log: `PaymentController.fixEobPaymentMethods: ${error}`,
-      });
+      handleControllerError(error, 'fixEobPaymentMethods', next, 'Failed to fix EOB payment methods');
     }
   },
 
-  // Toggle EOB processed status (for credit cards)
   toggleEobProcessed: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eobId } = req.params;
       const { isProcessed } = req.body;
 
       if (!eobId) {
-        return next({
-          status: 400,
-          message: { err: 'EOB ID is required' },
-          log: `PaymentController.toggleEobProcessed: Missing EOB ID`,
-        });
+        return next(new AppError('EOB ID is required', 400, 'Missing EOB ID'));
       }
 
-      // Find the EOB first
       const existingEob = await prisma.eob.findUnique({
         where: { id: parseInt(eobId) }
       });
 
       if (!existingEob) {
-        return next({
-          status: 404,
-          message: { err: 'EOB not found' },
-          log: `PaymentController.toggleEobProcessed: EOB ${eobId} not found`,
-        });
+        return next(new AppError('EOB not found', 404, `EOB ${eobId} not found`));
       }
 
-      // Toggle or set the processed status
       const newProcessedStatus = isProcessed !== undefined ? isProcessed : !existingEob.isProcessed;
 
       const updatedEob = await prisma.eob.update({
@@ -535,26 +399,16 @@ const paymentController: PaymentController = {
 
       return next();
     } catch (error) {
-      console.error('Error in toggleEobProcessed:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to toggle EOB processed status' },
-        log: `PaymentController.toggleEobProcessed: ${error}`,
-      });
+      handleControllerError(error, 'toggleEobProcessed', next, 'Failed to toggle EOB processed status');
     }
   },
 
-  // Bulk toggle for multiple EOBs
   bulkToggleProcessed: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eobIds, isProcessed } = req.body;
 
       if (!eobIds || !Array.isArray(eobIds)) {
-        return next({
-          status: 400,
-          message: { err: 'EOB IDs array is required' },
-          log: `PaymentController.bulkToggleProcessed: Invalid eobIds`,
-        });
+        return next(new AppError('EOB IDs array is required', 400, 'Invalid eobIds'));
       }
 
       const updateResult = await prisma.eob.updateMany({
@@ -572,30 +426,19 @@ const paymentController: PaymentController = {
 
       return next();
     } catch (error) {
-      console.error('Error in bulkToggleProcessed:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to bulk toggle EOB processed status' },
-        log: `PaymentController.bulkToggleProcessed: ${error}`,
-      });
+      handleControllerError(error, 'bulkToggleProcessed', next, 'Failed to bulk toggle EOB processed status');
     }
   },
 
   deleteAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Legacy endpoint - redirect to clearTables
-      req.body = { 
-        tables: ['eob', 'deposit'], 
-        confirmCode: 'CLEAR_TABLES_CONFIRMED' 
+      req.body = {
+        tables: ['eob', 'deposit'],
+        confirmCode: 'CLEAR_TABLES_CONFIRMED'
       };
       return paymentController.clearTables(req, res, next);
     } catch (error) {
-      console.error('Error in deleteAll:', error);
-      return next({
-        status: 500,
-        message: { err: 'Failed to delete Eob/Deposit records' },
-        log: `PaymentController.deleteAll: ${error}`,
-      });
+      handleControllerError(error, 'deleteAll', next, 'Failed to delete Eob/Deposit records');
     }
   },
 };
