@@ -71,12 +71,21 @@ class ApiClient {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        result = await response.json();
-      }
+        const json = await response.json();
 
-      // console.log('Successful fetch from', endpoint);
-      // console.log('Total records:', result.length);
-      // console.log('Sample record:', result[0]);
+        // Unwrap server envelope if present: { success, data, ... }
+        if (
+          json !== null &&
+          typeof json === 'object' &&
+          'success' in json &&
+          'data' in json
+        ) {
+          result = json.data;
+        } else {
+          // Legacy: treat entire response as data
+          result = json;
+        }
+      }
 
       return {
         data: result,

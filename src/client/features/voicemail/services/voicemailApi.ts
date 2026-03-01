@@ -81,9 +81,10 @@ export const requestAiResponse = async (type: string, transcript: string) => {
       body: JSON.stringify({ type, transcript }),
     });
 
-    const data = await response.json();
+    const json = await response.json();
 
-    return data;
+    // Unwrap envelope if present
+    return json.data !== undefined ? json.data : json;
   } catch (error) {
     console.error('Error requesting AI response:', error);
   }

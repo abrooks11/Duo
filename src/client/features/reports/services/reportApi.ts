@@ -117,7 +117,7 @@ export const createReport = async (data: {
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message?.err || 'Failed to create report');
+    throw new Error(errorData.error || errorData.message?.err || 'Failed to create report');
   }
 
   const json: ApiResponse<ReportData> = await response.json();
@@ -138,7 +138,7 @@ export const updateReport = async (
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message?.err || 'Failed to update report');
+    throw new Error(errorData.error || errorData.message?.err || 'Failed to update report');
   }
 
   const json: ApiResponse<ReportData> = await response.json();
@@ -167,7 +167,7 @@ export const runReport = async (id: string): Promise<ReportData> => {
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message?.err || 'Failed to run report');
+    throw new Error(errorData.error || errorData.message?.err || 'Failed to run report');
   }
 
   const json: ApiResponse<ReportData> = await response.json();

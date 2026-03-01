@@ -11,22 +11,23 @@ const Payments = () => {
   const fetchData = async (resource: Resource): Promise<void> => {
     const response = await fetch(`${BASE_URL}/${resource}`);
 
-    const data = await response.json();
+    const json = await response.json();
+    const items = json.data || [];
 
     // Sort by date (most recent first)
-    const sortByDate = (items: any[]) => {
-      return items.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+    const sortByDate = (arr: any[]) => {
+      return arr.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
     };
 
     switch (resource) {
       case 'eobs':
-        setUnmatchedEobs(sortByDate(data.eobs || []));
+        setUnmatchedEobs(sortByDate(items));
         break;
       case 'deposits':
-        setUnmatchedDeposits(sortByDate(data.deposits || []));
+        setUnmatchedDeposits(sortByDate(items));
         break;
       case 'matched':
-        setMatchedEobs(sortByDate(data.matchedEobs || []));
+        setMatchedEobs(sortByDate(items));
         break;
       default:
         break;
@@ -45,16 +46,16 @@ const Payments = () => {
       await fetchData('eobs');
     } else {
       const response = await fetch(`${BASE_URL}/eobs/method/${method}`);
-      const data = await response.json();
-      setUnmatchedEobs(sortByDate(data.eobs || []));
+      const json = await response.json();
+      setUnmatchedEobs(sortByDate(json.data || []));
     }
   };
 
   const fetchValidationData = async (): Promise<any> => {
     try {
       const response = await fetch(`${BASE_URL}/validation/completeness`);
-      const data = await response.json();
-      return data.validation;
+      const json = await response.json();
+      return json.data;
     } catch (error) {
       console.error('Failed to fetch validation data:', error);
       return null;
@@ -62,8 +63,6 @@ const Payments = () => {
   };
 
   const matchDeposits = async (): Promise<void> => {
-    console.log('Starting matching process...');
-
     const response = await fetch(`${BASE_URL}/match`, {
       method: 'POST',
       headers: {
@@ -71,10 +70,8 @@ const Payments = () => {
       },
     });
 
-    const data = await response.json();
+    await response.json();
 
-    console.log('Match results:', data);
-    
     // Refresh all data after matching
     await fetchData('eobs');
     await fetchData('deposits');
@@ -98,9 +95,6 @@ const Payments = () => {
 
   const [matchedEobs, setMatchedEobs] = useState<Eob[]>([]);
   const [validationData, setValidationData] = useState<any>(null);
-
-  console.log({ unmatchedEobs, unmatchedDeposits, matchedEobs });
-  // console.log('UNMATCHED EOBS', unmatchedEobs )
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
