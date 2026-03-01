@@ -1,20 +1,70 @@
-import { NextFunction } from 'express';
+import type { Response, NextFunction, Request } from 'express';
+import logger from './logger.js';
+
+// ---------------------------------------------------------------------------
+// AppError class
+// ---------------------------------------------------------------------------
 
 /**
- * Standardized error structure for the application
+ * Structured application error that the global error handler understands.
  */
-export interface AppError {
+export class AppError extends Error {
   status: number;
-  message: { err: string };
   log: string;
+
+  constructor(message: string, status = 500, log?: string) {
+    super(message);
+    this.name = 'AppError';
+    this.status = status;
+    this.log = log || message;
+  }
 }
 
+// ---------------------------------------------------------------------------
+// Response helpers — standard envelope
+// ---------------------------------------------------------------------------
+
 /**
- * Generic error handler for controller methods
- * @param error - The caught error
- * @param method - The method name where error occurred
- * @param next - Express next function
- * @param customMessage - Optional custom error message
+ * Send a success response with the standard envelope.
+ *
+ * Shape: `{ success: true, data: T, message?: string }`
+ */
+export const sendSuccess = <T>(
+  res: Response,
+  data: T,
+  message?: string,
+  statusCode = 200
+): void => {
+  res.status(statusCode).json({
+    success: true,
+    data,
+    ...(message && { message }),
+  });
+};
+
+/**
+ * Send an error response with the standard envelope.
+ *
+ * Shape: `{ success: false, error: string }`
+ */
+export const sendError = (
+  res: Response,
+  error: string,
+  statusCode = 500
+): void => {
+  res.status(statusCode).json({
+    success: false,
+    error,
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Controller / service error helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Generic error handler for controller catch blocks.
+ * Logs the error and forwards a structured AppError to Express `next()`.
  */
 export const handleControllerError = (
   error: unknown,
@@ -22,94 +72,61 @@ export const handleControllerError = (
   next: NextFunction,
   customMessage?: string
 ): void => {
-  console.error(`Controller.${method}:`, error);
-  
-  const errorMessage = customMessage || `Failed to ${method.toLowerCase()}`;
-  
-  return next({
-    status: 500,
-    message: { err: errorMessage },
-    log: `Controller.${method}: ${error instanceof Error ? error.message : String(error)}`
-  } as AppError);
+  const errMsg =
+    error instanceof Error ? error.message : String(error);
+
+  logger.error({ method, error: errMsg }, `Controller.${method} failed`);
+
+  next(
+    new AppError(
+      customMessage || `Failed to ${method.toLowerCase()}`,
+      500,
+      `Controller.${method}: ${errMsg}`
+    )
+  );
 };
 
 /**
- * Async wrapper for Express route handlers
- * Automatically catches and forwards async errors
+ * Async wrapper for Express route handlers.
+ * Catches rejected promises and forwards them to the global error handler.
  */
-export const asyncHandler = (
-  fn: Function
-) => (req: any, res: any, next: NextFunction) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+export const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 
 /**
- * Database operation error handler
- * @param error - The database error
- * @param operation - The database operation that failed
- * @param next - Express next function
+ * Database operation error handler.
  */
 export const handleDatabaseError = (
   error: unknown,
   operation: string,
   next: NextFunction
 ): void => {
-  console.error(`Database ${operation} error:`, error);
-  
-  return next({
-    status: 500,
-    message: { err: `Database ${operation} failed` },
-    log: `Database.${operation}: ${error instanceof Error ? error.message : String(error)}`
-  } as AppError);
+  const errMsg =
+    error instanceof Error ? error.message : String(error);
+
+  logger.error({ operation, error: errMsg }, `Database ${operation} failed`);
+
+  next(
+    new AppError(
+      `Database ${operation} failed`,
+      500,
+      `Database.${operation}: ${errMsg}`
+    )
+  );
 };
 
 /**
- * Validation error handler
- * @param field - The field that failed validation
- * @param value - The invalid value
- * @param next - Express next function
+ * Validation error handler — returns 400.
  */
 export const handleValidationError = (
   field: string,
-  value: any,
+  value: unknown,
   next: NextFunction
 ): void => {
-  console.error(`Validation error for ${field}:`, value);
-  
-  return next({
-    status: 400,
-    message: { err: `Invalid ${field}` },
-    log: `Validation error: ${field} = ${value}`
-  } as AppError);
+  logger.warn({ field, value }, 'Validation error');
+
+  next(new AppError(`Invalid ${field}`, 400, `Validation error: ${field} = ${value}`));
 };
-
-/**
- * Creates a standardized success response
- * @param data - The response data
- * @param message - Optional success message
- * @param statusCode - HTTP status code (default: 200)
- */
-export const createSuccessResponse = <T>(
-  data: T,
-  message?: string,
-  statusCode: number = 200
-) => ({
-  success: true,
-  data,
-  message,
-  statusCode
-});
-
-/**
- * Creates a standardized error response
- * @param error - The error message
- * @param statusCode - HTTP status code (default: 500)
- */
-export const createErrorResponse = (
-  error: string,
-  statusCode: number = 500
-) => ({
-  success: false,
-  error,
-  statusCode
-});

@@ -1,18 +1,15 @@
-import express from 'express'; // Import the Express framework to create a web server
-import cors from 'cors'; // Import the CORS middleware
+import express from 'express';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
-// import xmlparser from 'express-xml-bodyparser';
-
-// import fileUpload from "express-fileupload";
-import path from 'path'; // Import the path module to handle file and directory paths
-
-// use fileURLToPath to recreate dirname
+import path from 'path';
 import { fileURLToPath } from 'url';
+
+import apiRouter from './routes/api.js';
+import logger, { requestLogger } from './shared/logger.js';
+import { AppError } from './shared/errorHandlers.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// import api endpoint routes
-import apiRouter from './routes/api.js';
 
 const PORT = process.env.PORT || 3000; // Set the port to the environment variable PORT or default to 3000
 
@@ -34,8 +31,8 @@ app.use(cookieParser());
 // Enable file upload middleware
 // app.use(fileUpload());
 
-// parse incoming request body in JSON format
 app.use(express.json());
+app.use(requestLogger);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../build')));
@@ -58,29 +55,43 @@ app.get('*', (req, res) => {
 app.use((req, res) => res.sendStatus(404));
 
 /**
- * configure express global error handler
- * @see https://expressjs.com/en/guide/error-handling.html#writing-error-handlers
+ * Global error handler.
+ * Supports both the new AppError class and the legacy { status, message: { err }, log } format.
+ * Always returns the standard envelope: { success: false, error: string }
  */
-app.use((err, req, res, next) => {
-  const defaultErr = {
-    log: 'DEFAULT ERROR: Express error handler caught unknown middleware error',
-    status: 500,
-    message: { err: 'Internal Server Error' },
-  };
+app.use((err, req, res, _next) => {
+  let status, userMessage, logMessage;
 
-  const errorObj = Object.assign({}, defaultErr, err);
-  console.error('GLOBAL ERROR HANDLER: ', {
-    log: errorObj.log,
-    status: errorObj.status,
-    message: errorObj.message,
-    stack: errorObj.stack, // Add stack trace
-    path: req.path, // Add request path
-    method: req.method, // Add request method
+  if (err instanceof AppError) {
+    status = err.status;
+    userMessage = err.message;
+    logMessage = err.log;
+  } else if (err.status && err.message) {
+    // Legacy format: { status, message: { err: string }, log }
+    status = err.status || 500;
+    userMessage =
+      (typeof err.message === 'object' && err.message?.err) ||
+      (typeof err.message === 'string' && err.message) ||
+      'Internal Server Error';
+    logMessage = err.log || userMessage;
+  } else {
+    status = 500;
+    userMessage = 'Internal Server Error';
+    logMessage = err.message || String(err);
+  }
+
+  logger.error(
+    { status, path: req.path, method: req.method, error: logMessage, stack: err.stack },
+    'Request error'
+  );
+
+  return res.status(status).json({
+    success: false,
+    error: userMessage,
   });
-  return res.status(errorObj.status).json(errorObj.message);
 });
 
 // Start the server and listen on the specified port
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`); // Log a message indicating the server is running
+  logger.info(`Server is running on port ${PORT}`);
 });
