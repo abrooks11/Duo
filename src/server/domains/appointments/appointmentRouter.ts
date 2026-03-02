@@ -1,12 +1,8 @@
 import express from 'express';
 import appointmentController from './appointmentController.js';
 import { sendSuccess } from '../../shared/errorHandlers.js';
-import { asyncHandler } from '../../shared/errorHandlers.js';
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
-const { getAppointments, updateCopay, updateNote } = appointmentController;
+const { getAppointments, updateCopay, updateNote, deleteAll } = appointmentController;
 
 const appointmentRouter = express.Router();
 
@@ -20,9 +16,8 @@ appointmentRouter.post('/copay', updateCopay, (req, res) => {
 
 appointmentRouter.patch('/:id/notes', updateNote);
 
-appointmentRouter.delete('/', asyncHandler(async (req, res) => {
-  await prisma.appointment.deleteMany({});
-  return sendSuccess(res, null, 'Records deleted');
-}));
+if (process.env.NODE_ENV !== 'production') {
+  appointmentRouter.delete('/', deleteAll);
+}
 
 export default appointmentRouter;

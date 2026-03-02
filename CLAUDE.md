@@ -41,7 +41,7 @@ npx prisma generate       # Regenerate Prisma client
 **Frontend (`src/client/`):**
 - Global state lives in `context/` — uses Immer for immutable updates
 - Custom hooks in `hooks/` wrap API calls (`useApi`) and context access (`useGlobalContext`)
-- Resource-specific API utilities in `utils/` (e.g., `appointmentApi.ts`, `voicemailApi.ts`)
+- Resource-specific API utilities in `utils/` (e.g., `appointmentApi.ts`, `voicemailApi.ts`); feature-specific services in `features/*/services/` (e.g., `payments/services/paymentApi.ts`)
 - Vite proxies `/api` requests to `http://localhost:3000`, so frontend fetches use relative `/api/...` paths
 
 **Backend (`src/server/`):**
@@ -53,7 +53,7 @@ npx prisma generate       # Regenerate Prisma client
 - Upload endpoint: `POST /api/upload/:resourceType/:sheetName` — supports `patient`, `appointment`, `payment`, `eob`
 - Upsert logic in upload controllers: skips records if incoming `lastModifiedDate` is not newer than existing
 - **RingRX auth middleware** (`domains/auth/`): cookie-based token management with auto-refresh on 401/403
-- **Tebra sync** (`domains/tebra-api/`): SOAP API client that fetches appointments/payments, upserts with patient validation
+- **Tebra sync** (`domains/tebra-api/`): SOAP API client; `tebraSync.ts` exports `syncAppointments` and `syncEobs`; `tebraApi.ts` exports individual fetch functions. Shared Prisma instance from `src/server/prisma.ts`
 - **Reports** (`domains/reports/`): AI generates SQL from natural language descriptions, SQL validator ensures SELECT-only queries
 - **SMS** (`domains/sms/`): sends messages via RingRX API
 
@@ -104,15 +104,21 @@ TEBRA_PRACTICE_NAME=
 | React entry | `src/client/main.tsx` |
 | Global state context | `src/client/context/` |
 | Reports frontend | `src/client/features/reports/` |
+| Payments frontend | `src/client/features/payments/` |
+| Payment API client service | `src/client/features/payments/services/paymentApi.ts` |
+| Shared Prisma instance | `src/server/prisma.ts` |
 | Vite config (proxy setup) | `vite.config.ts` |
 
 ## Notes
 
 - The backend runs as ESM (`"type": "module"` in package.json); use `import`/`export`, not `require`/`module.exports` in server files
 - Appointments query defaults to current month + next month date range; Tebra auto-syncs on GET
-- Payments GET returns only unpaid EOBs (`isPaid: false`)
+- **Payment reconciliation** (`domains/payments/`): 3 endpoints only — `GET /reconciliation` (auto-syncs EOBs from Tebra then returns matched/missingEob/pendingPayment rows + stats), `POST /match` (EFT reference matching), `POST /clear` (requires `CLEAR_TABLES_CONFIRMED` code). Bank deposit uploads go through the upload domain, not payments.
+- Tebra EOB sync (`syncEobs`): fetches Insurance payments only via `GetPayments` SOAP call. The `PayerType` filter works; do NOT use the `Amount` numeric filter (it silently blocks all results). Zero-amount records are filtered in code. Tebra returns a single empty placeholder `PaymentData` when no results match — filter these out by checking `ID !== ''`.
 - Voicemail integrates with RingRX API; the `openAiController` handles AI-assisted features
 - Timezone adjustment of +2 hours is applied to appointment dates during upload processing
+- Deposit upload processing: splits HCCLAIMPMT reference on `'*'` to extract the 3rd segment as reference number; stores `postDate` (bank posting date from statement) and `description` separately from `createdDate` (server record creation); rows with no parseable reference are filtered out before upsert
 - Tebra sync preserves custom fields (notes, insEligibility, patientCopay) on updates; seeds notes from Tebra on creation
+- Appointment `updateCopay` uses Zod schema validation; Prisma P2025 "not found" errors return 404. The `deleteAll` endpoint is gated to `NODE_ENV !== 'production'`
 - Reports SQL validator blocks all non-SELECT statements to prevent destructive queries
 - RingRX auth uses httpOnly cookies with auto-refresh; all RingRX API calls go through authenticated helpers

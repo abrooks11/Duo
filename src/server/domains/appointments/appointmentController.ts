@@ -1,36 +1,31 @@
-import { PrismaClient } from '@prisma/client';
-import { syncAppointments } from '../tebra-api/tebraSync.ts';
+import { z } from 'zod';
+import { Prisma } from '@prisma/client';
+import { syncAppointments } from '../tebra-api/tebraSync.js';
 import { handleControllerError, sendSuccess, sendError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
-
-const prisma = new PrismaClient();
+import prisma from '../../prisma.js';
 const log = createChildLogger('appointments');
+
+function formatDateForTebra(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getDefaultDateRange(): { firstDayOfMonth: Date; lastDayOfNextMonth: Date; fromDate: string; toDate: string } {
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+  const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+  return {
+    firstDayOfMonth,
+    lastDayOfNextMonth,
+    fromDate: formatDateForTebra(firstDayOfMonth),
+    toDate: formatDateForTebra(lastDayOfNextMonth),
+  };
+}
 
 const appointmentController = {
   getAppointments: async (req, res, next) => {
     try {
-      const now = new Date();
-
-      const firstDayOfMonth = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        1,
-        0,
-        0,
-        0
-      );
-
-      const lastDayOfNextMonth = new Date(
-        now.getFullYear(),
-        now.getMonth() + 2,
-        0,
-        23,
-        59,
-        59
-      );
-
-      const fromDate = `${firstDayOfMonth.getFullYear()}-${String(firstDayOfMonth.getMonth() + 1).padStart(2, '0')}-${String(firstDayOfMonth.getDate()).padStart(2, '0')}`;
-      const toDate = `${lastDayOfNextMonth.getFullYear()}-${String(lastDayOfNextMonth.getMonth() + 1).padStart(2, '0')}-${String(lastDayOfNextMonth.getDate()).padStart(2, '0')}`;
+      const { firstDayOfMonth, lastDayOfNextMonth, fromDate, toDate } = getDefaultDateRange();
 
       try {
         await syncAppointments(fromDate, toDate);
@@ -63,14 +58,11 @@ const appointmentController = {
       });
       log.debug(`Total appointments: ${appointments.length}`);
 
-      if (appointments) {
-        const flattenedAppointments = appointments.map(
-          ({ patient, ...rest }) => {
-            return { ...rest, ...patient };
-          }
-        );
-        res.locals.appointments = flattenedAppointments;
-      }
+      const flattenedAppointments = appointments.map(({ patient, ...rest }) => ({
+        ...rest,
+        ...(patient ?? {}),
+      }));
+      res.locals.appointments = flattenedAppointments;
 
       return next();
     } catch (error) {
@@ -101,29 +93,37 @@ const appointmentController = {
 
   updateCopay: async (req, res, next) => {
     try {
-      const { id, copay } = req.body;
+      const UpdateCopaySchema = z.object({
+        id: z.number().int().positive(),
+        copay: z.number().nonnegative(),
+      });
+      const parsed = UpdateCopaySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return sendError(res, 'Invalid input', 400);
+      }
+      const { id, copay } = parsed.data;
       log.debug({ id, copay }, 'Updating copay');
 
-      const currentAppointment = await prisma.appointment.findUnique({
-        where: {
-          id: Number(id),
-        },
-      });
-
-      if (!currentAppointment) {
-        return sendError(res, 'Appointment not found', 404);
-      }
-
       await prisma.appointment.update({
-        where: { id: id },
-        data: {
-          patientCopay: Number(copay),
-        },
+        where: { id },
+        data: { patientCopay: copay },
       });
 
       next();
     } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return sendError(res, 'Appointment not found', 404);
+      }
       handleControllerError(error, 'updateCopay', next, 'Error updating copay');
+    }
+  },
+
+  deleteAll: async (req, res, next) => {
+    try {
+      await prisma.appointment.deleteMany({});
+      return sendSuccess(res, null, 'Records deleted');
+    } catch (error) {
+      handleControllerError(error, 'deleteAll', next, 'Error deleting appointments');
     }
   },
 };

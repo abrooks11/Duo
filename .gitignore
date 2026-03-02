@@ -24,5 +24,6 @@ dist-ssr
 *.sw?
 
 PROMPTING
+.templates
 .env
 package_lock.json

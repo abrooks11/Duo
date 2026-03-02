@@ -14,21 +14,15 @@ export const updateAppointmentNote = async (id: number, notes: string) => {
   return { status: response.status };
 };
 
-export const updateCopay = async (id:number, copay:number) => {
+export const updateCopay = async (id: number, copay: number) => {
   const response = await fetch(`${baseURL}/appointments/copay`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        id: id, 
-        copay: copay
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, copay }),
   });
-
-  const result = await response.json()
-  console.log(result)
-  return
+  if (!response.ok) {
+    throw new Error(`Failed to save copay (${response.status})`);
+  }
 };
 
 

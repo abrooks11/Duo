@@ -1,81 +1,134 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
-import type { Eob, Deposit } from './paymentTypes.ts';
+import prisma from '../../prisma.ts';
+import type { PaymentType } from './paymentTypes.ts';
 import { AppError, handleControllerError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
+import { syncEobs } from '../tebra-api/tebraSync.ts';
 
-const prisma = new PrismaClient();
 const log = createChildLogger('payments');
 
+/** Map raw paymentMethod codes to display types */
+const mapPaymentType = (pm: string): PaymentType | null => {
+  if (pm === '1' || pm.startsWith('1')) return 'Check';
+  if (pm === '3' || pm.startsWith('3')) return 'CC';
+  if (pm === '4' || pm.startsWith('4')) return 'EFT';
+  return null;
+};
+
+/** Default date range: first and last day of current month (YYYY-MM-DD) */
+function defaultDateRange(): { from: string; to: string } {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+  return { from: `${y}-${m}-01`, to: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
+}
+
 const paymentController = {
-  getEobs: async (req: Request, res: Response, next: NextFunction) => {
+  getReconciliation: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const eobs: Eob[] = await prisma.eob.findMany({
-        where: {
-          depositId: null,
-          NOT: {
-            AND: [
-              {
-                OR: [
-                  { paymentMethod: "3" },
-                  { paymentMethod: "3 - Credit Card" },
-                  { paymentMethod: { startsWith: "3" } }
-                ]
-              },
-              { isProcessed: true }
-            ]
-          }
-        },
-      });
+      // Auto-sync EOBs from Tebra before querying
+      const { from: defaultFrom, to: defaultTo } = defaultDateRange();
+      const fromDate = (req.query.from as string) || defaultFrom;
+      const toDate = (req.query.to as string) || defaultTo;
 
-      res.locals.eobs = eobs;
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'getEobs', next, 'Failed to fetch unmatched EOBs');
-    }
-  },
+      console.log(`[DEBUG getReconciliation] Date range: ${fromDate} to ${toDate}`);
+      try {
+        const syncResult = await syncEobs(fromDate, toDate);
+        console.log(`[DEBUG getReconciliation] Sync result:`, syncResult);
+        log.info(`EOB auto-sync: ${syncResult.synced} synced, ${syncResult.skipped} skipped`);
+      } catch (syncErr) {
+        console.log(`[DEBUG getReconciliation] Sync error:`, syncErr);
+        log.warn({ err: syncErr }, 'EOB auto-sync failed, proceeding with local data');
+      }
 
-  getBankDeposits: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const deposits: Deposit[] = await prisma.deposit.findMany({
-        where: {
-          eob: null,
-        },
-      });
-
-      res.locals.deposits = deposits;
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'getBankDeposits', next, 'Failed to fetch unmatched bank deposits');
-    }
-  },
-
-  getMatchedEobs: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const matchedEobs: Eob[] = await prisma.eob.findMany({
-        where: {
-          OR: [
-            { depositId: { not: null } },
-            {
+      const [matchedDeposits, missingEobDeposits, pendingEobs] = await Promise.all([
+        prisma.deposit.findMany({
+          where: { eob: { isNot: null } },
+          include: { eob: true },
+        }),
+        prisma.deposit.findMany({
+          where: { eob: null },
+        }),
+        prisma.eob.findMany({
+          where: {
+            depositId: null,
+            NOT: {
               AND: [
-                {
-                  OR: [
-                    { paymentMethod: "3" },
-                    { paymentMethod: "3 - Credit Card" },
-                    { paymentMethod: { startsWith: "3" } }
-                  ]
-                },
-                { isProcessed: true }
-              ]
-            }
-          ]
-        },
-      });
+                { OR: [{ paymentMethod: '3' }, { paymentMethod: { startsWith: '3' } }] },
+                { isProcessed: true },
+              ],
+            },
+          },
+        }),
+      ]);
 
-      res.locals.matchedEobs = matchedEobs;
+      const rows = [
+        ...matchedDeposits.map((deposit) => {
+          const eob = deposit.eob!;
+          const delta = Number(deposit.amount) - Number(eob.amount);
+          return {
+            status: 'matched' as const,
+            depositDate: (deposit.postDate ?? deposit.createdDate).toISOString(),
+            bankDescription: deposit.description ?? null,
+            depositRef: deposit.reference,
+            depositId: deposit.id,
+            eobRef: eob.reference,
+            eobDate: eob.createdDate.toISOString(),
+            eobId: eob.id,
+            payerName: deposit.payerName,
+            type: mapPaymentType(eob.paymentMethod),
+            amount: Number(deposit.amount),
+            amountDelta: Math.abs(delta) < 0.01 ? 0 : parseFloat(Math.abs(delta).toFixed(2)),
+          };
+        }),
+        ...missingEobDeposits.map((deposit) => ({
+          status: 'missingEob' as const,
+          depositDate: (deposit.postDate ?? deposit.createdDate).toISOString(),
+          bankDescription: deposit.description ?? null,
+          depositRef: deposit.reference,
+          depositId: deposit.id,
+          eobRef: null,
+          eobDate: null,
+          eobId: null,
+          payerName: deposit.payerName,
+          type: null as null,
+          amount: Number(deposit.amount),
+          amountDelta: null,
+        })),
+        ...pendingEobs.map((eob) => ({
+          status: 'pendingPayment' as const,
+          depositDate: null,
+          bankDescription: null,
+          depositRef: null,
+          depositId: null,
+          eobRef: eob.reference,
+          eobDate: eob.createdDate.toISOString(),
+          eobId: eob.id,
+          payerName: eob.payerName,
+          type: mapPaymentType(eob.paymentMethod),
+          amount: Number(eob.amount),
+          amountDelta: null,
+        })),
+      ];
+
+      const sum = (items: any[], getAmt: (x: any) => number) =>
+        items.reduce((acc, x) => ({ count: acc.count + 1, amount: acc.amount + getAmt(x) }), { count: 0, amount: 0 });
+
+      const stats = {
+        totalDeposits: {
+          count: matchedDeposits.length + missingEobDeposits.length,
+          amount: [...matchedDeposits, ...missingEobDeposits].reduce((acc, d) => acc + Number(d.amount), 0),
+        },
+        matched: sum(matchedDeposits, (d) => Number(d.amount)),
+        missingEob: sum(missingEobDeposits, (d) => Number(d.amount)),
+        pendingPayment: sum(pendingEobs, (e) => Number(e.amount)),
+      };
+
+      res.locals.reconciliation = { stats, rows };
       return next();
     } catch (error) {
-      handleControllerError(error, 'getMatchedEobs', next, 'Failed to fetch matched EOBs');
+      handleControllerError(error, 'getReconciliation', next, 'Failed to fetch reconciliation data');
     }
   },
 
@@ -101,13 +154,11 @@ const paymentController = {
         for (const eob of unmatchedEobs) {
           if (eob.reference) {
             const deposit = await tx.deposit.findUnique({
-              where: {
-                reference: eob.reference,
-              },
+              where: { reference: eob.reference },
             });
 
             if (deposit) {
-              if (Math.abs(deposit.amount - eob.amount) < 0.01) {
+              if (Math.abs(Number(deposit.amount) - Number(eob.amount)) < 0.01) {
                 matches.push({ eobId: eob.id, depositId: deposit.id });
               } else {
                 warnings.push(`Amount mismatch: EOB ${eob.id} ($${eob.amount}) vs Deposit ${deposit.id} ($${deposit.amount})`);
@@ -147,97 +198,6 @@ const paymentController = {
     }
   },
 
-  getEobsNeedingDeposits: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const eobs = await prisma.eob.findMany({
-        where: {
-          paymentMethod: "4",
-          depositId: null,
-        },
-      });
-      res.locals.eobs = eobs;
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'getEobsNeedingDeposits', next, 'Failed to fetch EOBs needing deposits');
-    }
-  },
-
-  getCreditCardEobs: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const eobs = await prisma.eob.findMany({
-        where: {
-          paymentMethod: "3",
-        },
-      });
-      res.locals.eobs = eobs;
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'getCreditCardEobs', next, 'Failed to fetch credit card EOBs');
-    }
-  },
-
-  getEobsByPaymentMethod: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { paymentMethod } = req.params;
-
-      if (!['1', '3', '4'].includes(paymentMethod)) {
-        return next(new AppError('Invalid payment method. Must be 1, 3, or 4', 400, `Invalid payment method ${paymentMethod}`));
-      }
-
-      const eobs = await prisma.eob.findMany({
-        where: {
-          paymentMethod: paymentMethod,
-          depositId: null,
-        },
-      });
-
-      res.locals.eobs = eobs;
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'getEobsByPaymentMethod', next, 'Failed to fetch EOBs by payment method');
-    }
-  },
-
-  validatePaymentCompleteness: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const results = {
-        eftEobsWithoutDeposits: 0,
-        creditCardEobsCount: 0,
-        checkEobsCount: 0,
-        totalUnmatchedEobs: 0,
-        matchedEobsCount: 0,
-      };
-
-      results.eftEobsWithoutDeposits = await prisma.eob.count({
-        where: {
-          paymentMethod: "4",
-          depositId: null,
-        },
-      });
-
-      results.creditCardEobsCount = await prisma.eob.count({
-        where: { paymentMethod: "3" },
-      });
-
-      results.checkEobsCount = await prisma.eob.count({
-        where: { paymentMethod: "1" },
-      });
-
-      results.totalUnmatchedEobs = await prisma.eob.count({
-        where: { depositId: null },
-      });
-
-      results.matchedEobsCount = await prisma.eob.count({
-        where: { depositId: { not: null } },
-      });
-
-      res.locals.validationResults = results;
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'validatePaymentCompleteness', next, 'Failed to validate payment completeness');
-    }
-  },
-
   clearTables: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { tables, confirmCode } = req.body;
@@ -246,7 +206,7 @@ const paymentController = {
         return next(new AppError('Invalid confirmation code. Use "CLEAR_TABLES_CONFIRMED" to proceed.', 400, 'Invalid confirmation code'));
       }
 
-      const validTables = ['eob', 'deposit', 'payment'];
+      const validTables = ['eob', 'deposit'];
       const tablesToClear = tables || ['eob', 'deposit'];
 
       const invalidTables = tablesToClear.filter((table: string) => !validTables.includes(table));
@@ -254,7 +214,7 @@ const paymentController = {
         return next(new AppError(`Invalid tables: ${invalidTables.join(', ')}. Valid options: ${validTables.join(', ')}`, 400, 'Invalid tables specified'));
       }
 
-      const results: any = {};
+      const results: Record<string, number> = {};
 
       if (tablesToClear.includes('eob')) {
         const deletedEobs = await prisma.eob.deleteMany({});
@@ -268,177 +228,10 @@ const paymentController = {
         log.info(`Deleted ${deletedDeposits.count} Deposit records`);
       }
 
-      if (tablesToClear.includes('payment')) {
-        try {
-          const deletedPayments = await prisma.payment.deleteMany({});
-          results.paymentsDeleted = deletedPayments.count;
-          log.info(`Deleted ${deletedPayments.count} Payment records`);
-        } catch (error) {
-          log.debug('Payment table not found in schema, skipping...');
-          results.paymentsDeleted = 'N/A - Table not in schema';
-        }
-      }
-
       res.locals.clearResults = results;
       return next();
     } catch (error) {
       handleControllerError(error, 'clearTables', next, 'Failed to clear tables');
-    }
-  },
-
-  debugEobPaymentMethods: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const paymentMethodCounts = await prisma.$queryRaw`
-        SELECT
-          "paymentMethod",
-          COUNT(*) as count
-        FROM "Eob"
-        GROUP BY "paymentMethod"
-        ORDER BY count DESC
-      `;
-
-      const sampleEobs = await prisma.eob.findMany({
-        take: 5,
-        select: {
-          id: true,
-          paymentMethod: true,
-          payerName: true,
-          amount: true
-        }
-      });
-
-      res.locals.debugResults = {
-        paymentMethodCounts,
-        sampleEobs,
-        totalEobs: await prisma.eob.count()
-      };
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'debugEobPaymentMethods', next, 'Failed to debug EOB payment methods');
-    }
-  },
-
-  fixEobPaymentMethods: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { defaultMethod = "4", confirmCode } = req.body;
-
-      if (confirmCode !== 'FIX_PAYMENT_METHODS_CONFIRMED') {
-        return next(new AppError('Invalid confirmation code. Use "FIX_PAYMENT_METHODS_CONFIRMED" to proceed.', 400, 'Invalid confirmation code'));
-      }
-
-      const problematicEobs = await prisma.eob.findMany({
-        where: {
-          OR: [
-            { paymentMethod: null },
-            { paymentMethod: "" },
-            { paymentMethod: undefined },
-            { NOT: { paymentMethod: { in: ["1", "3", "4"] } } }
-          ]
-        }
-      });
-
-      log.info(`Found ${problematicEobs.length} EOBs with invalid payment methods`);
-
-      const updateResult = await prisma.eob.updateMany({
-        where: {
-          OR: [
-            { paymentMethod: null },
-            { paymentMethod: "" },
-            { paymentMethod: undefined },
-            { NOT: { paymentMethod: { in: ["1", "3", "4"] } } }
-          ]
-        },
-        data: {
-          paymentMethod: defaultMethod
-        }
-      });
-
-      res.locals.fixResults = {
-        problematicEobsFound: problematicEobs.length,
-        eobsUpdated: updateResult.count,
-        defaultMethodUsed: defaultMethod
-      };
-
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'fixEobPaymentMethods', next, 'Failed to fix EOB payment methods');
-    }
-  },
-
-  toggleEobProcessed: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eobId } = req.params;
-      const { isProcessed } = req.body;
-
-      if (!eobId) {
-        return next(new AppError('EOB ID is required', 400, 'Missing EOB ID'));
-      }
-
-      const existingEob = await prisma.eob.findUnique({
-        where: { id: parseInt(eobId) }
-      });
-
-      if (!existingEob) {
-        return next(new AppError('EOB not found', 404, `EOB ${eobId} not found`));
-      }
-
-      const newProcessedStatus = isProcessed !== undefined ? isProcessed : !existingEob.isProcessed;
-
-      const updatedEob = await prisma.eob.update({
-        where: { id: parseInt(eobId) },
-        data: { isProcessed: newProcessedStatus }
-      });
-
-      res.locals.toggleResult = {
-        eobId: updatedEob.id,
-        previousStatus: existingEob.isProcessed,
-        newStatus: updatedEob.isProcessed,
-        paymentMethod: updatedEob.paymentMethod,
-        amount: updatedEob.amount
-      };
-
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'toggleEobProcessed', next, 'Failed to toggle EOB processed status');
-    }
-  },
-
-  bulkToggleProcessed: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eobIds, isProcessed } = req.body;
-
-      if (!eobIds || !Array.isArray(eobIds)) {
-        return next(new AppError('EOB IDs array is required', 400, 'Invalid eobIds'));
-      }
-
-      const updateResult = await prisma.eob.updateMany({
-        where: {
-          id: { in: eobIds.map((id: string) => parseInt(id)) }
-        },
-        data: { isProcessed }
-      });
-
-      res.locals.bulkToggleResult = {
-        eobIds,
-        updatedCount: updateResult.count,
-        newStatus: isProcessed
-      };
-
-      return next();
-    } catch (error) {
-      handleControllerError(error, 'bulkToggleProcessed', next, 'Failed to bulk toggle EOB processed status');
-    }
-  },
-
-  deleteAll: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.body = {
-        tables: ['eob', 'deposit'],
-        confirmCode: 'CLEAR_TABLES_CONFIRMED'
-      };
-      return paymentController.clearTables(req, res, next);
-    } catch (error) {
-      handleControllerError(error, 'deleteAll', next, 'Failed to delete Eob/Deposit records');
     }
   },
 };

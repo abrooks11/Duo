@@ -72,6 +72,7 @@ const AppointmentTable = ({
         field: key,
         headerName: displayName,
         width: 200,
+        type: 'number',
         editable: true,
       };
     }
@@ -82,21 +83,19 @@ const AppointmentTable = ({
     };
   });
 
-  const processRowUpdate = (
+  const processRowUpdate = async (
     updatedRow: AppointmentRow,
     originalRow: AppointmentRow
   ) => {
-    console.log('Row information: ', { updatedRow, originalRow });
     if (updatedRow.insEligibility !== originalRow.insEligibility) {
-    //   updateVoicemailNote(originalRow.id, updatedRow.notes);
       return updatedRow;
     }
     if (updatedRow.notes !== originalRow.notes) {
-      updateAppointmentNote(originalRow.id, updatedRow.notes);
+      await updateAppointmentNote(originalRow.id, updatedRow.notes);
       return updatedRow;
     }
     if (updatedRow.patientCopay !== originalRow.patientCopay) {
-      updateCopay(originalRow.id, updatedRow.patientCopay);
+      await updateCopay(originalRow.id, updatedRow.patientCopay);
       return updatedRow;
     }
     return originalRow;

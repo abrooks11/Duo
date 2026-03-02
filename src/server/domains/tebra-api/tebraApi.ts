@@ -139,6 +139,79 @@ export async function fetchPayments(fromDate: string, toDate: string): Promise<a
 }
 
 /**
+ * Fetch insurance EOBs from Tebra for the given date range.
+ * Filters: PayerType = Insurance, Amount > 0.
+ * @param fromDate - "YYYY-MM-DD"
+ * @param toDate   - "YYYY-MM-DD"
+ * @returns Array of PaymentData objects (insurance EOBs)
+ */
+export async function fetchInsuranceEobs(fromDate: string, toDate: string): Promise<any[]> {
+  const envelope = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:sch="http://www.kareo.com/api/schemas/">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <sch:GetPayments>
+      <sch:request>
+        ${buildRequestHeader()}
+        <sch:Fields>
+          <sch:Amount>true</sch:Amount>
+          <sch:CreatedDate>true</sch:CreatedDate>
+          <sch:ID>true</sch:ID>
+          <sch:LastModifiedDate>true</sch:LastModifiedDate>
+          <sch:PayerName>true</sch:PayerName>
+          <sch:PayerType>true</sch:PayerType>
+          <sch:PaymentMethod>true</sch:PaymentMethod>
+          <sch:ReferenceNumber>true</sch:ReferenceNumber>
+        </sch:Fields>
+        <sch:Filter>
+          <sch:FromCreatedDate>${fromDate}</sch:FromCreatedDate>
+          <sch:PayerType>Insurance</sch:PayerType>
+          <sch:ToCreatedDate>${toDate}</sch:ToCreatedDate>
+        </sch:Filter>
+      </sch:request>
+    </sch:GetPayments>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+  console.log(`[DEBUG fetchInsuranceEobs] Requesting EOBs from ${fromDate} to ${toDate}`);
+  const rawXml = await soapPost('GetPayments', envelope);
+  console.log(`[DEBUG fetchInsuranceEobs] Raw XML length: ${rawXml.length}`);
+  console.log(`[DEBUG fetchInsuranceEobs] Raw XML preview: ${rawXml.substring(0, 500)}`);
+  const parsed = parser.parse(rawXml);
+  const result = parsed?.Envelope?.Body?.GetPaymentsResponse?.GetPaymentsResult;
+
+  console.log(`[DEBUG fetchInsuranceEobs] result keys:`, result ? Object.keys(result) : 'null');
+  console.log(`[DEBUG fetchInsuranceEobs] ErrorResponse:`, result?.ErrorResponse);
+  console.log(`[DEBUG fetchInsuranceEobs] Payments keys:`, result?.Payments ? Object.keys(result.Payments) : 'null/undefined');
+
+  if (!result) throw new Error('Could not locate GetPaymentsResult in response');
+  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+    throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
+  }
+
+  const payments = result?.Payments?.PaymentData;
+  if (!payments) return [];
+  const arr = Array.isArray(payments) ? payments : [payments];
+  // Filter out empty placeholder records Tebra returns when there are no results
+  // Filter out empty placeholder records and zero-amount entries
+  const filtered = arr.filter((p: any) => p.ID && String(p.ID).trim() !== '' && Number(p.Amount) > 0);
+  console.log(`[DEBUG fetchInsuranceEobs] Raw count: ${arr.length}, after filtering empty: ${filtered.length}`);
+  // Show distinct PayerType values and counts
+  const payerTypes: Record<string, number> = {};
+  filtered.forEach((p: any) => {
+    const pt = String(p.PayerType ?? 'null');
+    payerTypes[pt] = (payerTypes[pt] || 0) + 1;
+  });
+  console.log(`[DEBUG fetchInsuranceEobs] PayerType breakdown:`, payerTypes);
+  if (filtered.length > 0) {
+    console.log(`[DEBUG fetchInsuranceEobs] First record sample:`, JSON.stringify(filtered[0]).substring(0, 500));
+  }
+  return filtered;
+}
+
+/**
  * Fetch patients from Tebra for the given date range.
  * @param fromDate - "YYYY-MM-DD"
  * @param toDate   - "YYYY-MM-DD"

@@ -204,38 +204,30 @@ uploadRouter.post(
           }
           break;
         case 'deposit':
-          const getReferenceNumber = (str: string): string => {
-            let count = 2; // number of times to slice a *
-
-            while (count > 0) {
-              let startIndex = str.indexOf('*');
-              str = str.slice(startIndex + 1);
-              --count;
-            }
-
-            let endIndex = str.indexOf('*');
-            str = str.slice(0, endIndex);
-
-            return str;
+          // Parse reference from HCCLAIMPMT format: e.g. "HCCLAIMPMT*PAYER*REF123*..."
+          // Reference is the 3rd segment (index 2) when split by '*'
+          const getReferenceNumber = (str: string): string | null => {
+            const parts = str.split('*');
+            return parts.length >= 3 ? parts[2] : null;
           };
 
-          // map over excel data to prep data for batch upload
-          // console.log('INPUT DATA:', excelData[0]);
-
           const deposits = excelData
-            .filter((row) => row.description.includes('HCCLAIMPMT'))
+            .filter((row) => row.description?.includes('HCCLAIMPMT') && row.credit != null)
             .map((deposit) => {
-              // init constants,  parse the reference and payerName from the description
               const { date, description, credit } = deposit;
               const referenceNumber = getReferenceNumber(description);
+              if (!referenceNumber) return null;
               return {
-                id: referenceNumber, // String
-                createdDate: new Date(date), // DateTime
-                reference: referenceNumber, // String @unique
-                payerName: getPayerName(description), // String
-                amount: credit != null ? String(credit) : null, // Decimal
+                id: referenceNumber,
+                createdDate: new Date(),       // record creation timestamp
+                postDate: new Date(date),      // actual bank posting date from statement
+                description: description as string,
+                reference: referenceNumber,
+                payerName: getPayerName(description),
+                amount: String(credit),
               };
-            });
+            })
+            .filter((d): d is NonNullable<typeof d> => d !== null);
           log.info(`Filtered deposits: ${deposits.length}`);
 
           // FOR EACH NEW DEPOSIT, CHECK IF IT EXISTS ON THE DEPOSITS TABLE, IF SO, SKIP,
@@ -319,19 +311,26 @@ uploadRouter.post(
               !existingEOB ||
               incomingEOB.lastModifiedDate > existingEOB?.lastModifiedDate
             ) {
-              const eob = await prisma.eob.upsert({
-                where: {
-                  reference: incomingEOB.reference
-                },
-                update: {
-                  lastModifiedDate: incomingEOB.lastModifiedDate,
-                  reference: incomingEOB.reference,
-                  payerName: incomingEOB.payerName,
-                  paymentMethod: incomingEOB.paymentMethod,
-                  amount: incomingEOB.amount,
-                },
-                create: incomingEOB,
-              });
+              const updateData = {
+                lastModifiedDate: incomingEOB.lastModifiedDate,
+                payerName: incomingEOB.payerName,
+                paymentMethod: incomingEOB.paymentMethod,
+                amount: incomingEOB.amount,
+              };
+              if (incomingEOB.reference) {
+                await prisma.eob.upsert({
+                  where: { reference: incomingEOB.reference },
+                  update: updateData,
+                  create: incomingEOB,
+                });
+              } else {
+                // No reference — fall back to upsert by numeric id
+                await prisma.eob.upsert({
+                  where: { id: incomingEOB.id },
+                  update: updateData,
+                  create: incomingEOB,
+                });
+              }
             }
           }
 
