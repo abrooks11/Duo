@@ -4,13 +4,18 @@ import { Tooltip } from '@mui/material';
 import {
   getReconciliation,
   runMatch,
+  confirmDeposit,
   type ReconciliationRow,
   type ReconciliationStatus,
   type PaymentType,
   type ReconciliationResponse,
 } from '../services/paymentApi';
 
-type TabKey = 'all' | ReconciliationStatus;
+// Tabs group statuses logically
+type TabKey = 'all' | 'pending' | 'matched' | 'missingEob';
+
+const PENDING_STATUSES: ReconciliationStatus[] = ['pendingPayment', 'pendingDeposit', 'pendingProcessing'];
+const RESOLVED_STATUSES: ReconciliationStatus[] = ['matched', 'deposited', 'processed'];
 
 interface Filters {
   dateFrom: string;
@@ -37,6 +42,9 @@ const formatDelta = (delta: number | null): string | null => {
   return `Δ$${delta.toFixed(2)}`;
 };
 
+const isPending = (s: ReconciliationStatus) => (PENDING_STATUSES as string[]).includes(s);
+const isResolved = (s: ReconciliationStatus) => (RESOLVED_STATUSES as string[]).includes(s);
+
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 const TypeChip = ({ type }: { type: PaymentType | null }) => {
@@ -55,13 +63,18 @@ const TypeChip = ({ type }: { type: PaymentType | null }) => {
   );
 };
 
+const STATUS_CONFIG: Record<ReconciliationStatus, { bg: string; dot: string; label: string }> = {
+  matched:           { bg: 'bg-green-100 text-green-700',  dot: 'bg-green-600',  label: 'Matched' },
+  deposited:         { bg: 'bg-green-100 text-green-700',  dot: 'bg-green-600',  label: 'Deposited' },
+  processed:         { bg: 'bg-green-100 text-green-700',  dot: 'bg-green-600',  label: 'Processed' },
+  pendingPayment:    { bg: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500', label: 'Pending Payment' },
+  pendingDeposit:    { bg: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500', label: 'Pending Deposit' },
+  pendingProcessing: { bg: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500', label: 'Pending Processing' },
+  missingEob:        { bg: 'bg-red-100 text-red-700',       dot: 'bg-red-600',    label: 'Missing EOB' },
+};
+
 const StatusBadge = ({ status }: { status: ReconciliationStatus }) => {
-  const config: Record<ReconciliationStatus, { bg: string; dot: string; label: string }> = {
-    matched: { bg: 'bg-green-100 text-green-700', dot: 'bg-green-600', label: 'Matched' },
-    pendingPayment: { bg: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500', label: 'Pending Payment' },
-    missingEob: { bg: 'bg-red-100 text-red-700', dot: 'bg-red-600', label: 'Missing EOB' },
-  };
-  const { bg, dot, label } = config[status];
+  const { bg, dot, label } = STATUS_CONFIG[status];
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${bg}`}
@@ -75,14 +88,14 @@ const StatusBadge = ({ status }: { status: ReconciliationStatus }) => {
 // ── Row cell renderers ─────────────────────────────────────────────────────────
 
 const renderDepositDate = (row: ReconciliationRow) =>
-  row.status === 'pendingPayment' ? (
+  isPending(row.status) ? (
     <span className="text-slate-500">{formatDate(row.eobDate)}</span>
   ) : (
     <span>{formatDate(row.depositDate)}</span>
   );
 
 const renderBankDesc = (row: ReconciliationRow) => {
-  const desc = row.status !== 'pendingPayment' ? row.bankDescription : null;
+  const desc = !isPending(row.status) ? row.bankDescription : null;
   if (!desc) return <span>{row.payerName}</span>;
   return (
     <Tooltip title={desc} placement="bottom-start">
@@ -92,7 +105,7 @@ const renderBankDesc = (row: ReconciliationRow) => {
 };
 
 const renderDepositRef = (row: ReconciliationRow) =>
-  row.status === 'pendingPayment' ? (
+  isPending(row.status) ? (
     <span className="text-slate-400 text-xs">— awaiting</span>
   ) : (
     <code className="font-mono text-[11px] text-slate-500">{row.depositRef}</code>
@@ -103,10 +116,9 @@ const renderEobMatch = (row: ReconciliationRow) => {
     return <span className="text-slate-400 text-xs">— no EOB received</span>;
   }
   const delta = formatDelta(row.amountDelta);
-  const secondary =
-    row.status === 'pendingPayment'
-      ? `EOB dated ${formatDate(row.eobDate)} · deposit not yet posted`
-      : `EOB dated ${formatDate(row.eobDate)}${delta ? ` · ${delta}` : ''}`;
+  const secondary = isPending(row.status)
+    ? `EOB dated ${formatDate(row.eobDate)} · deposit not yet posted`
+    : `EOB dated ${formatDate(row.eobDate)}${delta ? ` · ${delta}` : ''}`;
   return (
     <div>
       <code className="font-mono text-[11px] text-slate-500">{row.eobRef}</code>
@@ -115,97 +127,13 @@ const renderEobMatch = (row: ReconciliationRow) => {
   );
 };
 
-const renderAction = (row: ReconciliationRow) => {
-  if (row.status === 'matched') {
-    return (
-      <button className="px-2 py-0.5 rounded-[5px] text-[11px] font-medium border bg-slate-50 text-slate-500 border-slate-300 whitespace-nowrap cursor-pointer hover:bg-slate-100">
-        View Details
-      </button>
-    );
-  }
-  if (row.status === 'missingEob') {
-    return (
-      <button className="px-2 py-0.5 rounded-[5px] text-[11px] font-medium border bg-blue-50 text-blue-600 border-blue-200 whitespace-nowrap cursor-pointer hover:bg-blue-100">
-        Find EOB ↗
-      </button>
-    );
-  }
-  return (
-    <button className="px-2 py-0.5 rounded-[5px] text-[11px] font-medium border bg-blue-50 text-blue-600 border-blue-200 whitespace-nowrap cursor-pointer hover:bg-blue-100">
-      View EOB ↗
-    </button>
-  );
-};
-
 // ── Tabs config ────────────────────────────────────────────────────────────────
 
 const TABS: { key: TabKey; label: string; activeBadge: string }[] = [
-  { key: 'all', label: 'All', activeBadge: 'bg-blue-100 text-blue-600' },
-  { key: 'missingEob', label: 'Missing EOB', activeBadge: 'bg-red-100 text-red-700' },
-  { key: 'pendingPayment', label: 'Pending Payment', activeBadge: 'bg-yellow-100 text-yellow-700' },
-  { key: 'matched', label: 'Matched', activeBadge: 'bg-blue-100 text-blue-600' },
-];
-
-// ── Columns definition ─────────────────────────────────────────────────────────
-// Fields prefixed with _ are sort-helper values added to dgRows below.
-
-const columns: GridColDef[] = [
-  {
-    field: '_dateSort',
-    headerName: 'Deposit Date',
-    width: 130,
-    renderCell: ({ row }) => renderDepositDate(row as ReconciliationRow),
-  },
-  {
-    field: 'payerName',
-    headerName: 'Payer',
-    flex: 1,
-    minWidth: 150,
-    renderCell: ({ row }) => renderBankDesc(row as ReconciliationRow),
-  },
-  {
-    field: '_depositRefSort',
-    headerName: 'Deposit Ref',
-    width: 155,
-    renderCell: ({ row }) => renderDepositRef(row as ReconciliationRow),
-  },
-  {
-    field: '_typeSort',
-    headerName: 'Type',
-    width: 90,
-    renderCell: ({ row }) => <TypeChip type={(row as ReconciliationRow).type} />,
-  },
-  {
-    field: 'amount',
-    headerName: 'Amount',
-    width: 115,
-    type: 'number',
-    align: 'left',
-    headerAlign: 'left',
-    renderCell: ({ row }) => (
-      <span className="font-medium tabular-nums">{formatCurrency((row as ReconciliationRow).amount)}</span>
-    ),
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    width: 155,
-    renderCell: ({ row }) => <StatusBadge status={(row as ReconciliationRow).status} />,
-  },
-  {
-    field: '_eobRefSort',
-    headerName: 'EOB Match',
-    flex: 1.5,
-    minWidth: 200,
-    renderCell: ({ row }) => renderEobMatch(row as ReconciliationRow),
-  },
-  {
-    field: 'actions',
-    headerName: 'Action',
-    width: 120,
-    sortable: false,
-    renderCell: ({ row }) => renderAction(row as ReconciliationRow),
-  },
+  { key: 'all',        label: 'All',         activeBadge: 'bg-blue-100 text-blue-600' },
+  { key: 'missingEob', label: 'Missing EOB',  activeBadge: 'bg-red-100 text-red-700' },
+  { key: 'pending',    label: 'Pending',      activeBadge: 'bg-yellow-100 text-yellow-700' },
+  { key: 'matched',    label: 'Matched',      activeBadge: 'bg-green-100 text-green-700' },
 ];
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -215,6 +143,7 @@ const ReconciliationDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [confirming, setConfirming] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [filters, setFilters] = useState<Filters>({
     dateFrom: '',
@@ -251,6 +180,16 @@ const ReconciliationDashboard = () => {
     }
   };
 
+  const handleConfirmDeposit = async (eobId: number) => {
+    setConfirming(eobId);
+    try {
+      await confirmDeposit(eobId);
+      await fetchData();
+    } finally {
+      setConfirming(null);
+    }
+  };
+
   const setFilter = (key: keyof Filters, value: string) =>
     setFilters(prev => ({ ...prev, [key]: value }));
 
@@ -260,26 +199,28 @@ const ReconciliationDashboard = () => {
   }, [data]);
 
   const tabCounts = useMemo(() => {
-    if (!data) return { all: 0, matched: 0, missingEob: 0, pendingPayment: 0 };
+    if (!data) return { all: 0, matched: 0, missingEob: 0, pending: 0 };
     return {
-      all: data.rows.length,
-      matched: data.rows.filter(r => r.status === 'matched').length,
+      all:       data.rows.length,
+      matched:   data.rows.filter(r => isResolved(r.status)).length,
       missingEob: data.rows.filter(r => r.status === 'missingEob').length,
-      pendingPayment: data.rows.filter(r => r.status === 'pendingPayment').length,
+      pending:   data.rows.filter(r => isPending(r.status)).length,
     };
   }, [data]);
 
   const filteredRows = useMemo(() => {
     if (!data) return [];
     return data.rows.filter(row => {
-      if (activeTab !== 'all' && row.status !== activeTab) return false;
+      if (activeTab === 'matched'   && !isResolved(row.status)) return false;
+      if (activeTab === 'pending'   && !isPending(row.status))  return false;
+      if (activeTab === 'missingEob' && row.status !== 'missingEob') return false;
 
-      const relevantDate = row.status === 'pendingPayment' ? row.eobDate : row.depositDate;
+      const relevantDate = isPending(row.status) ? row.eobDate : row.depositDate;
       if (filters.dateFrom && relevantDate && relevantDate < filters.dateFrom) return false;
-      if (filters.dateTo && relevantDate && relevantDate > filters.dateTo) return false;
+      if (filters.dateTo   && relevantDate && relevantDate > filters.dateTo)   return false;
 
       if (filters.payer && row.payerName !== filters.payer) return false;
-      if (filters.type && row.type !== filters.type) return false;
+      if (filters.type  && row.type !== filters.type)       return false;
 
       if (filters.search) {
         const q = filters.search.toLowerCase();
@@ -299,15 +240,109 @@ const ReconciliationDashboard = () => {
       filteredRows.map((row, i) => ({
         ...row,
         id: `${row.depositId ?? row.eobId}-${i}`,
-        _dateSort: row.status === 'pendingPayment' ? (row.eobDate ?? '') : (row.depositDate ?? ''),
-        _depositRefSort: row.status === 'pendingPayment' ? '' : (row.depositRef ?? ''),
-        _eobRefSort: row.eobRef ?? '',
-        _typeSort: row.type ?? '',
+        _dateSort:       isPending(row.status) ? (row.eobDate ?? '') : (row.depositDate ?? ''),
+        _depositRefSort: isPending(row.status) ? '' : (row.depositRef ?? ''),
+        _eobRefSort:     row.eobRef ?? '',
+        _typeSort:       row.type ?? '',
       })),
     [filteredRows],
   );
 
+  // Action column needs access to handleConfirmDeposit, so defined inside component
+  const renderAction = (row: ReconciliationRow) => {
+    if (row.status === 'missingEob') {
+      return (
+        <button className="px-2 py-0.5 rounded-[5px] text-[11px] font-medium border bg-blue-50 text-blue-600 border-blue-200 whitespace-nowrap cursor-pointer hover:bg-blue-100">
+          Find EOB ↗
+        </button>
+      );
+    }
+    if (row.status === 'pendingDeposit' || row.status === 'pendingProcessing') {
+      const isConfirming = confirming === row.eobId;
+      return (
+        <button
+          disabled={isConfirming}
+          onClick={() => row.eobId !== null && handleConfirmDeposit(row.eobId)}
+          className="px-2 py-0.5 rounded-[5px] text-[11px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 whitespace-nowrap cursor-pointer hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isConfirming ? '…' : 'Confirm Deposit'}
+        </button>
+      );
+    }
+    // matched, deposited, processed, pendingPayment
+    return (
+      <button className="px-2 py-0.5 rounded-[5px] text-[11px] font-medium border bg-slate-50 text-slate-500 border-slate-300 whitespace-nowrap cursor-pointer hover:bg-slate-100">
+        View Details
+      </button>
+    );
+  };
+
+  const columns: GridColDef[] = [
+    {
+      field: '_dateSort',
+      headerName: 'Deposit Date',
+      width: 130,
+      renderCell: ({ row }) => renderDepositDate(row as ReconciliationRow),
+    },
+    {
+      field: 'payerName',
+      headerName: 'Payer',
+      flex: 1,
+      minWidth: 150,
+      renderCell: ({ row }) => renderBankDesc(row as ReconciliationRow),
+    },
+    {
+      field: '_depositRefSort',
+      headerName: 'Deposit Ref',
+      width: 155,
+      renderCell: ({ row }) => renderDepositRef(row as ReconciliationRow),
+    },
+    {
+      field: '_typeSort',
+      headerName: 'Type',
+      width: 90,
+      renderCell: ({ row }) => <TypeChip type={(row as ReconciliationRow).type} />,
+    },
+    {
+      field: 'amount',
+      headerName: 'Amount',
+      width: 115,
+      type: 'number',
+      align: 'left',
+      headerAlign: 'left',
+      renderCell: ({ row }) => (
+        <span className="font-medium tabular-nums">{formatCurrency((row as ReconciliationRow).amount)}</span>
+      ),
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 165,
+      renderCell: ({ row }) => <StatusBadge status={(row as ReconciliationRow).status} />,
+    },
+    {
+      field: '_eobRefSort',
+      headerName: 'EOB Match',
+      flex: 1.5,
+      minWidth: 200,
+      renderCell: ({ row }) => renderEobMatch(row as ReconciliationRow),
+    },
+    {
+      field: 'actions',
+      headerName: 'Action',
+      width: 135,
+      sortable: false,
+      renderCell: ({ row }) => renderAction(row as ReconciliationRow),
+    },
+  ];
+
   const stats = data?.stats;
+
+  // Combined stats for the 4-card summary bar
+  const resolvedAmount  = stats ? stats.matched.amount  + stats.deposited.amount  + stats.processed.amount  : 0;
+  const resolvedCount   = stats ? stats.matched.count   + stats.deposited.count   + stats.processed.count   : 0;
+  const pendingAmount   = stats ? stats.pendingPayment.amount + stats.pendingDeposit.amount + stats.pendingProcessing.amount : 0;
+  const pendingCount    = stats ? stats.pendingPayment.count  + stats.pendingDeposit.count  + stats.pendingProcessing.count  : 0;
 
   return (
     <div className="p-6 bg-[#f4f5f7] min-h-screen text-[13px] text-slate-800">
@@ -344,24 +379,24 @@ const ReconciliationDashboard = () => {
         </div>
         <div className="bg-white border border-slate-200 rounded-lg px-4 py-3.5">
           <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1.5">
-            Matched
+            Resolved
           </div>
           <div className="text-[22px] font-bold text-green-600 leading-none">
-            {stats ? formatCurrency(stats.matched.amount) : '—'}
+            {stats ? formatCurrency(resolvedAmount) : '—'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            {stats ? `${stats.matched.count} records · deposit + EOB confirmed` : ''}
+            {stats ? `${resolvedCount} records · matched or confirmed` : ''}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-lg px-4 py-3.5">
           <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1.5">
-            Pending Payment
+            Pending
           </div>
           <div className="text-[22px] font-bold text-yellow-600 leading-none">
-            {stats ? formatCurrency(stats.pendingPayment.amount) : '—'}
+            {stats ? formatCurrency(pendingAmount) : '—'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            {stats ? `${stats.pendingPayment.count} EOBs · deposit not yet posted` : ''}
+            {stats ? `${pendingCount} EOBs · awaiting confirmation or deposit` : ''}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-lg px-4 py-3.5">
@@ -382,7 +417,10 @@ const ReconciliationDashboard = () => {
         {/* Tabs */}
         <div className="flex gap-1 px-4 pt-3 border-b border-slate-200">
           {TABS.map(tab => {
-            const count = tabCounts[tab.key === 'all' ? 'all' : tab.key];
+            const count = tab.key === 'all' ? tabCounts.all
+              : tab.key === 'matched'    ? tabCounts.matched
+              : tab.key === 'pending'    ? tabCounts.pending
+              : tabCounts.missingEob;
             const isActive = activeTab === tab.key;
             return (
               <button
