@@ -1,6 +1,13 @@
 // Reconciliation dashboard types
 
-export type ReconciliationStatus = 'matched' | 'missingEob' | 'pendingPayment';
+export type ReconciliationStatus =
+  | 'matched'
+  | 'missingEob'
+  | 'pendingPayment'
+  | 'pendingDeposit'
+  | 'pendingProcessing'
+  | 'deposited'
+  | 'processed';
 
 export type PaymentType = 'Check' | 'EFT' | 'CC';
 
@@ -23,10 +30,14 @@ export interface ReconciliationRow {
 }
 
 export interface ReconciliationStats {
-  totalDeposits:  { count: number; amount: number };
-  matched:        { count: number; amount: number };
-  pendingPayment: { count: number; amount: number };
-  missingEob:     { count: number; amount: number };
+  totalDeposits:      { count: number; amount: number };
+  matched:            { count: number; amount: number };
+  pendingPayment:     { count: number; amount: number };
+  pendingDeposit:     { count: number; amount: number };
+  pendingProcessing:  { count: number; amount: number };
+  deposited:          { count: number; amount: number };
+  processed:          { count: number; amount: number };
+  missingEob:         { count: number; amount: number };
 }
 
 export interface ReconciliationResponse {

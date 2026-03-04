@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../../prisma.ts';
-import type { PaymentType } from './paymentTypes.ts';
+import type { PaymentType, ReconciliationStatus } from './paymentTypes.ts';
 import { AppError, handleControllerError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
 import { syncEobs } from '../tebra-api/tebraSync.ts';
@@ -21,7 +21,7 @@ function defaultDateRange(): { from: string; to: string } {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-  return { from: `${y}-${m}-01`, to: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
+  return { from: '2026-01-15', to: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
 }
 
 const paymentController = {
@@ -42,7 +42,7 @@ const paymentController = {
         log.warn({ err: syncErr }, 'EOB auto-sync failed, proceeding with local data');
       }
 
-      const [matchedDeposits, missingEobDeposits, pendingEobs] = await Promise.all([
+      const [matchedDeposits, missingEobDeposits, pendingEobs, confirmedEobs] = await Promise.all([
         prisma.deposit.findMany({
           where: { eob: { isNot: null } },
           include: { eob: true },
@@ -50,18 +50,28 @@ const paymentController = {
         prisma.deposit.findMany({
           where: { eob: null },
         }),
+        // Unconfirmed EOBs with no deposit (Check, CC, EFT not yet acted on)
         prisma.eob.findMany({
-          where: {
-            depositId: null,
-            NOT: {
-              AND: [
-                { OR: [{ paymentMethod: '3' }, { paymentMethod: { startsWith: '3' } }] },
-                { isProcessed: true },
-              ],
-            },
-          },
+          where: { depositId: null, isProcessed: false },
+        }),
+        // Manually confirmed EOBs (Check → deposited, CC → processed)
+        prisma.eob.findMany({
+          where: { depositId: null, isProcessed: true },
         }),
       ]);
+
+      const pendingStatusFor = (pm: string): ReconciliationStatus => {
+        const type = mapPaymentType(pm);
+        if (type === 'Check') return 'pendingDeposit';
+        if (type === 'CC') return 'pendingProcessing';
+        return 'pendingPayment';
+      };
+
+      const confirmedStatusFor = (pm: string): ReconciliationStatus => {
+        const type = mapPaymentType(pm);
+        if (type === 'Check') return 'deposited';
+        return 'processed'; // CC (and anything else confirmed)
+      };
 
       const rows = [
         ...matchedDeposits.map((deposit) => {
@@ -97,7 +107,21 @@ const paymentController = {
           amountDelta: null,
         })),
         ...pendingEobs.map((eob) => ({
-          status: 'pendingPayment' as const,
+          status: pendingStatusFor(eob.paymentMethod),
+          depositDate: null,
+          bankDescription: null,
+          depositRef: null,
+          depositId: null,
+          eobRef: eob.reference,
+          eobDate: eob.createdDate.toISOString(),
+          eobId: eob.id,
+          payerName: eob.payerName,
+          type: mapPaymentType(eob.paymentMethod),
+          amount: Number(eob.amount),
+          amountDelta: null,
+        })),
+        ...confirmedEobs.map((eob) => ({
+          status: confirmedStatusFor(eob.paymentMethod),
           depositDate: null,
           bankDescription: null,
           depositRef: null,
@@ -115,14 +139,24 @@ const paymentController = {
       const sum = (items: any[], getAmt: (x: any) => number) =>
         items.reduce((acc, x) => ({ count: acc.count + 1, amount: acc.amount + getAmt(x) }), { count: 0, amount: 0 });
 
+      const depositedEobs = confirmedEobs.filter((e) => mapPaymentType(e.paymentMethod) === 'Check');
+      const processedEobs = confirmedEobs.filter((e) => mapPaymentType(e.paymentMethod) !== 'Check');
+      const checkPending   = pendingEobs.filter((e) => mapPaymentType(e.paymentMethod) === 'Check');
+      const ccPending      = pendingEobs.filter((e) => mapPaymentType(e.paymentMethod) === 'CC');
+      const eftPending     = pendingEobs.filter((e) => mapPaymentType(e.paymentMethod) !== 'Check' && mapPaymentType(e.paymentMethod) !== 'CC');
+
       const stats = {
         totalDeposits: {
           count: matchedDeposits.length + missingEobDeposits.length,
           amount: [...matchedDeposits, ...missingEobDeposits].reduce((acc, d) => acc + Number(d.amount), 0),
         },
-        matched: sum(matchedDeposits, (d) => Number(d.amount)),
-        missingEob: sum(missingEobDeposits, (d) => Number(d.amount)),
-        pendingPayment: sum(pendingEobs, (e) => Number(e.amount)),
+        matched:           sum(matchedDeposits, (d) => Number(d.amount)),
+        missingEob:        sum(missingEobDeposits, (d) => Number(d.amount)),
+        pendingPayment:    sum(eftPending, (e) => Number(e.amount)),
+        pendingDeposit:    sum(checkPending, (e) => Number(e.amount)),
+        pendingProcessing: sum(ccPending, (e) => Number(e.amount)),
+        deposited:         sum(depositedEobs, (e) => Number(e.amount)),
+        processed:         sum(processedEobs, (e) => Number(e.amount)),
       };
 
       res.locals.reconciliation = { stats, rows };
@@ -195,6 +229,23 @@ const paymentController = {
       return next();
     } catch (error) {
       handleControllerError(error, 'matchEobs', next, 'Failed to match EOBs');
+    }
+  },
+
+  confirmDeposit: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const eobId = parseInt(req.body.eobId, 10);
+      if (isNaN(eobId)) {
+        return next(new AppError('eobId must be a valid integer', 400, 'Invalid eobId'));
+      }
+      await prisma.eob.update({
+        where: { id: eobId },
+        data: { isProcessed: true },
+      });
+      res.locals.confirmResult = { eobId };
+      return next();
+    } catch (error) {
+      handleControllerError(error, 'confirmDeposit', next, 'Failed to confirm deposit');
     }
   },
 
