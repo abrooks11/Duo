@@ -41,15 +41,17 @@ npx prisma generate       # Regenerate Prisma client
 **Frontend (`src/client/`):**
 - Global state lives in `context/` — uses Immer for immutable updates
 - Custom hooks in `hooks/` wrap API calls (`useApi`) and context access (`useGlobalContext`)
-- Resource-specific API utilities in `utils/` (e.g., `appointmentApi.ts`, `voicemailApi.ts`); feature-specific services in `features/*/services/` (e.g., `payments/services/paymentApi.ts`)
+- Feature-specific services in `features/*/services/` (e.g., `appointments/services/appointmentApi.ts`, `payments/services/paymentApi.ts`, `voicemail/services/voicemailApi.ts`)
+- Frontend features: `appointments/`, `payments/`, `reports/`, `sms/`, `voicemail/`
 - Vite proxies `/api` requests to `http://localhost:3000`, so frontend fetches use relative `/api/...` paths
 
 **Backend (`src/server/`):**
 - **Domain-based organization** under `src/server/domains/` — each domain has Router, Controller, Services, Types files
 - Domains: `auth/`, `ai/`, `appointments/`, `claims/`, `patients/`, `payments/`, `voicemail/`, `upload/`, `reports/`, `sms/`, `tebra-api/`, `estimates/`
-- `routes/api.js` mounts all domain routers under `/api`
-- `services/fieldMap.js` maps Excel column headers to Prisma field names — critical for upload processing
-- `services/excelServices.js` handles Excel serial date → ISO string conversion
+- `routes/api.ts` mounts all domain routers under `/api`
+- `domains/upload/fieldMap.ts` maps Excel column headers to Prisma field names — critical for upload processing
+- `domains/upload/excelServices.ts` handles Excel serial date → ISO string conversion
+- `shared/logger.ts` provides structured logging; `shared/errorHandlers.ts` provides standardized error handling and response envelope helpers
 - Upload endpoint: `POST /api/upload/:resourceType/:sheetName` — supports `patient`, `appointment`, `payment`, `eob`
 - Upsert logic in upload controllers: skips records if incoming `lastModifiedDate` is not newer than existing
 - **RingRX auth middleware** (`domains/auth/`): cookie-based token management with auto-refresh on 401/403
@@ -92,11 +94,15 @@ TEBRA_PRACTICE_NAME=
 | Purpose | Path |
 |---------|------|
 | Express server entry | `src/server/server.js` |
-| API router mount | `src/server/routes/api.js` |
+| API router mount | `src/server/routes/api.ts` |
 | Backend domains | `src/server/domains/` |
-| Excel column → Prisma field map | `src/server/services/fieldMap.js` |
+| Excel column → Prisma field map | `src/server/domains/upload/fieldMap.ts` |
+| Structured logger | `src/server/shared/logger.ts` |
+| Error handlers & response envelope | `src/server/shared/errorHandlers.ts` |
 | Upload domain | `src/server/domains/upload/` |
 | Tebra integration | `src/server/domains/tebra-api/` |
+| Tebra SOAP field/filter templates | `SOAP-header-templates/` |
+| Tebra SOAP API rule | `.claude/rules/tebra-soap-api.md` |
 | Reports (AI SQL) | `src/server/domains/reports/` |
 | RingRX auth middleware | `src/server/domains/auth/` |
 | SMS feature | `src/server/domains/sms/` |
@@ -114,7 +120,7 @@ TEBRA_PRACTICE_NAME=
 - The backend runs as ESM (`"type": "module"` in package.json); use `import`/`export`, not `require`/`module.exports` in server files
 - Appointments query defaults to current month + next month date range; Tebra auto-syncs on GET
 - **Payment reconciliation** (`domains/payments/`): 3 endpoints only — `GET /reconciliation` (auto-syncs EOBs from Tebra then returns matched/missingEob/pendingPayment rows + stats), `POST /match` (EFT reference matching), `POST /clear` (requires `CLEAR_TABLES_CONFIRMED` code). Bank deposit uploads go through the upload domain, not payments.
-- Tebra EOB sync (`syncEobs`): fetches Insurance payments only via `GetPayments` SOAP call. The `PayerType` filter works; do NOT use the `Amount` numeric filter (it silently blocks all results). Zero-amount records are filtered in code. Tebra returns a single empty placeholder `PaymentData` when no results match — filter these out by checking `ID !== ''`.
+- Tebra SOAP API conventions and pitfalls are documented in `.claude/rules/tebra-soap-api.md`; field/filter templates are in `SOAP-header-templates/`
 - Voicemail integrates with RingRX API; the `openAiController` handles AI-assisted features
 - Timezone adjustment of +2 hours is applied to appointment dates during upload processing
 - Deposit upload processing: splits HCCLAIMPMT reference on `'*'` to extract the 3rd segment as reference number; stores `postDate` (bank posting date from statement) and `description` separately from `createdDate` (server record creation); rows with no parseable reference are filtered out before upsert

@@ -31,15 +31,18 @@ Duo is a **Full-Stack Data Integration Bridge** designed specifically for small 
 ## Features
 
 ### Core Features
-- **📊 Excel/CSV File Imports** - Seamlessly ingest data from various healthcare systems
-- **🔄 Advanced Backend Logic** - Intelligent data processing and relationship mapping
+- **📊 Excel/CSV File Imports** - Ingest patient, appointment, payment, and EOB data from exported spreadsheets
+- **🔄 Tebra/Kareo EHR Sync** - Automatic SOAP API sync for appointments and EOBs from Tebra
+- **💰 Payment Reconciliation** - Match EOBs to deposits, EFT reference matching, and reconciliation dashboard
+- **🤖 AI-Powered Reports** - Natural language to SQL report generation via OpenAI
 - **🗄️ Unified Database** - Centralized storage with PostgreSQL and Prisma ORM
-- **📋 Advanced Data Tables** - Filterable, sortable tables with Material-UI components
+- **📋 Advanced Data Tables** - Filterable, sortable tables with Material-UI MUI X DataGrid
 
 ### Secondary Features
-- **📅 Appointment Management** - View and manage patient appointments
+- **📅 Appointment Management** - View and manage patient appointments with auto-sync
 - **👥 Patient Management** - Comprehensive patient data handling
-- **📞 Voicemail Integration** - RingRX API integration for voicemail handling
+- **📞 Voicemail Integration** - RingRX voicemail management with AI-assisted features
+- **💬 SMS Messaging** - Send messages to patients via RingRX
 
 ## Installation
 
@@ -65,25 +68,31 @@ npm run start
 Create a `.env` file in the root directory with the following variables:
 
 ```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/duo"
-
-# OpenAI Integration (for AI-powered features)
-OPENAI_API_KEY="your_openai_api_key_here"
-
-# RingRX API (for voicemail integration)
-RINGRX_API_KEY="your_ringrx_api_key_here"
-RINGRX_BASE_URL="https://portal.ringrx.com"
-
-# Server Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/duo
 PORT=3000
 NODE_ENV=development
+
+# OpenAI (AI reports, voicemail features)
+OPENAI_API_KEY=
+
+# RingRX (voicemail, SMS)
+RING_USER_NAME=
+RING_PASSWORD=
+RINGRX_BASE_URL=https://portal.ringrx.com
+
+# Tebra/Kareo (EHR sync)
+TEBRA_API_URL=
+TEBRA_CUSTOMER_KEY=
+TEBRA_USER_ID=
+TEBRA_PASSWORD=
+TEBRA_PRACTICE_NAME=
 ```
 
 ### Third-Party Integrations
 
-- **RingRX**: Used for voicemail management through their REST API
-- **OpenAI**: Powers AI-enhanced features within the application
+- **Tebra/Kareo**: SOAP API integration for syncing appointments and EOBs from the EHR
+- **RingRX**: Cookie-based auth for voicemail management and SMS messaging
+- **OpenAI**: Powers AI report generation and voicemail features
 
 ## Usage
 
