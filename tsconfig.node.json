@@ -19,6 +19,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "types": ["node"],
     "outDir": "./dist/",
     "sourceMap": true
   },
@@ -26,6 +27,6 @@
     "esm": true,
     "transpileOnly": true
   },
-  "include": ["src/server/**/*.ts", "src/server/**/*.js"],
+  "include": ["src/server/**/*.ts", "src/server/**/*.js", "scripts/**/*.ts"],
   "exclude": ["node_modules"]
 }

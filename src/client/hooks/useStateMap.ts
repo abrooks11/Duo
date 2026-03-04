@@ -1,6 +1,9 @@
-import type { GlobalState } from '../context/GlobalContext';
+import { useLocation } from 'react-router-dom';
+import type { GlobalState } from '../context/types/state';
 
 const useStateMap = () => {
+  const location = useLocation();
+  
   // Map paths to their corresponding state properties
   const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
     appointments: 'appointments',

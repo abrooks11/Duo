@@ -1,0 +1,73 @@
+.sms-Wrapper {
+  max-width: 500px;
+  /* margin: 2rem auto; */
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sms-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sms-form-element {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sms-form-element label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.sms-form-element input,
+.sms-form-element textarea {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.sms-form-element input:focus,
+.sms-form-element textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.sms-form-element textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+
+.sms-form button[type="submit"] {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sms-form button[type="submit"]:hover {
+  background: #2563eb;
+}
+
+.sms-form button[type="submit"]:active {
+  background: #1d4ed8;
+}
+
+.sms-form button[type="submit"]:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}

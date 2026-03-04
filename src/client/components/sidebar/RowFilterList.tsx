@@ -1,48 +1,48 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';  // Add this import
 import useGlobalContext from '../../hooks/useGlobalContext';
-import type { GlobalState, RowFilterDetails } from '../../context/GlobalContext';
-import { ActionTypes } from '../../context/GlobalContext';
+import type { RowFilterDetails } from '../../context/types/state';
+import { appointmentActions } from '../../context/reducers/appointmentReducer';
+import { voicemailActions } from '../../context/reducers/voicemailReducer';
 import useStateMap from '../../hooks/useStateMap';
 
 
 
 function RowFilterList() {
   const { state, dispatch } = useGlobalContext();
-  // const [rowFilterList, setRowFilterList] = useState<TableFilter[]>([]);
+  const currentPage = useStateMap(); // Move hook call to top level
   const [rowFilterList, setRowFilterList] = useState<RowFilterDetails>({});
   const [resource, setResource] = useState<string>()
-  const location = useLocation();  // Add this hook
 
   useEffect(() => {
-  const currentPage = useStateMap()
-  const filterList = resource ? state[currentPage]?.rowFilterDetails || {} : {};
-  setResource(currentPage)
-
-  // console.log({resource})
-  // console.log({filterList});
-  
-  if (filterList) {
-    setRowFilterList(filterList);
-  } else {
-    setRowFilterList({});
-  }
-}, [location.pathname, state]);
+    if (currentPage && state[currentPage]) {
+      // Type guard to ensure the resource has rowFilterDetails
+      const resourceState = state[currentPage];
+      if ('rowFilterDetails' in resourceState) {
+        const filterList = resourceState.rowFilterDetails || {};
+        setResource(currentPage);
+        setRowFilterList(filterList);
+      } else {
+        setRowFilterList({});
+      }
+    } else {
+      setRowFilterList({});
+    }
+  }, [currentPage, state]); // Update dependency array
 
   /*
    * function for selecting/deselecting a single filter from the list of filters
    */
 
-  const handleFilterClick = (filterKey: string) : void => {
-    // console.log('FILTER CLICKED: ', filterKey);
-    // console.log('RESOURCE: ', resource);
-    dispatch({
-      type: ActionTypes.TOGGLE_FILTER,
-      payload: {
-        filterResource: resource,
-        filterKey: filterKey,
-      },
-    });
+  const handleFilterClick = (filterKey: string): void => {
+    if (!resource) return;
+    
+    // Use domain-specific actions based on the current resource
+    if (resource === 'appointments') {
+      dispatch(appointmentActions.toggleFilter(filterKey));
+    } else if (resource === 'voicemail') {
+      dispatch(voicemailActions.toggleFilter(filterKey));
+    }
+    // Add claims and patients when those reducers are implemented
   };
 
   return (

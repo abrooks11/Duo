@@ -178,6 +178,13 @@ $main-background-color: #c4d3dc;
   width: 100%;
 }
 
+.calendar {
+ width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 // VOICEMAIL COMPONENT
 .voicemail-container {
   height: calc(100vh - 30px); // Full height minus footer

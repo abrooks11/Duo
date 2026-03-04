@@ -1,19 +1,19 @@
-// import React, { createContext, useEffect, useReducer, useRef } from "react";
-// import helper function for fetching appointments from the database
-// import api from "../hooks/useApi";
-
 // import react hooks
 import React, { createContext, useReducer } from 'react';
 
 // import immer for state management
 import { produce } from 'immer';
 
+import type { GlobalState } from './types/state';
+import type { AppAction } from './types/actions';
+import { rootReducer, initialGlobalState } from './reducers/index.reducer';
+
 import {
-  ColumnDisplayNames,
-  RowFilterMap,
-  patientColumnOrder,
-  patientColumnNames,
-} from '../utils/keyMappings';
+  generateOrderedColumns,
+  generateRowFilterDetails,
+} from '../utils/stateHelpers';
+
+import { patientColumnOrder, patientColumnNames } from '../utils/keyMappings';
 
 import {
   appointmentRowFilterMap,
@@ -36,7 +36,7 @@ interface DispatchAction {
 
 interface GlobalContextType {
   state: GlobalState;
-  dispatch: React.Dispatch<DispatchAction>;
+  dispatch: React.Dispatch<AppAction>;
 }
 
 // TYPE ASSERTIONS AND LABELS FOR ACTIONS
@@ -62,60 +62,6 @@ const ActionTypes: GlobalStateActions = {
   DELETE_VOICEMAIL: 'DELETE_VOICEMAIL',
 };
 
-// TYPE ASSERTIONS AND LABELS FOR STATE
-interface GlobalState {
-  uploadModal: boolean;
-  // selectedDateRange:DateRangeObject[];
-  appointments: ResourceObject;
-  claims: ResourceObject;
-  patients: ResourceObject;
-  voicemail: ResourceObject;
-}
-
-interface ResourceObject {
-  data: any[];
-  rowFilterDetails: RowFilterDetails;
-  allColumnHeaders: TableColumn[]; // get from keys of first object in data array
-  selectedDateRange: DateRangeObject[]
-  // allRowFilters: TableFilter[]; // defined in reducer
-  // selectedFilters: TableFilter[];
-  // selectedSort: {
-  //   column: string;
-  //   sortOrder: string;
-  // };
-  // Add column configuration; columnConfig{orderMap, ColumnDisplayNames, widths, etc . . . }
-}
-interface DateRangeObject {
-    startDate: Date;
-    endDate: Date; // Initially set to the same day for single day selection
-    key: string;
-    color: string;
-}
-
-interface RowFilterDetail {
-  displayName: string;
-  sum: number;
-  isSelected: boolean;
-}
-
-interface RowFilterDetails {
-  [key: string]: RowFilterDetail;
-}
-
-interface TableColumn {
-  key: string;
-  order: number;
-  displayName: string;
-  isVisible: boolean;
-}
-
-interface TableFilter {
-  key: string;
-  label: string;
-  isSelected: boolean;
-  data: any[];
-}
-
 // !! INITIAL STATE
 const initialState: GlobalState = {
   uploadModal: false,
@@ -123,22 +69,19 @@ const initialState: GlobalState = {
   //   startDate: new Date(),
   //   endDate: new Date(), // Initially set to the same day for single day selection
   //   key: "selection",
-  // }], 
+  // }],
   appointments: {
     data: [], // data from database
     rowFilterDetails: {},
     allColumnHeaders: [], // list of table column headers from every key from first object in data array
-    selectedDateRange: {selection: {
-      startDate: new Date(),
-      endDate: new Date(), // Initially set to the same day for single day selection
-      key: "selection",
-      color: '#3d91ff',
-    }}, 
-    // TABLE SORT
-    // selectedSort: {
-    //   column: '',
-    //   sortOrder: '',
-    // },
+    selectedDateRange: {
+      selection: {
+        startDate: new Date(),
+        endDate: new Date(), // Initially set to the same day for single day selection
+        key: 'selection',
+        color: '#3d91ff',
+      },
+    },
   },
   claims: {
     data: [], // data from database
@@ -176,104 +119,10 @@ const initialState: GlobalState = {
       sortOrder: '',
     },
   },
-  voicemail: {
-    data: [], // data from database
-    rowFilterDetails: {},
-    allColumnHeaders: [],
-    // TABLE SORT
-    // selectedSort: {
-    //   column: '',
-    //   sortOrder: '',
-    // },
-  },
 };
 
 // define reducer function and action handlers
 const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
-  // helper function for flattening nested objects from server.json
-  const flattenObject = (obj: { [key: string]: any }) => {
-    const flattened: { [key: string]: any } = {};
-
-    Object.keys(obj).forEach((key) => {
-      const value = obj[key];
-
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        !Array.isArray(value)
-      ) {
-        Object.assign(flattened, flattenObject(value));
-      } else {
-        flattened[key] = value;
-      }
-    });
-    return flattened;
-  };
-
-  const generateOrderedColumns = (
-    orderMap: string[],
-    nameMap: ColumnDisplayNames
-  ) => {
-    return orderMap
-      .map((label, index) => {
-        return {
-          key: label,
-          order: index,
-          displayName: nameMap[label],
-          isVisible: true,
-        };
-      })
-      .sort((a, b) => a.order - b.order); //### do I need to sort?
-  };
-
-  const generateRowFilterDetails = (
-    data: any[],
-    displayNames: ColumnDisplayNames,
-    targetColumnName: string,
-    filterMap?: RowFilterMap
-  ): RowFilterDetails => {
-    // Create template object from keys in ordered filter list; Initialize with zero counts and not selected
-    const filterDetails = Object.fromEntries(
-      Object.entries(displayNames).map(([key, _]) => [
-        key,
-        { displayName: displayNames[key], sum: 0, isSelected: false },
-      ])
-    );
-    // Iterate over data and update counts
-    if (filterMap) {
-      for (const row of data) {
-        const filterKey = row[targetColumnName];
-
-        // Check each filter group
-        for (const key in filterMap) {
-          if (filterMap[key].includes(filterKey)) {
-            filterDetails[key].sum += 1;
-          }
-        }
-      }
-    } else {
-      // console.log('Processing data without filterMap');
-      for (const row of data) {
-        const filterKey = row[targetColumnName];
-        // console.log('Current row filterKey:', filterKey);
-        // console.log('Available keys in filterDetails:', Object.keys(filterDetails));
-
-        if (filterDetails[filterKey] === undefined) {
-          console.log('Warning: No matching key found for:', filterKey);
-          continue;
-        }
-        filterDetails[filterKey].sum += 1;
-      }
-    }
-
-    // Calculate total if it's in the ordered list
-    if (Object.keys(displayNames).includes('total')) {
-      filterDetails['total'].sum = data.length;
-    }
-
-    return filterDetails;
-  };
-
   return produce(state, (draft) => {
     switch (action.type) {
       case ActionTypes.DISPLAY_UPLOAD_MODAL:
@@ -285,9 +134,8 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
 
         if (Array.isArray(data) && data.length > 0) {
           // generate list of column labels from  keys of first object in response array then filter into categories
-          const flatSingleRow = flattenObject(data[0]);
 
-          const allColumnHeaders = Object.keys(flatSingleRow).map((header) => ({
+          const allColumnHeaders = Object.keys(data[0]).map((header) => ({
             key: header,
             value: header,
             isSelected: true,
@@ -302,7 +150,7 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
           // console.log({ target });
 
           if (resourceType === 'appointments') {
-            draft.appointments.data = data.map((row) => flattenObject(row));
+            draft.appointments.data = data;
             draft.appointments.rowFilterDetails = generateRowFilterDetails(
               data,
               appointmentRowDisplayNames,
@@ -324,8 +172,6 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
               patientColumnNames
             );
           } else if (resourceType === 'voicemail') {
-            // console.log(data[0])
-            draft.voicemail.data = data.map((row) => flattenObject(row));
             draft.voicemail.rowFilterDetails = generateRowFilterDetails(
               data.filter((row) => row.messageFolder === 'inbox'),
               voicemailRowDisplayNames,
@@ -341,22 +187,22 @@ const reducer = (state: GlobalState, action: DispatchAction): GlobalState => {
       case ActionTypes.TOGGLE_FILTER:
         const { filterResource, filterKey } = action.payload;
         const resourceToFilter: ResourceObject = draft[filterResource];
-        console.log({filterResource, filterKey});
-        
+        console.log({ filterResource, filterKey });
+
         resourceToFilter.rowFilterDetails[filterKey].isSelected =
           !resourceToFilter.rowFilterDetails[filterKey].isSelected;
 
         break;
       case ActionTypes.SET_CALENDAR_RANGE:
-        const {resource, newRange} = action.payload;
+        const { resource, newRange } = action.payload;
         if (resource === 'appointments') {
-          draft.appointments.selectedDateRange.selection = newRange
+          draft.appointments.selectedDateRange.selection = newRange;
         }
-        const test = state.appointments.selectedDateRange
+        const test = state.appointments.selectedDateRange;
         console.log(test);
-        
-        break
-        // case ActionTypes.SET_ROW_FILTER_LIST:
+
+        break;
+      // case ActionTypes.SET_ROW_FILTER_LIST:
       //   console.log('SET_ROW_FILTER_LIST PAYLOAD: ', action.payload);
       //   console.log(state.appointments.allRowFilters);
 
@@ -395,7 +241,7 @@ const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   // initialize the global state
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(rootReducer, initialGlobalState);
 
   // return the GlobalContext.Provider component with the global state and dispatch function as the value
   return (
@@ -410,4 +256,3 @@ const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
 // export the ActionTypes for use in other components
 // export custom types for use in other components
 export { GlobalProvider, GlobalContext, ActionTypes };
-export type { GlobalState, RowFilterDetails, TableColumn, TableFilter };

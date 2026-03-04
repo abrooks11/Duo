@@ -1,6 +1,6 @@
 // import main components
 import TopNav from './components/layout/TopNav';
-import FileUploadDropZone from './components/ui/FileUploadDropZone';
+// import FileUploadDropZone from './components/ui/FileUploadDropZone';
 import Sidebar from './components/layout/Sidebar';
 import MainContent from './components/layout/MainContent';
 import Footer from './components/layout/Footer';
@@ -10,7 +10,7 @@ function App() {
     <div className="app-wrapper">
       <div className="top-wrapper">
         <TopNav />
-        <FileUploadDropZone />
+        {/* <FileUploadDropZone /> */}
       </div>
       <div className="main-container">
         <div className="main-left-container">
