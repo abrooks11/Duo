@@ -261,9 +261,9 @@ export async function fetchPatients(fromDate: string, toDate: string): Promise<a
           <sch:TotalBalance>true</sch:TotalBalance>
         </sch:Fields>
         <sch:Filter>
-          <sch:FromCreatedDate>${fromDate}</sch:FromCreatedDate>
-          <sch:ToCreatedDate>${toDate}</sch:ToCreatedDate>
+          <sch:FromLastModifiedDate>${fromDate}</sch:FromLastModifiedDate>
           <sch:PracticeName>${process.env.TEBRA_PRACTICE_NAME}</sch:PracticeName>
+          <sch:ToLastModifiedDate>${toDate}</sch:ToLastModifiedDate>
         </sch:Filter>
       </sch:request>
     </sch:GetPatients>
