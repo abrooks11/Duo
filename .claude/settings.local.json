@@ -4,7 +4,9 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:webservice.kareo.com)"
+      "WebFetch(domain:webservice.kareo.com)",
+      "Bash(npx tsc --noEmit -p tsconfig.node.json)",
+      "Bash(npx tsc --noEmit -p tsconfig.app.json)"
     ]
   }
 }
