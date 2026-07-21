@@ -177,7 +177,7 @@ export interface RowFilterDetails {
   [key: string]: RowFilterDetail;
 }
 
-interface TableColumn {
+export interface TableColumn {
   key: string;
   order: number;
   displayName: string;

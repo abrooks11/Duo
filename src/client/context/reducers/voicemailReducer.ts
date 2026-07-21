@@ -103,8 +103,10 @@ export const voicemailReducer = (
           
           // Restore previous selections
           Object.keys(draft.rowFilterDetails).forEach(key => {
-            if (currentSelections[key] !== undefined) {
-              draft.rowFilterDetails[key].isSelected = currentSelections[key];
+            const savedSelection = currentSelections[key];
+            const filterDetail = draft.rowFilterDetails[key];
+            if (savedSelection !== undefined && filterDetail !== undefined) {
+              filterDetail.isSelected = savedSelection;
             }
           });
         } else {

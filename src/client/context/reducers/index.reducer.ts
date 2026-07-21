@@ -7,7 +7,7 @@ import type {
   ReportAction,
 } from '../types/actions';
 
-import type { GlobalState } from '../types/state';
+import type { GlobalState, ClaimState, PatientState } from '../types/state';
 
 import {
   appointmentReducer,
@@ -18,12 +18,34 @@ import { voicemailReducer, initialVoicemailState } from './voicemailReducer';
 
 import { reportReducer, initialReportState } from './reportReducer';
 
+const initialClaimState: ClaimState = {
+  data: [],
+  rowFilterDetails: {},
+  allColumnHeaders: [],
+  selectedDateRange: [{ startDate: new Date(), endDate: new Date(), key: 'selection', color: '#3d91ff' }],
+  isLoading: false,
+  error: null,
+  lastUpdated: null,
+  selectedFilters: [],
+};
+
+const initialPatientState: PatientState = {
+  data: [],
+  rowFilterDetails: {},
+  allColumnHeaders: [],
+  selectedDateRange: [{ startDate: new Date(), endDate: new Date(), key: 'selection', color: '#3d91ff' }],
+  isLoading: false,
+  error: null,
+  lastUpdated: null,
+  selectedFilters: [],
+};
+
 // Combined initial state
 export const initialGlobalState: GlobalState = {
   ui: {uploadModal: false},
   appointments: initialAppointmentState,
-  // claims: initialClaimState,
-  // patients: initialPatientState,
+  claims: initialClaimState,
+  patients: initialPatientState,
   voicemail: initialVoicemailState,
   reports: initialReportState,
 };
