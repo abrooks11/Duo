@@ -63,7 +63,6 @@ const Appointments = () => {
   const filteredData = formattedDateData.filter((row) => {
     // If no filters are selected, show all data
     if (activeFilters.length === 0) return true;
-
     // Check if the row matches any of the selected filters
     return activeFilters.some((filterKey) => {
       if (appointmentRowFilterMap[filterKey]) {
@@ -77,38 +76,138 @@ const Appointments = () => {
 
   const dateFilteredData = useDateRangeFilter(filteredData, 'startDate');
 
+  const insuranceMap = useMemo(() => {
+    const result = [
+      { label: 'BC/BS', keywordList: ['bc/bs', 'bcbs'] },
+      { label: 'AETNA', keywordList: ['aetna', 'meritain'] },
+      { label: 'CIGNA', keywordList: [] },
+      {
+        label: 'UNITED',
+        keywordList: ['united', 'uhc', 'united healthcare'],
+      },
+      { label: 'UMR', keywordList: [] },
+      { label: 'MEDICARE', keywordList: ['medicare', 'mcr'] },
+      { label: 'TRICARE', keywordList: [] },
+      { label: 'HUMANA', keywordList: [] },
+    ];
+    return result;
+  }, []);
+
+  const reasonMap = useMemo(() => {
+    const result = [
+      { label: 'WELLNESS', reasonList: ['Well'] },
+      {
+        label: 'E/M',
+        reasonList: [
+          'Injection',
+          'Colpo',
+          'Consultation',
+          'Follow',
+          'Iud',
+          'Problem',
+          'Pellet',
+          'Post',
+          'Pre',
+          'Weight',
+          'Votiva',
+        ],
+      },
+      { label: 'TELEHEALTH', reasonList: ['Phone'] },
+      { label: 'SURGERY', reasonList: [] },
+    ];
+    return result;
+  }, []);
   // Unique options derived from the full (pre-date-filter) dataset so options
   // don't disappear as the date range changes.
-  const insuranceOptions = useMemo(
-    () =>
-      [...new Set(formattedDateData.map((r) => r.patientCaseName).filter(Boolean))].sort(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appointments]
+  const insuranceOptions = useMemo(() => {
+    const insuranceList = insuranceMap.map((ins) => ins.label);
+    return ['ALL', ...insuranceList, 'OTHER', 'CLEAR'];
+  }, [insuranceMap]);
+
+  const reasonOptions = useMemo(() => {
+    const reasonList = reasonMap.map((rsn) => rsn.label);
+    return ['ALL', ...reasonList, 'CLEAR'];
+  }, [reasonMap]);
+
+  const checkIns = useCallback(
+    (ins: string | null | undefined): boolean => {
+      if (!ins) return false;
+
+      const haystack = ins.toLowerCase();
+
+      // Only match against the insurers the user actually selected.
+      return selectedInsurance.some((selectedLabel) => {
+        const entry = insuranceMap.find((m) => m.label === selectedLabel);
+        if (!entry) return false;
+
+        if (haystack.includes(entry.label.toLowerCase())) return true;
+
+        return entry.keywordList.some((keyword) =>
+          haystack.includes(keyword.toLowerCase())
+        );
+      });
+    },
+    [selectedInsurance, insuranceMap]
   );
 
-  const reasonOptions = useMemo(
-    () =>
-      [...new Set(formattedDateData.map((r) => r.appointmentReason).filter(Boolean))].sort(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appointments]
+  const checkRsn = useCallback(
+    (rsn: string | null | undefined): boolean => {
+      if (!rsn) return false;
+
+      const haystack = rsn.toLowerCase();
+
+      // Only match against the reasons the user actually selected.
+      return selectedReason.some((selectedLabel) => {
+        const entry = reasonMap.find((m) => m.label === selectedLabel);
+        if (!entry) return false;
+
+        if (haystack.includes(entry.label.toLowerCase())) return true;
+
+        return entry.reasonList.some((keyword) =>
+          haystack.includes(keyword.toLowerCase())
+        );
+      });
+    },
+    [selectedReason, reasonMap]
   );
 
   // Apply multiselect filters last
-  const finalData = useMemo(
-    () =>
-      dateFilteredData.filter((row) => {
-        const ins =
-          selectedInsurance.length === 0 ||
-          selectedInsurance.includes(row.patientCaseName);
-        const rsn =
-          selectedReason.length === 0 ||
-          selectedReason.includes(row.appointmentReason);
-        return ins && rsn;
-      }),
-    [dateFilteredData, selectedInsurance, selectedReason]
-  );
+  const finalData = useMemo(() => {
+    const result = dateFilteredData.filter((row) => {
+      const ins: boolean =
+        selectedInsurance.length === 0 || checkIns(row.patientCaseName);
+
+      const rsn: boolean =
+        selectedReason.length === 0 || checkRsn(row.appointmentReason);
+      return ins && rsn;
+    });
+    // console.log({selectedInsurance, result})
+    return result;
+  }, [dateFilteredData, selectedInsurance, selectedReason, checkIns, checkRsn]);
+
+  console.log({ finalData });
 
   const hasFilters = selectedInsurance.length > 0 || selectedReason.length > 0;
+
+  // Control tokens are not real filter values — they trigger check-all / clear.
+  const insuranceSelectable = insuranceOptions.filter(
+    (opt) => opt !== 'ALL' && opt !== 'CLEAR'
+  );
+  const reasonSelectable = reasonOptions.filter(
+    (opt) => opt !== 'ALL' && opt !== 'CLEAR'
+  );
+
+  const handleInsuranceChange = (value: string[]) => {
+    if (value.includes('CLEAR')) return setSelectedInsurance([]);
+    if (value.includes('ALL')) return setSelectedInsurance(insuranceSelectable);
+    setSelectedInsurance(value);
+  };
+
+  const handleReasonChange = (value: string[]) => {
+    if (value.includes('CLEAR')) return setSelectedReason([]);
+    if (value.includes('ALL')) return setSelectedReason(reasonSelectable);
+    setSelectedReason(value);
+  };
 
   return (
     <div>
@@ -128,7 +227,9 @@ const Appointments = () => {
                 labelId="insurance-filter-label"
                 multiple
                 value={selectedInsurance}
-                onChange={(e) => setSelectedInsurance(e.target.value as string[])}
+                onChange={(e) =>
+                  handleInsuranceChange(e.target.value as string[])
+                }
                 input={<OutlinedInput label="Insurance" />}
                 renderValue={(selected) =>
                   selected.length === 1
@@ -138,7 +239,17 @@ const Appointments = () => {
               >
                 {insuranceOptions.map((opt) => (
                   <MenuItem key={opt} value={opt}>
-                    <Checkbox checked={selectedInsurance.includes(opt)} />
+                    <Checkbox
+                      checked={
+                        opt === 'ALL'
+                          ? insuranceSelectable.every((o) =>
+                              selectedInsurance.includes(o)
+                            )
+                          : opt === 'CLEAR'
+                            ? false
+                            : selectedInsurance.includes(opt)
+                      }
+                    />
                     <ListItemText primary={opt} />
                   </MenuItem>
                 ))}
@@ -151,7 +262,7 @@ const Appointments = () => {
                 labelId="reason-filter-label"
                 multiple
                 value={selectedReason}
-                onChange={(e) => setSelectedReason(e.target.value as string[])}
+                onChange={(e) => handleReasonChange(e.target.value as string[])}
                 input={<OutlinedInput label="Reason" />}
                 renderValue={(selected) =>
                   selected.length === 1
@@ -161,7 +272,17 @@ const Appointments = () => {
               >
                 {reasonOptions.map((opt) => (
                   <MenuItem key={opt} value={opt}>
-                    <Checkbox checked={selectedReason.includes(opt)} />
+                    <Checkbox
+                      checked={
+                        opt === 'ALL'
+                          ? reasonSelectable.every((o) =>
+                              selectedReason.includes(o)
+                            )
+                          : opt === 'CLEAR'
+                            ? false
+                            : selectedReason.includes(opt)
+                      }
+                    />
                     <ListItemText primary={opt} />
                   </MenuItem>
                 ))}
