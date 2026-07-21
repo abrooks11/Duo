@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useVoicemail } from '../index_voicemail';
 import { useSmsForm } from '@client/context/shared/smsFormcontext';
-import textBubble from '@client/assets/text-bubble.svg';
-import trashCan from '@client/assets/trash-can.svg';
 import { MessageSquareText, Trash2 } from 'lucide-react';
+import { VoicemailData } from '@client/context/types/state';
 
 interface Props {
   vmId: string;
-  rowData: any;
+  rowData: VoicemailData;
 }
 
 const VoicemailActionList = ({ vmId, rowData }: Props) => {
@@ -32,7 +31,6 @@ const VoicemailActionList = ({ vmId, rowData }: Props) => {
 
   const handleReply = () => {
     console.log('REPLYING . . . ');
-    console.log(rowData);
     populateForm({
       fullName: rowData.callerName,
       phoneNumber: rowData.callerNumber,
@@ -58,7 +56,6 @@ const VoicemailActionList = ({ vmId, rowData }: Props) => {
         title="Reply"
       >
         <MessageSquareText />
-        {/* <img src={textBubble} alt="Reply" className="w-5 h-5" /> */}
       </button>
     </div>
   );

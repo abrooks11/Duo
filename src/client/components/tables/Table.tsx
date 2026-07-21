@@ -1,9 +1,9 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-import type { TableColumn } from '../../context/types/state';
+import type { AppointmentData, TableColumn, VoicemailData } from '../../context/types/state';
 
 interface Props {
   columns: TableColumn[];
-  data: any[];
+  data: AppointmentData[] | VoicemailData[];
 }
 
 function Table({ columns, data }: Props) {

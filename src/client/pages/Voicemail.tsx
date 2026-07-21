@@ -9,6 +9,7 @@ import useDateRangeFilter from '../hooks/useDateRangeFilter';
 
 import {SmsForm} from '../features/sms/components/SmsForm'
 import { SmsFormProvider } from '@client/context/shared/smsFormcontext';
+import { VoicemailData } from '@client/context/types/state';
 
 const Voicemail = () => {
   const {
@@ -20,7 +21,7 @@ const Voicemail = () => {
     loadVoicemail,
   } = useVoicemail();
 
-  const [inbox, setInbox] = useState<any[]>([]);
+  const [inbox, setInbox] = useState<VoicemailData[]>([]);
 
   useEffect(() => {
     if (!voicemail.length) {

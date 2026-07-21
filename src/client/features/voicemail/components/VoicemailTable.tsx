@@ -1,5 +1,10 @@
-import { DataGrid, GridRowsProp, GridColDef, GridValidRowModel } from '@mui/x-data-grid';
-import {VoicemailActionList} from '../index_voicemail';
+import {
+  DataGrid,
+  GridRowsProp,
+  GridColDef,
+  GridValidRowModel,
+} from '@mui/x-data-grid';
+import { VoicemailActionList } from '../index_voicemail';
 
 import DropDown from '@client/components/ui/DropDown';
 import { voicemailRowDisplayNames } from '@client/utils/keyMappings';
@@ -7,10 +12,17 @@ import {
   updateVoicemailNote,
   updateVoicemailReason,
 } from '../services/voicemailApi';
+import { VoicemailData } from '@client/context/types/state';
 
+interface TableHeader {
+key: string;
+order: number;
+displayName: string;
+isVisible: boolean;
+}
 interface Props {
-  columns: any[];
-  data: any[];
+  columns: TableHeader[];
+  data: VoicemailData[];
   className: string;
   dynamicHeight?: boolean;
   helpers?: any;
@@ -26,7 +38,6 @@ const VoicemailTable = ({
   const muiColumns: GridColDef[] = columns.map((column) => {
     // const { key, order, displayName, isVisible } = column;
     const { key, displayName } = column;
-
     // Special handling for the date column to include actions
     if (key === 'createdDate') {
       return {
@@ -45,7 +56,9 @@ const VoicemailTable = ({
         headerName: displayName,
         width: 100,
         renderCell: (params) => {
-          return <VoicemailActionList vmId={params.row.id} rowData={params.row}/>;
+          return (
+            <VoicemailActionList vmId={params.row.id} rowData={params.row} />
+          );
         },
       };
     }
@@ -115,9 +128,6 @@ const VoicemailTable = ({
   const handleProcessRowUpdateError = (error: any) => {
     console.error('Error saving row update:', error);
   };
-
-  // console.log(muiRows);
-  
 
   return (
     <div className={className}>
