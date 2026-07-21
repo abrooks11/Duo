@@ -21,7 +21,7 @@ function defaultDateRange(): { from: string; to: string } {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-  return { from: '2026-01-15', to: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
+  return { from: '2026-02-15', to: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
 }
 
 const paymentController = {
@@ -166,7 +166,7 @@ const paymentController = {
     }
   },
 
-  matchEobs: async (req: Request, res: Response, next: NextFunction) => {
+  matchEobs: async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await prisma.$transaction(async (tx) => {
         const unmatchedEobs = await tx.eob.findMany({

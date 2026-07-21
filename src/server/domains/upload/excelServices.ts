@@ -1,11 +1,10 @@
 // import xlsx to read excel files and parse data
 import xlsx from 'xlsx';
 import fieldMap from './fieldMap.ts';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import type { ExcelRow } from './uploadTypes.ts';
 
 const excelServices = {
-  readFile: async (file, resourceType, sheetName) => {
+  readFile: async (file: Buffer, _resourceType: string, sheetName: string): Promise<ExcelRow[]> => {
     try {
       // READ THE UPLOADED EXCEL FILE
       // const workbook = xlsx.read(file.data, { type: "buffer" }); // for browser
@@ -27,7 +26,7 @@ const excelServices = {
 
       // TRANSFORM THE RESULT ARRAY OF OBJECTS TO THE PRISMA FORMAT
       // console.log("RESULT PRE TRANSFORM: ", result[0]);
-    return result = result.map((row) => transformKeys(row));
+    return result = result.map((row) => transformKeys(row as Record<string, unknown>)) as ExcelRow[];
 
   } catch (error) {
       throw error;
@@ -35,9 +34,9 @@ const excelServices = {
   },
 };
 
-const transformKeys = (row) => {
+const transformKeys = (row: Record<string, unknown>): ExcelRow => {
   try {
-    return Object.entries(row).reduce((acc, [key, value]) => {
+    return Object.entries(row).reduce<ExcelRow>((acc, [key, value]) => {
       const prismaKey = fieldMap[key];
       if (prismaKey) {
         // if key contains 'Date' then convert to date to ISO string? (.toISOString())
@@ -56,7 +55,7 @@ const transformKeys = (row) => {
               acc[prismaKey] = excelDate.toISOString();
             } else {
               // Handle string date format
-              acc[prismaKey] = new Date(value).toISOString();
+              acc[prismaKey] = new Date(value as string).toISOString();
             }
           }
         } else if (prismaKey.includes('PolicyNumber')) {

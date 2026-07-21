@@ -39,7 +39,10 @@ async function soapPost(action: string, body: string): Promise<string> {
  * @param toDate   - "YYYY-MM-DD"
  * @returns Array of AppointmentData objects
  */
-export async function fetchAppointments(fromDate: string, toDate: string): Promise<any[]> {
+export async function fetchAppointments(
+  fromDate: string,
+  toDate: string
+): Promise<any[]> {
   const envelope = `<?xml version="1.0" encoding="utf-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -78,10 +81,15 @@ export async function fetchAppointments(fromDate: string, toDate: string): Promi
 
   const rawXml = await soapPost('GetAppointments', envelope);
   const parsed = parser.parse(rawXml);
-  const result = parsed?.Envelope?.Body?.GetAppointmentsResponse?.GetAppointmentsResult;
+  const result =
+    parsed?.Envelope?.Body?.GetAppointmentsResponse?.GetAppointmentsResult;
 
-  if (!result) throw new Error('Could not locate GetAppointmentsResult in response');
-  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+  if (!result)
+    throw new Error('Could not locate GetAppointmentsResult in response');
+  if (
+    result.ErrorResponse?.IsError === true ||
+    result.ErrorResponse?.IsError === 'true'
+  ) {
     throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
   }
 
@@ -96,7 +104,10 @@ export async function fetchAppointments(fromDate: string, toDate: string): Promi
  * @param toDate   - "YYYY-MM-DD"
  * @returns Array of PaymentData objects
  */
-export async function fetchPayments(fromDate: string, toDate: string): Promise<any[]> {
+export async function fetchPayments(
+  fromDate: string,
+  toDate: string
+): Promise<any[]> {
   const envelope = `<?xml version="1.0" encoding="utf-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -128,8 +139,12 @@ export async function fetchPayments(fromDate: string, toDate: string): Promise<a
   const parsed = parser.parse(rawXml);
   const result = parsed?.Envelope?.Body?.GetPaymentsResponse?.GetPaymentsResult;
 
-  if (!result) throw new Error('Could not locate GetPaymentsResult in response');
-  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+  if (!result)
+    throw new Error('Could not locate GetPaymentsResult in response');
+  if (
+    result.ErrorResponse?.IsError === true ||
+    result.ErrorResponse?.IsError === 'true'
+  ) {
     throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
   }
 
@@ -145,7 +160,10 @@ export async function fetchPayments(fromDate: string, toDate: string): Promise<a
  * @param toDate   - "YYYY-MM-DD"
  * @returns Array of PaymentData objects (insurance EOBs)
  */
-export async function fetchInsuranceEobs(fromDate: string, toDate: string): Promise<any[]> {
+export async function fetchInsuranceEobs(
+  fromDate: string,
+  toDate: string
+): Promise<any[]> {
   const envelope = `<?xml version="1.0" encoding="utf-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -175,19 +193,36 @@ export async function fetchInsuranceEobs(fromDate: string, toDate: string): Prom
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-  console.log(`[DEBUG fetchInsuranceEobs] Requesting EOBs from ${fromDate} to ${toDate}`);
+  console.log(
+    `[DEBUG fetchInsuranceEobs] Requesting EOBs from ${fromDate} to ${toDate}`
+  );
   const rawXml = await soapPost('GetPayments', envelope);
   console.log(`[DEBUG fetchInsuranceEobs] Raw XML length: ${rawXml.length}`);
-  console.log(`[DEBUG fetchInsuranceEobs] Raw XML preview: ${rawXml.substring(0, 500)}`);
+  console.log(
+    `[DEBUG fetchInsuranceEobs] Raw XML preview: ${rawXml.substring(0, 500)}`
+  );
   const parsed = parser.parse(rawXml);
   const result = parsed?.Envelope?.Body?.GetPaymentsResponse?.GetPaymentsResult;
 
-  console.log(`[DEBUG fetchInsuranceEobs] result keys:`, result ? Object.keys(result) : 'null');
-  console.log(`[DEBUG fetchInsuranceEobs] ErrorResponse:`, result?.ErrorResponse);
-  console.log(`[DEBUG fetchInsuranceEobs] Payments keys:`, result?.Payments ? Object.keys(result.Payments) : 'null/undefined');
+  console.log(
+    `[DEBUG fetchInsuranceEobs] result keys:`,
+    result ? Object.keys(result) : 'null'
+  );
+  console.log(
+    `[DEBUG fetchInsuranceEobs] ErrorResponse:`,
+    result?.ErrorResponse
+  );
+  console.log(
+    `[DEBUG fetchInsuranceEobs] Payments keys:`,
+    result?.Payments ? Object.keys(result.Payments) : 'null/undefined'
+  );
 
-  if (!result) throw new Error('Could not locate GetPaymentsResult in response');
-  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+  if (!result)
+    throw new Error('Could not locate GetPaymentsResult in response');
+  if (
+    result.ErrorResponse?.IsError === true ||
+    result.ErrorResponse?.IsError === 'true'
+  ) {
     throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
   }
 
@@ -196,8 +231,12 @@ export async function fetchInsuranceEobs(fromDate: string, toDate: string): Prom
   const arr = Array.isArray(payments) ? payments : [payments];
   // Filter out empty placeholder records Tebra returns when there are no results
   // Filter out empty placeholder records and zero-amount entries
-  const filtered = arr.filter((p: any) => p.ID && String(p.ID).trim() !== '' && Number(p.Amount) > 0);
-  console.log(`[DEBUG fetchInsuranceEobs] Raw count: ${arr.length}, after filtering empty: ${filtered.length}`);
+  const filtered = arr.filter(
+    (p: any) => p.ID && String(p.ID).trim() !== '' && Number(p.Amount) > 0
+  );
+  console.log(
+    `[DEBUG fetchInsuranceEobs] Raw count: ${arr.length}, after filtering empty: ${filtered.length}`
+  );
   // Show distinct PayerType values and counts
   const payerTypes: Record<string, number> = {};
   filtered.forEach((p: any) => {
@@ -206,7 +245,10 @@ export async function fetchInsuranceEobs(fromDate: string, toDate: string): Prom
   });
   console.log(`[DEBUG fetchInsuranceEobs] PayerType breakdown:`, payerTypes);
   if (filtered.length > 0) {
-    console.log(`[DEBUG fetchInsuranceEobs] First record sample:`, JSON.stringify(filtered[0]).substring(0, 500));
+    console.log(
+      `[DEBUG fetchInsuranceEobs] First record sample:`,
+      JSON.stringify(filtered[0]).substring(0, 500)
+    );
   }
   return filtered;
 }
@@ -217,7 +259,10 @@ export async function fetchInsuranceEobs(fromDate: string, toDate: string): Prom
  * @param toDate   - "YYYY-MM-DD"
  * @returns Array of PatientData objects
  */
-export async function fetchPatients(fromDate: string, toDate: string): Promise<any[]> {
+export async function fetchPatients(
+  fromDate: string,
+  toDate: string
+): Promise<any[]> {
   const envelope = `<?xml version="1.0" encoding="utf-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -274,8 +319,12 @@ export async function fetchPatients(fromDate: string, toDate: string): Promise<a
   const parsed = parser.parse(rawXml);
   const result = parsed?.Envelope?.Body?.GetPatientsResponse?.GetPatientsResult;
 
-  if (!result) throw new Error('Could not locate GetPatientsResult in response');
-  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+  if (!result)
+    throw new Error('Could not locate GetPatientsResult in response');
+  if (
+    result.ErrorResponse?.IsError === true ||
+    result.ErrorResponse?.IsError === 'true'
+  ) {
     throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
   }
 
@@ -285,12 +334,80 @@ export async function fetchPatients(fromDate: string, toDate: string): Promise<a
 }
 
 /**
+ * Fetch balance data for patients created within a given year from Tebra.
+ * Scoped to the practice; returns only patients with at least one non-zero balance.
+ * @param fromDate - "YYYY-MM-DD"
+ * @param toDate   - "YYYY-MM-DD"
+ * @returns Array of PatientData objects with balance fields
+ */
+export async function fetchPatientBalances(
+  fromDate: string,
+  toDate: string
+): Promise<any[]> {
+  const envelope = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:sch="http://www.kareo.com/api/schemas/">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <sch:GetPatients>
+      <sch:request>
+        ${buildRequestHeader()}
+        <sch:Fields>
+          <sch:Active>true</sch:Active>
+          <sch:ID>true</sch:ID>
+          <sch:InsuranceBalance>true</sch:InsuranceBalance>
+          <sch:LastModifiedDate>true</sch:LastModifiedDate>
+          <sch:PatientBalance>true</sch:PatientBalance>
+          <sch:PatientFullName>true</sch:PatientFullName>
+          <sch:TotalBalance>true</sch:TotalBalance>
+        </sch:Fields>
+        <sch:Filter>
+          <sch:FromCreatedDate>${fromDate}</sch:FromCreatedDate>
+          <sch:PracticeName>${process.env.TEBRA_PRACTICE_NAME}</sch:PracticeName>
+          <sch:ToCreatedDate>${toDate}</sch:ToCreatedDate>
+        </sch:Filter>
+      </sch:request>
+    </sch:GetPatients>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+  const rawXml = await soapPost('GetPatients', envelope);
+  const parsed = parser.parse(rawXml);
+  const result = parsed?.Envelope?.Body?.GetPatientsResponse?.GetPatientsResult;
+
+  if (!result)
+    throw new Error('Could not locate GetPatientsResult in response');
+  if (
+    result.ErrorResponse?.IsError === true ||
+    result.ErrorResponse?.IsError === 'true'
+  ) {
+    throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
+  }
+
+  const patients = result?.Patients?.PatientData;
+  if (!patients) return [];
+  const arr = Array.isArray(patients) ? patients : [patients];
+  return arr.filter(
+    (p: any) =>
+      p.ID &&
+      String(p.ID).trim() !== '' &&
+      (Number(p.InsuranceBalance) > 0 ||
+        Number(p.PatientBalance) > 0 ||
+        Number(p.TotalBalance) > 0)
+  );
+}
+
+/**
  * Fetch charges from Tebra for the given date range.
  * @param fromDate - "YYYY-MM-DD"
  * @param toDate   - "YYYY-MM-DD"
  * @returns Array of ChargeData objects
  */
-export async function fetchCharges(fromDate: string, toDate: string): Promise<any[]> {
+export async function fetchCharges(
+  fromDate: string,
+  toDate: string
+): Promise<any[]> {
   const envelope = `<?xml version="1.0" encoding="utf-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -327,7 +444,10 @@ export async function fetchCharges(fromDate: string, toDate: string): Promise<an
   const result = parsed?.Envelope?.Body?.GetChargesResponse?.GetChargesResult;
 
   if (!result) throw new Error('Could not locate GetChargesResult in response');
-  if (result.ErrorResponse?.IsError === true || result.ErrorResponse?.IsError === 'true') {
+  if (
+    result.ErrorResponse?.IsError === true ||
+    result.ErrorResponse?.IsError === 'true'
+  ) {
     throw new Error(`Tebra API error: ${result.ErrorResponse.ErrorMessage}`);
   }
 

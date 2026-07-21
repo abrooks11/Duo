@@ -1,17 +1,20 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const patientServices = {
-  createPatient: async (patient) => {
+  createPatient: async (patient: Prisma.PatientCreateInput) => {
     await prisma.patient.create({
       data: patient,
     });
   },
 
-  updatePatient: async (filePatient, dbPatient) => {
+  updatePatient: async (
+    filePatient: Record<string, unknown>,
+    dbPatient: Record<string, unknown>
+  ) => {
     // convert the dates to Date objects
-    const dbModifiedDate = new Date(dbPatient.LastModifiedDate);
-    const fileModifiedDate = new Date(filePatient.LastModifiedDate);
+    const dbModifiedDate = new Date(dbPatient.LastModifiedDate as string);
+    const fileModifiedDate = new Date(filePatient.LastModifiedDate as string);
     // check if the fileModifiedDate is more recent than the dbModifiedDate
     if (dbModifiedDate < fileModifiedDate) {
       console.log(
@@ -20,23 +23,20 @@ const patientServices = {
         ' with file ID: ',
         filePatient.ID
       );
-      // filePatient.id = dbPatient.id
       await prisma.patient.update({
         where: {
-          id: dbPatient.id,
+          id: dbPatient.id as number,
         },
-        data: filePatient,
+        data: filePatient as Prisma.PatientUpdateInput,
       });
     }
 
     return;
   },
-  upsertPatients: async (patients) => {
-    await prisma.patient.$transaction({
-      where: {
-        id: filePatient.id,
-      },
-    });
+
+  upsertPatients: async (_patients: Record<string, unknown>[]) => {
+    // No-op stub — upsert logic is handled directly in uploadRouter
+    return;
   },
 };
 

@@ -1,6 +1,5 @@
 import express from 'express';
 import tebraController from './tebraController.ts';
-import { sendSuccess } from '../../shared/errorHandlers.js';
 
 const { testTebraApi, getAppointments, syncAppointments } = tebraController;
 

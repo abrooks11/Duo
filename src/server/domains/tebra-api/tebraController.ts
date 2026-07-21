@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
 import { parseStringPromise } from 'xml2js';
+import { Request, Response, NextFunction } from 'express';
 import { syncAppointments } from './tebraSync.ts';
 import { AppError, handleControllerError, sendSuccess, sendError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
@@ -9,15 +7,15 @@ import { createChildLogger } from '../../shared/logger.js';
 const log = createChildLogger('tebra');
 
 const tebraController = {
-  testTebraApi: async (req, res, next) => {
+  testTebraApi: async (_req: Request, res: Response, next: NextFunction) => {
     try {
       log.debug('testTebraApi middleware called');
 
       const tebraInfo = {
-        url: process.env.TEBRA_API_URL,
-        customerKey: process.env.TEBRA_CUSTOMER_KEY,
-        user: process.env.TEBRA_USER_ID,
-        password: process.env.TEBRA_PASSWORD,
+        url: process.env.TEBRA_API_URL ?? '',
+        customerKey: process.env.TEBRA_CUSTOMER_KEY ?? '',
+        user: process.env.TEBRA_USER_ID ?? '',
+        password: process.env.TEBRA_PASSWORD ?? '',
       };
 
       const xmlRequest = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -59,7 +57,7 @@ const tebraController = {
     }
   },
 
-  getAppointments: async (req, res, next) => {
+  getAppointments: async (req: Request, res: Response, next: NextFunction) => {
     try {
       log.debug('getAppointments middleware called');
 
@@ -70,10 +68,10 @@ const tebraController = {
       }
 
       const tebraInfo = {
-        url: process.env.TEBRA_API_URL,
-        customerKey: process.env.TEBRA_CUSTOMER_KEY,
-        user: process.env.TEBRA_USER_ID,
-        password: process.env.TEBRA_PASSWORD,
+        url: process.env.TEBRA_API_URL ?? '',
+        customerKey: process.env.TEBRA_CUSTOMER_KEY ?? '',
+        user: process.env.TEBRA_USER_ID ?? '',
+        password: process.env.TEBRA_PASSWORD ?? '',
       };
 
       const xmlRequest = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -142,7 +140,7 @@ const tebraController = {
     }
   },
 
-  syncAppointments: async (req, res, next) => {
+  syncAppointments: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { startDate, endDate } = req.body;
 

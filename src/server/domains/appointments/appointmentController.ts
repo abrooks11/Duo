@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
+import { Request, Response, NextFunction } from 'express';
 import { syncAppointments } from '../tebra-api/tebraSync.js';
 import { handleControllerError, sendSuccess, sendError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
@@ -23,7 +24,7 @@ function getDefaultDateRange(): { firstDayOfMonth: Date; lastDayOfNextMonth: Dat
 }
 
 const appointmentController = {
-  getAppointments: async (req, res, next) => {
+  getAppointments: async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const { firstDayOfMonth, lastDayOfNextMonth, fromDate, toDate } = getDefaultDateRange();
 
@@ -70,7 +71,7 @@ const appointmentController = {
     }
   },
 
-  updateNote: async (req, res, next) => {
+  updateNote: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = Number(req.params.id);
       const { notes } = req.body;
@@ -91,7 +92,7 @@ const appointmentController = {
     }
   },
 
-  updateCopay: async (req, res, next) => {
+  updateCopay: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const UpdateCopaySchema = z.object({
         id: z.number().int().positive(),
@@ -118,7 +119,7 @@ const appointmentController = {
     }
   },
 
-  deleteAll: async (req, res, next) => {
+  deleteAll: async (_req: Request, res: Response, next: NextFunction) => {
     try {
       await prisma.appointment.deleteMany({});
       return sendSuccess(res, null, 'Records deleted');

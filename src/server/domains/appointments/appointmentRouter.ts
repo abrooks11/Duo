@@ -6,11 +6,11 @@ const { getAppointments, updateCopay, updateNote, deleteAll } = appointmentContr
 
 const appointmentRouter = express.Router();
 
-appointmentRouter.get('/', getAppointments, (req, res) => {
+appointmentRouter.get('/', getAppointments, (_req, res) => {
   return sendSuccess(res, res.locals.appointments);
 });
 
-appointmentRouter.post('/copay', updateCopay, (req, res) => {
+appointmentRouter.post('/copay', updateCopay, (_req, res) => {
   return sendSuccess(res, null, 'Copay updated');
 });
 

@@ -93,21 +93,24 @@ uploadRouter.post(
           for (const patientObj of excelData) {
             const { id, ...patientData } = patientObj;
 
+            if (id === undefined) continue;
+
             // First check if the record exists and get its current lastModifiedDate
             const existingPatient = await prisma.patient.findUnique({
-              where: { id: id },
+              where: { id },
             });
 
             if (existingPatient) {
               // Record exists, check if incoming data is more recent
               const existingDate = new Date(existingPatient.lastModifiedDate);
-              const incomingDate = new Date(patientObj.lastModifiedDate);
+              const incomingDate = new Date(patientObj.lastModifiedDate as string);
 
               if (incomingDate > existingDate) {
                 // Incoming data is more recent, update the record
                 await prisma.patient.update({
-                  where: { id: id },
-                  data: patientData,
+                  where: { id },
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  data: patientData as any,
                 });
                 log.debug('Updated patient record with more recent data');
               } else {
@@ -116,7 +119,8 @@ uploadRouter.post(
             } else {
               // Record doesn't exist, create it
               await prisma.patient.create({
-                data: patientObj,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data: patientObj as any,
               });
               // console.log('Created new patient record');
             }
@@ -140,9 +144,9 @@ uploadRouter.post(
               appointmentData.appointmentReason !== 'OTHER'
             ) {
               // check that matching patient exists
-              const currentPatient = await prisma.patient.findUnique({
-                where: { id: patientId },
-              });
+              const currentPatient = patientId !== undefined
+                ? await prisma.patient.findUnique({ where: { id: patientId } })
+                : null;
 
               if (!currentPatient) {
                 log.debug(`Skipping appointment - Patient ${patientFullName} ${patientId} not found`);
@@ -151,15 +155,15 @@ uploadRouter.post(
 
               // ADJUST TIMES TO MATCH CURRENT TIME ZONE (NEEDED B/C EXCEL REPORT HAS DIFFERENT TIMEZONE)
               appointmentData.createdDate = new Date(
-                new Date(appointmentData.createdDate).getTime() +
+                new Date(appointmentData.createdDate as string).getTime() +
                   2 * 60 * 60 * 1000
               );
               appointmentData.lastModifiedDate = new Date(
-                new Date(appointmentData.lastModifiedDate).getTime() +
+                new Date(appointmentData.lastModifiedDate as string).getTime() +
                   2 * 60 * 60 * 1000
               );
               appointmentData.startDate = new Date(
-                new Date(appointmentData.startDate).getTime() +
+                new Date(appointmentData.startDate as string).getTime() +
                   2 * 60 * 60 * 1000
               );
 
@@ -172,17 +176,18 @@ uploadRouter.post(
                 const currentDate = new Date(
                   currentAppointment.lastModifiedDate
                 );
-                const incomingDate = new Date(appointmentData.lastModifiedDate);
+                const incomingDate = new Date(String(appointmentData.lastModifiedDate));
 
                 if (incomingDate > currentDate) {
                   // Incoming data is more recent, update the record
                   await prisma.appointment.update({
                     where: { id: id },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data: {
                       patientId,
                       ...appointmentData,
                       notes: String(appointmentData.notes),
-                    },
+                    } as any,
                   });
                   log.debug('Updated appointment record with more recent data');
                 } else {
@@ -192,11 +197,12 @@ uploadRouter.post(
                 // Record doesn't exist, create it
                 appointmentData.notes = String(appointmentData.notes); // edge case: only numbers in the notes section
                 await prisma.appointment.create({
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   data: {
                     id,
                     ...appointmentData,
                     patient: { connect: { id: patientId } },
-                  },
+                  } as any,
                 });
                 // console.log('Created new appointment record');
               }
@@ -212,16 +218,17 @@ uploadRouter.post(
           };
 
           const deposits = excelData
-            .filter((row) => row.description?.includes('HCCLAIMPMT') && row.credit != null)
+            .filter((row) => (row.description?.includes('HCCLAIMPMT') || row.description?.includes('TRN*1')) && row.credit != null)
             .map((deposit) => {
               const { date, description, credit } = deposit;
+              if (!description) return null;
               const referenceNumber = getReferenceNumber(description);
               if (!referenceNumber) return null;
               return {
                 id: referenceNumber,
                 createdDate: new Date(),       // record creation timestamp
-                postDate: new Date(date),      // actual bank posting date from statement
-                description: description as string,
+                postDate: new Date(date as string),      // actual bank posting date from statement
+                description: description,
                 reference: referenceNumber,
                 payerName: getPayerName(description),
                 amount: String(credit),
@@ -282,7 +289,7 @@ uploadRouter.post(
                 amount,
               } = eob;
               return {
-                id: id,
+                id: id ?? 0,
                 createdDate: createdDate ? new Date(createdDate) : new Date(),
                 lastModifiedDate: lastModifiedDate
                   ? new Date(lastModifiedDate)
@@ -290,7 +297,7 @@ uploadRouter.post(
                 reference: String(reference) || null,
                 payerType: 'Insurance',
                 payerName: getPayerName(payerName || ''),
-                paymentMethod,
+                paymentMethod: paymentMethod ?? '',
                 amount:
                   typeof amount === 'number'
                     ? amount

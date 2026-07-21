@@ -1,5 +1,7 @@
+import fs from 'fs';
+import path from 'path';
 import prisma from '../../prisma.ts';
-import { fetchAppointments, fetchInsuranceEobs, fetchPatients, parseSoapDateTime } from './tebraApi.ts';
+import { fetchAppointments, fetchInsuranceEobs, fetchPatientBalances, fetchPatients, parseSoapDateTime } from './tebraApi.ts';
 import { createChildLogger } from '../../shared/logger.js';
 
 const log = createChildLogger('tebra-sync');
@@ -229,5 +231,102 @@ export async function syncPatients(fromDate: string, toDate: string): Promise<Sy
   }
 
   log.info(`Patient sync complete: ${result.synced} synced, ${result.skipped} skipped`);
+  return result;
+}
+
+/**
+ * Sync patient balance fields from Tebra for all patients with a non-zero balance.
+ *
+ * - Fetches all patients with InsuranceBalance, PatientBalance, or TotalBalance > 0
+ * - Only updates the three balance fields — never creates new patient records
+ * - Skips patients not present in the local DB
+ */
+export async function syncPatientBalances(): Promise<SyncResult> {
+  const result: SyncResult = { synced: 0, skipped: 0, errors: [] };
+
+  // Tebra caps results at 10,000 per request. Chunk by creation year to cover all patients.
+  const currentYear = new Date().getFullYear();
+  const allPatients: any[] = [];
+  for (let year = 2012; year <= currentYear; year++) {
+    const chunk = await fetchPatientBalances(`${year}-01-01`, `${year}-12-31`);
+    log.info(`Year ${year}: ${chunk.length} patients with non-zero balances`);
+    allPatients.push(...chunk);
+    if (year < currentYear) await new Promise((r) => setTimeout(r, 1100));
+  }
+  const patients = allPatients;
+  log.info(`Fetched ${patients.length} patients with non-zero balances (across all years)`);
+
+  for (const p of patients) {
+    try {
+      const patientId = Number(p.ID);
+      if (!patientId) {
+        result.skipped++;
+        continue;
+      }
+
+      const updated = await prisma.patient.updateMany({
+        where: { id: patientId },
+        data: {
+          insuranceBalance: p.InsuranceBalance != null ? Number(p.InsuranceBalance) : null,
+          patientBalance: p.PatientBalance != null ? Number(p.PatientBalance) : null,
+          totalBalance: p.TotalBalance != null ? Number(p.TotalBalance) : null,
+        },
+      });
+
+      if (updated.count === 0) {
+        result.skipped++;
+        result.errors.push(`Skipped patient ${patientId}: not in local DB`);
+      } else {
+        result.synced++;
+      }
+    } catch (err) {
+      result.skipped++;
+      result.errors.push(`Error on patient ${p.ID}: ${err}`);
+    }
+  }
+
+  log.info(`Balance sync complete: ${result.synced} synced, ${result.skipped} skipped`);
+
+  // Write patients with non-zero balances to a txt log file.
+  const syncedPatients = patients.filter((p) => {
+    const patientId = Number(p.ID);
+    return (
+      patientId &&
+      (Number(p.InsuranceBalance) > 0 ||
+        Number(p.PatientBalance) > 0 ||
+        Number(p.TotalBalance) > 0)
+    );
+  });
+
+  if (syncedPatients.length > 0) {
+    console.log('SYNCHED PATIENTS', syncedPatients[0])
+    const logsDir = path.resolve(process.cwd(), 'logs');
+    if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const logFile = path.join(logsDir, `patient-balances-${timestamp}.txt`);
+
+    const lines = [
+      `Patient Balance Sync — ${new Date().toISOString()}`,
+      `Total with non-zero balances: ${syncedPatients.length}`,
+      '',
+      // 'ID          | Patient Name           | Last Name            | Ins Balance | Pat Balance | Total Balance',
+      'ID          | Patient Name           | Patient Balance | Insurance Balance | Total Balance',
+      '-'.repeat(105),
+      // ...syncedPatients.filter(p=>p.TotalBalance === 0).map((p) => {
+      ...syncedPatients.map((p) => {
+        const id = String(p.ID).padEnd(11);
+        const name = String(p.PatientFullName ?? '').padEnd(21);
+        const ins = String(p.InsuranceBalance ?? 0).padStart(11);
+        const pat = String(p.PatientBalance ?? 0).padStart(11);
+        const total = String(p.TotalBalance ?? 0).padStart(13);
+        return `${id} | ${name} | ${pat} | ${ins} | ${total}`;
+      }),
+    ];
+
+    fs.writeFileSync(logFile, lines.join('\n'), 'utf-8');
+    log.info(`Balance log written to ${logFile}`);
+  }
+
   return result;
 }
