@@ -5,7 +5,7 @@ interface Props {
     patientId: number
 }
 
-const AppointmentActions = ({patientId}: Props) => {
+const AppointmentActions = ({patientId: _patientId}: Props) => {
     const handleInsuranceStatus = () => {
         console.log('FETCHING INSURANCE STATUS . . . ');
 

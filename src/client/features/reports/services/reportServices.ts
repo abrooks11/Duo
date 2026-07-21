@@ -77,8 +77,7 @@ export const useReportServices = () => {
       return report;
     } catch (error) {
       dispatch(reportActions.setError(error instanceof Error ? error.message : 'Failed to create report'));
-      dispatch(reportActions.setCreating(false));
-      throw error;
+      // Keep isCreating true so the form stays open and the error is visible
     }
   }, [dispatch]);
 

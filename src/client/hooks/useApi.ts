@@ -62,7 +62,7 @@ class ApiClient {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: data ? JSON.stringify(data) : undefined,
+          body: data ? JSON.stringify(data) : null,
           signal: controller.signal,
         });
         

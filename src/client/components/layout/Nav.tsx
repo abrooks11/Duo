@@ -1,9 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
 function Nav() {
-  const activePage = window.location.pathname;
-  // console.log("CURRENT URL pathname: ", activePage);
-
   return (
     <nav className="nav-wrapper">
       {/* <h1>--Nav--</h1> */}

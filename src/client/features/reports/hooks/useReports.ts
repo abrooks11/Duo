@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import useGlobalContext from '../../../hooks/useGlobalContext';
 import { reportActions } from '../../../context/reducers/reportReducer';
 import { useReportServices, reportServices } from '../services/reportServices';
-import type { ReportData, ReportFolder, ReportTemplate } from '../../../context/types/state';
+import type { ReportData, ReportFolder } from '../../../context/types/state';
 
 export const useReports = () => {
   const { state, dispatch } = useGlobalContext();

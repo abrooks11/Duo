@@ -33,12 +33,13 @@ const INSURANCE_COMPANIES: InsuranceCompany[] = [
 
 export const useInsuranceExtractor = () => {
   const { appointments, selectedDateRange } = useAppointment();
-console.log(appointments[0])
+// console.log(appointments[0])
 
   // Date filtering helper function
   const getDateFilteredAppointments = useMemo(() => {
-    const dateRange = selectedDateRange?.[0] || {};
-    const { startDate, endDate } = dateRange;
+    const dateRange = selectedDateRange?.[0];
+    const startDate = dateRange?.startDate;
+    const endDate = dateRange?.endDate;
     
     // Convert to Date objects
     const start = startDate ? new Date(startDate) : null;

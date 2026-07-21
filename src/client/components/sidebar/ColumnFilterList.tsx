@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';  // Add this import
+import { useLocation } from 'react-router-dom';
 import useGlobalContext from '../../hooks/useGlobalContext';
-import type { GlobalState, TableColumn } from '../../context/GlobalContext';
-import { ActionTypes } from '../../context/GlobalContext';
+import type { GlobalState, TableColumn } from '../../context/types/state';
 
 function ColumnFilterList() {
-  // get state and dispatch from global context
-  const { state, dispatch } = useGlobalContext();
-  // get all columns from state
+  const { state } = useGlobalContext();
   const [allColumnLabels, setAllColumnLabels] = useState<TableColumn[]>([]);
 
-  const location = useLocation();  // Add this hook
+  const location = useLocation();
 
 // Map paths to their corresponding state properties
 const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
-  "": 'home', 
   appointments: 'appointments',
   claims: 'claims',
   patients: 'patients',
@@ -23,50 +19,44 @@ const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
 
 
 useEffect(() => {
-  // Remove leading slash and get the path
-const currentPath = location.pathname.slice(1);
+  const currentPath = location.pathname.slice(1);
+  const stateProperty = PATH_TO_STATE_MAP[currentPath];
 
-// Get the corresponding state property from the map
-const stateProperty = PATH_TO_STATE_MAP[currentPath];
+  if (!stateProperty || stateProperty === 'ui' || stateProperty === 'reports') {
+    setAllColumnLabels([]);
+    return;
+  }
 
-const columnHeaders = state[stateProperty]?.allColumnHeaders || []
+  const resourceState = state[stateProperty];
+  const columnHeaders = resourceState?.allColumnHeaders ?? [];
 
-if (columnHeaders.length) {
-  setAllColumnLabels(columnHeaders);
-} else {
-  setAllColumnLabels([]);
-}
+  if (columnHeaders.length) {
+    setAllColumnLabels(columnHeaders);
+  } else {
+    setAllColumnLabels([]);
+  }
 }, [location.pathname, state]);
 
 
 
-  const handleColumnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // extract checkbox name and checked status from event target
-    const { name, checked } = e.target;
-    // dispatch action to update column status
-    // dispatch({
-    //   type: ActionTypes.SET_APPOINTMENT_COLUMNS,
-    //   payload: {
-    //     column: name,
-    //     isSelected: checked,
-    //   },
-    // });
+  const handleColumnChange = (_e: React.ChangeEvent<HTMLInputElement>) => {
+    // TODO: dispatch column toggle action
   };
 
   return (
     <div className="header-selector-wrapper">
       <h2>Select Columns</h2>
       {allColumnLabels.map((column) => (
-        <div key={column.value} className="header-selector-item">
+        <div key={column.key} className="header-selector-item">
           <input
-            id={column.value}
+            id={column.key}
             type="checkbox"
-            value={column.value}
-            name={column.value}
+            value={column.key}
+            name={column.key}
             onChange={handleColumnChange}
-            checked={column.isSelected}
+            checked={column.isVisible}
           />
-          <label htmlFor={column.value}>{column.label}</label>
+          <label htmlFor={column.key}>{column.displayName}</label>
         </div>
       ))}
     </div>

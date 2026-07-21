@@ -1,33 +1,21 @@
 import { Dropzone, FileMosaic } from '@files-ui/react';
+import type { ExtFile } from '@files-ui/react';
 import { useState } from 'react';
-import api from '../../hooks/useApi';
-import { ActionTypes } from '../../context/GlobalContext';
 import useGlobalContext from '../../hooks/useGlobalContext';
-// imports for sheet selection
 import * as XLSX from 'xlsx';
 import { Select, MenuItem } from '@mui/material';
 
-// !NEW FEATURES:
-// Add sheet selection functionality
-// Read the Excel file contents before upload
-// Add a sheet selector UI
-
 function FileUploadDropZone() {
-  // IMPORT GLOBAL STATE:
-  const { state, dispatch } = useGlobalContext();
+  const { state } = useGlobalContext();
 
-  // DROP ZONE CONTROLS:
-  // state to manage uploadedfiles
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState<ExtFile[]>([]);
   const [sheets, setSheets] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [resourceType, setResourceType] = useState<'appointment' | 'claim' | 'patient'>(
     'appointment'
   );
 
-  // function to update files
-  const updateFiles = (newFiles: any) => {
-    // console.log("new files: ", newFiles);
+  const updateFiles = (newFiles: ExtFile[]) => {
     setFiles(newFiles);
     if (newFiles.length > 0) {
       const file = newFiles[0];
@@ -37,49 +25,37 @@ function FileUploadDropZone() {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetNames = workbook.SheetNames;
-        console.log('sheet names: ', sheetNames);
         setSheets(sheetNames);
-        setSelectedSheet(sheetNames[0]); // Select first sheet by default
+        setSelectedSheet(sheetNames[0] ?? '');
       };
-      reader.readAsArrayBuffer(file.file);
+      if (file?.file) {
+        reader.readAsArrayBuffer(file.file);
+      }
     } else {
       setSheets([]);
       setSelectedSheet('');
     }
-    console.log('selected sheet: ', selectedSheet);
   };
 
-  // function to remove file
-  const removeFile = (id: string) => {
-    console.log('File removed');
-    setFiles(files.filter((x: any) => x.id !== id));
+  const removeFile = (id: string | number | undefined) => {
+    setFiles(files.filter((x) => x.id !== id));
   };
 
-  // function to trigger global state update on upload finish
   const handleUploadFinish = async () => {
-    console.log('Upload finished with sheet:', selectedSheet);
-    // const appointments = await Utils.fetchAppointments();
     setFiles([]);
     setSheets([]);
     setSelectedSheet('');
-    // dispatch({
-    //   type: ActionTypes.GET_APPOINTMENTS,
-    //   payload: {
-    //     data: appointments,
-    //   },
-    // });
   };
 
   return (
     <div className="dropzone-wrapper">
-      {state.uploadModal && (
+      {state.ui.uploadModal && (
         <>
           <Dropzone
             value={files}
             maxFiles={1}
-            // accept=".xlsx,.xls" // !TODO: ADD SUPPORT          onChange={updateFiles}
             onChange={updateFiles}
-            onUploadFinish={handleUploadFinish} // onDelete={removeFile}
+            onUploadFinish={handleUploadFinish}
             actionButtons={{
               position: 'after',
               uploadButton: {
@@ -96,24 +72,21 @@ function FileUploadDropZone() {
               },
             }}
             label="Drag'n drop files here or click to browse"
-            // fakeUpload={true}
             uploadConfig={{
               url: `http://localhost:3000/api/upload/${resourceType}/${selectedSheet}`,
               method: 'POST',
               cleanOnUpload: true,
             }}
           >
-            {files.map((file: any) => (
+            {files.map((file) => (
               <FileMosaic key={file.id} {...file} onDelete={removeFile} info />
             ))}
           </Dropzone>
-          {/* Add sheet selector */}
           {sheets.length > 0 && (
             <div style={{ marginTop: '1rem' }}>
               <Select
                 value={selectedSheet}
                 onChange={(e) => {
-                  console.log('selected sheet: ', e.target.value);
                   setSelectedSheet(e.target.value);
                 }}
                 fullWidth
@@ -130,9 +103,7 @@ function FileUploadDropZone() {
         </>
       )}
       <form id="upload-form" className="dropzone">
-        {/* <!-- this is were the previews should be shown. --> */}
         <div className="previews"></div>
-        {/* <!-- Now setup your input fields --> */}
         <input
           type="radio"
           name="resourceType"

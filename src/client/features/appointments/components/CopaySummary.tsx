@@ -21,8 +21,9 @@ const CopaySummary = () => {
   // Get date filtered appointments with copays
   const getCopaySummary = (): CopaySummaryData => {
     // Apply date filtering similar to insurance extractor
-    const dateRange = selectedDateRange?.[0] || {};
-    const { startDate, endDate } = dateRange;
+    const dateRange = selectedDateRange?.[0];
+    const startDate = dateRange?.startDate;
+    const endDate = dateRange?.endDate;
     
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
@@ -73,7 +74,7 @@ const CopaySummary = () => {
     const patientsOwingCopays = appointmentsWithCopays
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
       .map((appointment) => ({
-        patientId: appointment.patientId,
+        patientId: String(appointment.patientId),
         patientName: appointment.patientFullName || 'Unknown Patient',
         appointmentDate: formatDate(appointment.startDate),
         copayAmount: appointment.patientCopay || 0,

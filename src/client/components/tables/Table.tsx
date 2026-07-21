@@ -1,5 +1,5 @@
 import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-import { TableColumn } from '../../context/GlobalContext';
+import type { TableColumn } from '../../context/types/state';
 
 interface Props {
   columns: TableColumn[];

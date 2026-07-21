@@ -1,37 +1,14 @@
-import { useEffect, useMemo } from 'react';
-import useGlobalContext from '../hooks/useGlobalContext';
-import Table from '../components/tables/Table';
-import {apiClient} from '../hooks/useApi';
-import dataTransformers from '../utils/dataTransformers';
+import { useEffect } from 'react';
+import { apiClient } from '../hooks/useApi';
 
 function Claims() {
-  const { state } = useGlobalContext();
-
   useEffect(() => {
     apiClient.get('claims');
   }, []);
 
-  // Format dates in the data
-  // const formattedDateData = data.map((row) => {
-  //   return {
-  //     ...row,
-  //     createdDate: formatDate(row.createdDate),
-  //     lastModifiedDate: formatDate(row.lastModifiedDate),
-  //     serviceStartDate: formatDate(row.serviceStartDate),
-  //   };
-  // });
-
-  // Process the data with filters and sorting
-  // const processedData = useMemo(() => {
-  //   return filterAndSort(formattedDateData, selectedFilters, selectedSort);
-  // }, [formattedDateData, selectedFilters, selectedSort]);
-
   return (
     <div>
       <h1>Claims</h1>
-      {/* {processedData.length > 0 && (
-        <Table columns={selectedColumnHeaders} data={processedData} />
-      )} */}
     </div>
   );
 }

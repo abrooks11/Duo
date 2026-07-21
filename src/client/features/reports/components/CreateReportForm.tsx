@@ -6,7 +6,6 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Collapse,
   FormControl,
   InputLabel,
   Select,
@@ -88,7 +87,7 @@ const CreateReportForm = ({
     await onSubmit({
       name: name.trim() || suggestedName || 'Untitled Report',
       description: description.trim(),
-      folderId: folderId || undefined,
+      ...(folderId ? { folderId } : {}),
     });
   };
 

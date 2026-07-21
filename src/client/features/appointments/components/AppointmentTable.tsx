@@ -1,4 +1,4 @@
-import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridRowsProp, GridColDef, GridValidRowModel } from '@mui/x-data-grid';
 import DropDown from '@client/components/ui/DropDown'
 import AppointmentActions from './AppointmentActions';
 import { updateCopay, updateAppointmentNote } from '../services/appointmentApi';
@@ -10,30 +10,13 @@ interface Props {
   dynamicHeight?: boolean;
 }
 
-interface AppointmentRow {
-    insEligibility: string;
-    patientCopay: number;
-    patientBalance: string | number;
-    startDate: string;
-    confirmationStatus: string;
-    patientFullName: string;
-    patientCaseName: string;
-    primaryInsurancePolicyNumber: string;
-    appointmentReason: string;
-    alertMessage: string;
-    notes: string;
-    id: number;
-    createdDate: string;
-    lastModifiedDate: string;
-    patientId: number;
-}
-
 const AppointmentTable = ({
   columns,
   data,
   styling,
   dynamicHeight = false,
 }: Props) => {
+  
   const muiRows: GridRowsProp = data;
   const muiColumns: GridColDef[] = columns.map((column) => {
     // const { key, order, displayName, isVisible } = column;
@@ -84,21 +67,21 @@ const AppointmentTable = ({
   });
 
   const processRowUpdate = async (
-    updatedRow: AppointmentRow,
-    originalRow: AppointmentRow
-  ) => {
-    if (updatedRow.insEligibility !== originalRow.insEligibility) {
-      return updatedRow;
+    newRow: GridValidRowModel,
+    oldRow: GridValidRowModel
+  ): Promise<GridValidRowModel> => {
+    if (newRow.insEligibility !== oldRow.insEligibility) {
+      return newRow;
     }
-    if (updatedRow.notes !== originalRow.notes) {
-      await updateAppointmentNote(originalRow.id, updatedRow.notes);
-      return updatedRow;
+    if (newRow.notes !== oldRow.notes) {
+      await updateAppointmentNote(oldRow.id, newRow.notes);
+      return newRow;
     }
-    if (updatedRow.patientCopay !== originalRow.patientCopay) {
-      await updateCopay(originalRow.id, updatedRow.patientCopay);
-      return updatedRow;
+    if (newRow.patientCopay !== oldRow.patientCopay) {
+      await updateCopay(oldRow.id, newRow.patientCopay);
+      return newRow;
     }
-    return originalRow;
+    return oldRow;
   };
 
   // Handle process row update errors
@@ -109,7 +92,6 @@ const AppointmentTable = ({
   return (
     <div className={styling}>
       <DataGrid
-        cellSelection
         rows={muiRows}
         columns={muiColumns}
         processRowUpdate={processRowUpdate}

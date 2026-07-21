@@ -21,8 +21,6 @@ const Reports = () => {
     // Actions
     selectReport,
     setCreating,
-    clearError,
-
     // Async operations
     loadFolders,
     createReport,

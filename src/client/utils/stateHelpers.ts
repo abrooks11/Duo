@@ -42,7 +42,7 @@ export const generateOrderedColumns = (
       return {
         key: label,
         order: index,
-        displayName: nameMap[label],
+        displayName: nameMap[label] ?? label,
         isVisible: true,
       };
     })
@@ -59,7 +59,7 @@ export const generateRowFilterDetails = (
   const filterDetails = Object.fromEntries(
     Object.entries(displayNames).map(([key, _]) => [
       key,
-      { displayName: displayNames[key], sum: 0, isSelected: false },
+      { displayName: displayNames[key] ?? key, sum: 0, isSelected: false },
     ])
   );
   // Iterate over data and update counts
@@ -69,8 +69,10 @@ export const generateRowFilterDetails = (
 
       // Check each filter group
       for (const key in filterMap) {
-        if (filterMap[key].includes(filterKey)) {
-          filterDetails[key].sum += 1;
+        const filterGroup = filterMap[key];
+        const filterDetail = filterDetails[key];
+        if (filterGroup && filterDetail && filterGroup.includes(filterKey)) {
+          filterDetail.sum += 1;
         }
       }
     }
@@ -81,17 +83,21 @@ export const generateRowFilterDetails = (
       // console.log('Current row filterKey:', filterKey);
       // console.log('Available keys in filterDetails:', Object.keys(filterDetails));
 
-      if (filterDetails[filterKey] === undefined) {
+      const filterDetail = filterDetails[filterKey];
+      if (filterDetail === undefined) {
         console.log('Warning: No matching key found for:', filterKey);
         continue;
       }
-      filterDetails[filterKey].sum += 1;
+      filterDetail.sum += 1;
     }
   }
 
   // Calculate total if it's in the ordered list
   if (Object.keys(displayNames).includes('total')) {
-    filterDetails['total'].sum = data.length;
+    const totalDetail = filterDetails['total'];
+    if (totalDetail) {
+      totalDetail.sum = data.length;
+    }
   }
 
   return filterDetails;

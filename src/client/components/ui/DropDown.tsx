@@ -1,18 +1,18 @@
 interface Props {
   dropDownList: {[key: string]: string};
   value: string;
-  onChange: (newValue: string) => void;
+  onChange?: (newValue: string) => void;
 }
 
-const DropDown = ({ dropDownList, value, onChange }:Props) => {   
+const DropDown = ({ dropDownList, value, onChange }:Props) => {
   return (
     <select
       // name="reason"
       // id="reason"
-      value={value || 'Pending'} 
+      value={value || 'Pending'}
       onChange={(e) => {
         console.log('Dropdown value changing to:', e.target.value); // Add this debug log
-        onChange(e.target.value);
+        if (onChange) onChange(e.target.value);
       }}
     >
       {dropDownList && Object.entries(dropDownList).map(([key, displayName])=> {

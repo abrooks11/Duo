@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import useGlobalContext from '../../hooks/useGlobalContext';
-import { ActionTypes } from '../../context/GlobalContext';
 
 function ActionMenu() {
-  // GLOBAL STATE:
   const { state, dispatch } = useGlobalContext();
   const [syncing, setSyncing] = useState(false);
 
-  // function to toggle display of upload modal
   const toggleUploadModalDisplay = () => {
     dispatch({
-      type: ActionTypes.DISPLAY_UPLOAD_MODAL,
-      payload: !state.uploadModal,
+      type: 'ui/DISPLAY_UPLOAD_MODAL',
+      payload: { isOpen: !state.ui.uploadModal },
     });
   };
 
@@ -19,6 +16,7 @@ function ActionMenu() {
     setSyncing(true);
     try {
       await fetch('/api/patients/sync', { method: 'POST' });
+      await fetch('/api/patients/sync-balances', { method: 'POST' });
     } finally {
       setSyncing(false);
     }

@@ -1,26 +1,4 @@
-import { useEffect } from "react";
-
 const Demo = () => {
-
-    // define types
-    interface TokenResponse {
-        token_type: string,
-        access_token: string, 
-        expires_in: number,
-        scope: string
-    }
-
-    const BASE_URL = 'http://localhost:3000/api';
-    const getData = async () => {
-      const response = await fetch(`${BASE_URL}/insurance`);
-      console.log(await response.json())
-
-    }
-
-    // useEffect(()=>{
-    //   getData()
-    // }, [])
-
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       {/* <!-- Header --> */}
@@ -30,8 +8,6 @@ const Demo = () => {
             <h1 className="text-2xl font-bold text-gray-900">
               Patient Data Dashboard
             </h1>
-            {/* <button onclick="refreshData()"  */}
-            {/* <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-mediu m transition-colors"> */}
             <button>
               Refresh Data
             </button>
@@ -155,7 +131,6 @@ const Demo = () => {
             </h2>
           </div>
           <div className="px-6 py-4 space-y-6">
-            {/* <!-- Insurance Company Selection --> */}
             <div>
               <label
                 htmlFor="insuranceCompany"
@@ -171,7 +146,6 @@ const Demo = () => {
               </select>
             </div>
 
-            {/* <!-- Service Type Selection --> */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Service Type (CPT/ICD)
@@ -180,11 +154,9 @@ const Demo = () => {
                 id="serviceTypes"
                 className="space-y-3 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3"
               >
-                {/* <!-- Radio options will be populated by JavaScript --> */}
               </div>
             </div>
 
-            {/* <button onClick="generateEstimate()"  */}
             <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
               Generate Estimate
             </button>

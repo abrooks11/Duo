@@ -1,12 +1,10 @@
 import { DateRange } from 'react-date-range';
-import { addDays } from 'date-fns';
-// import { addDays, format, isWeekend } from 'date-fns';
+import type { RangeKeyDict } from 'react-date-range';
 
 import useGlobalContext from '../../hooks/useGlobalContext';
 import { appointmentActions } from '../../context/reducers/appointmentReducer';
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';  // Add this import
 import useStateMap from '../../hooks/useStateMap';
 
 
@@ -15,11 +13,9 @@ import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 
 const FullCalendar = () => {
-  // !!!need type definition for resource pages
-  const location = useLocation();
-  const currentPage = useStateMap(); // Move hook call to top level
+  const currentPage = useStateMap();
   const [resource, setResource] = useState<string>('appointments')
-  const [RANGE, SETRANGE] = useState<any>({
+  const [RANGE, SETRANGE] = useState<RangeKeyDict>({
     selection: {
       startDate: new Date(),
       endDate: new Date(),
@@ -34,21 +30,27 @@ const FullCalendar = () => {
     if (currentPage === 'appointments') {
       const DATERANGE = state[currentPage]?.selectedDateRange
       setResource(currentPage)
-      if (DATERANGE && DATERANGE.selection) {
-        SETRANGE({ selection: { ...DATERANGE.selection } })
+      if (DATERANGE && DATERANGE[0]) {
+        SETRANGE({ selection: { ...DATERANGE[0] } })
       }
       // console.log({currentPage, DATERANGE});
     }
 }, [currentPage, state]); // Update dependency array
 
 
-  const setRange = (item) => {
+  const setRange = (item: RangeKeyDict) => {
     // console.log(item);
     SETRANGE(item)
-    
+
     // Only handle appointments for now since that's the only implemented reducer
-    if (resource === 'appointments') {
-      dispatch(appointmentActions.setDateRange([item.selection]));
+    if (resource === 'appointments' && item.selection) {
+      const sel = item.selection;
+      dispatch(appointmentActions.setDateRange([{
+        startDate: sel.startDate ?? new Date(),
+        endDate: sel.endDate ?? new Date(),
+        key: sel.key ?? 'selection',
+        color: (sel as { color?: string }).color ?? '#3d91ff',
+      }]));
     }
   };
 
@@ -60,7 +62,7 @@ const FullCalendar = () => {
         onChange={item => setRange(item) }
         moveRangeOnFirstSelection={true}
         retainEndDateOnFirstSelection={true}
-        ranges={[RANGE.selection]}
+        ranges={[RANGE.selection ?? { startDate: new Date(), endDate: new Date(), key: 'selection' }]}
       />
     </div>
   );

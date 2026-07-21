@@ -1,4 +1,4 @@
-import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridRowsProp, GridColDef, GridValidRowModel } from '@mui/x-data-grid';
 import {VoicemailActionList} from '../index_voicemail';
 
 import DropDown from '@client/components/ui/DropDown';
@@ -13,23 +13,7 @@ interface Props {
   data: any[];
   className: string;
   dynamicHeight?: boolean;
-  helpers: any;
-}
-
-interface VoicemailRow {
-  callerName: string;
-  callerNumber: string;
-  callerType: string;
-  createdDate: string;
-  duration: number;
-  id: string;
-  messageFolder: string;
-  notes: string;
-  officeId?: null;
-  officeName?: null;
-  reason: string;
-  status: string;
-  transcription: string;
+  helpers?: any;
 }
 
 const VoicemailTable = ({
@@ -112,15 +96,15 @@ const VoicemailTable = ({
   });
 
   const processRowUpdate = (
-    updatedRow: VoicemailRow,
-    originalRow: VoicemailRow
-  ) => {
+    updatedRow: GridValidRowModel,
+    originalRow: GridValidRowModel
+  ): GridValidRowModel => {
     // console.log('Row information: ', { updatedRow, originalRow });
     if (updatedRow.notes !== originalRow.notes) {
       updateVoicemailNote(originalRow.id, updatedRow.notes);
       return updatedRow;
     }
-    if (updatedRow.reason !== originalRow.reason) {      
+    if (updatedRow.reason !== originalRow.reason) {
       updateVoicemailReason(originalRow.id, updatedRow.reason);
       return updatedRow;
     }

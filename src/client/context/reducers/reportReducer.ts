@@ -115,7 +115,8 @@ export const reportReducer = (
         );
         if (folderIndex !== -1) {
           // Preserve reports when updating folder
-          const existingReports = draft.folders[folderIndex].reports;
+          const existingFolder = draft.folders[folderIndex];
+          const existingReports = existingFolder ? existingFolder.reports : [];
           draft.folders[folderIndex] = {
             ...updatedFolder,
             reports: existingReports,
@@ -130,7 +131,8 @@ export const reportReducer = (
         );
         if (folderToDeleteIndex !== -1) {
           // Move reports to Uncategorized
-          const reportsToMove = draft.folders[folderToDeleteIndex].reports;
+          const folderToDelete = draft.folders[folderToDeleteIndex];
+          const reportsToMove = folderToDelete ? folderToDelete.reports : [];
           const uncategorizedFolder = draft.folders.find(
             (f) => f.name === 'Uncategorized'
           );

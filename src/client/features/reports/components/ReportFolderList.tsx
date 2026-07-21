@@ -83,8 +83,6 @@ const ReportFolderList = ({
     handleMenuClose();
   };
 
-  const selectedFolder = menuFolderId ? folders.find((f) => f.id === menuFolderId) : null;
-
   return (
     <List component="nav" sx={{ p: 0 }}>
       {folders.map((folder) => {

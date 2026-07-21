@@ -4,8 +4,9 @@ import useGlobalContext from './useGlobalContext'
 const useDateRangeFilter = (data: any[], dateKey: string) => {
 
     const {state} = useGlobalContext()
-    const dateRange = state.appointments.selectedDateRange[0] || {}
-    const {startDate, endDate} = dateRange
+    const dateRange = state.appointments.selectedDateRange[0]
+    const startDate = dateRange?.startDate
+    const endDate = dateRange?.endDate
     
     // Convert to Date objects
     const start = startDate ? new Date(startDate) : null

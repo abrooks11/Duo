@@ -107,8 +107,8 @@ const ReportView = ({
 
   const handleEditConfirm = async () => {
     await onEdit(report.id, {
-      name: editName !== report.name ? editName : undefined,
-      description: editDescription !== report.description ? editDescription : undefined,
+      ...(editName !== report.name ? { name: editName } : {}),
+      ...(editDescription !== report.description ? { description: editDescription } : {}),
     });
     setEditDialogOpen(false);
   };

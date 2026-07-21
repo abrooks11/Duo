@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   ButtonGroup,
-  IconButton,
   Tooltip,
   CircularProgress,
 } from '@mui/material';
