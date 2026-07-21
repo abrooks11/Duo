@@ -7,20 +7,18 @@ import Footer from './components/layout/Footer';
 
 function App() {
   return (
-    <div className="app-wrapper">
-      <div className="top-wrapper">
+    <div className="h-screen flex flex-col">
         <TopNav />
         {/* <FileUploadDropZone /> */}
-      </div>
-      <div className="main-container">
-        <div className="main-left-container">
+      <div className="flex flex-1">
+        <div className="flex-none">
           <Sidebar />
         </div>
-        <div className="main-right-container">
+        <div className="flex flex-1 flex-col min-w-0">
           <MainContent />
         </div>
       </div>
-      <div className="main-footer-container">
+      <div className="">
         <Footer />
       </div>
     </div>
