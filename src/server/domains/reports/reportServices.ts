@@ -89,6 +89,7 @@ RULES:
 5. Keep suggestedName under 50 characters
 6. Do NOT include a LIMIT clause - it will be added automatically
 7. For joins between Patient and Appointment, use: "Patient"."id" = "Appointment"."patientId"
+8. For categorical string fields (appointmentReason, confirmationStatus, Charge.status, etc.): prefer exact matches using the known values provided below. Fall back to ILIKE '%term%' only when no known value closely matches.
 `;
 
 const DEFAULT_FOLDERS = [
@@ -190,15 +191,61 @@ export async function getReportById(id: string) {
   });
 }
 
+async function fetchDistinctFieldValues(): Promise<string> {
+  const [
+    apptStatuses,
+    apptReasons,
+    chargeStatuses,
+    eobPayerTypes,
+    eobPaymentMethods,
+    eobPayerNames,
+    depositPayerNames,
+    insuranceCompanies,
+  ] = await Promise.all([
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "confirmationStatus" AS v FROM "Appointment" WHERE "confirmationStatus" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "appointmentReason" AS v FROM "Appointment" WHERE "appointmentReason" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "status" AS v FROM "Charge" WHERE "status" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "payerType" AS v FROM "Eob" WHERE "payerType" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "paymentMethod" AS v FROM "Eob" WHERE "paymentMethod" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "payerName" AS v FROM "Eob" WHERE "payerName" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "payerName" AS v FROM "Deposit" WHERE "payerName" IS NOT NULL ORDER BY v`,
+    prisma.$queryRaw<{ v: string }[]>`SELECT DISTINCT "primaryInsurancePolicyCompanyName" AS v FROM "Patient" WHERE "primaryInsurancePolicyCompanyName" IS NOT NULL ORDER BY v`,
+  ]);
+
+  const fmt = (rows: { v: string }[]) => rows.map((r) => `'${r.v}'`).join(', ') || '(none)';
+
+  return `
+Known field values (use these exact strings for equality comparisons):
+
+Appointment.confirmationStatus: ${fmt(apptStatuses)}
+Appointment.appointmentReason: ${fmt(apptReasons)}
+Charge.status: ${fmt(chargeStatuses)}
+Eob.payerType: ${fmt(eobPayerTypes)}
+Eob.paymentMethod: ${fmt(eobPaymentMethods)}
+Eob.payerName: ${fmt(eobPayerNames)}
+Deposit.payerName: ${fmt(depositPayerNames)}
+Patient.primaryInsurancePolicyCompanyName: ${fmt(insuranceCompanies)}
+
+When filtering any of these fields, pick the closest matching known value. If the user's wording loosely matches (e.g. "checked out" → 'Checked Out', "pellet insertion" → the appointmentReason value containing "Pellet"), use the exact known value. If nothing closely matches, use ILIKE '%term%'.
+`;
+}
+
 export async function generateQueryFromDescription(description: string): Promise<GeneratedQuery> {
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+
+  let fieldValuesContext = '';
+  try {
+    fieldValuesContext = await fetchDistinctFieldValues();
+  } catch (err) {
+    console.warn('[reports] fetchDistinctFieldValues failed, proceeding without value hints:', err);
+  }
 
   const completion = await openai.chat.completions.create({
     model,
     messages: [
       {
         role: 'system',
-        content: SCHEMA_CONTEXT,
+        content: SCHEMA_CONTEXT + fieldValuesContext,
       },
       {
         role: 'user',
@@ -282,7 +329,7 @@ export async function updateReport(id: string, input: UpdateReportInput) {
 
   // If description changed, regenerate query
   let sqlQuery = report.sqlQuery;
-  let cachedData = report.cachedData;
+  let cachedData: Prisma.InputJsonValue = report.cachedData as Prisma.InputJsonValue;
   let cachedAt = report.cachedAt;
 
   if (input.description && input.description !== report.description) {
@@ -343,7 +390,7 @@ export async function duplicateReport(id: string) {
       name: `${report.name} (Copy)`,
       description: report.description,
       sqlQuery: report.sqlQuery,
-      cachedData: report.cachedData,
+      cachedData: report.cachedData as Prisma.InputJsonValue,
       cachedAt: report.cachedAt,
       folderId: report.folderId,
     },

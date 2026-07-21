@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify';
 import type { ReportData, ReportFolder, ReportTemplate } from '../../../context/types/state';
 
-const baseURL = 'http://localhost:3000/api';
+const baseURL = '/api';
 
 interface ApiResponse<T> {
   data: T;
