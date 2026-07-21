@@ -21,25 +21,19 @@ function Nav() {
         </NavLink>
 
         <NavLink
-          to="/claims"
-          className={({ isActive }) => (isActive ? 'active-page' : '')}
-        >
-          <li>Claims</li>
-        </NavLink>
-
-        <NavLink
-          to="/patients"
-          className={({ isActive }) => (isActive ? 'active-page' : '')}
-        >
-          <li>Patients</li>
-        </NavLink>
-
-        <NavLink
           to="/voicemail"
           className={({ isActive }) => (isActive ? 'active-page' : '')}
         >
           <li>Voicemail</li>
         </NavLink>
+
+        <NavLink
+          to="/payments"
+          className={({ isActive }) => (isActive ? 'active-page' : '')}
+        >
+          <li>Payments</li>
+        </NavLink>
+
         <NavLink
           to="/reports"
           className={({ isActive }) => (isActive ? 'active-page' : '')}
@@ -53,13 +47,6 @@ function Nav() {
         >
           <li>Demo</li>
         </NavLink> */}
-
-        <NavLink
-          to="/payments"
-          className={({ isActive }) => (isActive ? 'active-page' : '')}
-        >
-          <li>Payments</li>
-        </NavLink>
       </ul>
     </nav>
   );

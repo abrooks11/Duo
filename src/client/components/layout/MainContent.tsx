@@ -4,8 +4,6 @@ import { ToastContainer } from 'react-toastify';
 // import pages
 import Home from '../../pages/Home';
 import Appointments from '../../pages/Appointments';
-import Claims from '../../pages/Claims';
-import Patients from '../../pages/Patients';
 import Voicemail from '../../pages/Voicemail';
 import Demo from '../../pages/Demo';
 import Payments from '../../pages/Payments';
@@ -20,8 +18,6 @@ function MainContent() {
         {/* <Route path="/" exact element={<Home />} /> */}
         <Route path="/" element={<Home />} />
         <Route path="/appointments" element={<Appointments />} />
-        <Route path="/claims" element={<Claims />} />
-        <Route path="/patients" element={<Patients />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/voicemail" element={<Voicemail />} />
