@@ -1,5 +1,5 @@
 .sms-Wrapper {
-  max-width: 500px;
+  /* max-width: 500px; */
   /* margin: 2rem auto; */
   padding: 2rem;
   background: #ffffff;
@@ -45,6 +45,45 @@
 .sms-form-element textarea {
   resize: vertical;
   min-height: 50px;
+  
+}
+
+.sms-quick-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sms-quick-replies span {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.sms-quick-replies-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sms-quick-reply-btn {
+  padding: 0.4rem 0.9rem;
+  background: white;
+  color: #3b82f6;
+  border: 1.5px solid #3b82f6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.sms-quick-reply-btn:hover {
+  background: #eff6ff;
+}
+
+.sms-quick-reply-btn:active {
+  background: #dbeafe;
 }
 
 .sms-form button[type="submit"] {

@@ -34,7 +34,7 @@ interface SmsFormContextValue {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
   handleSmsFormSubmit: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.FormEvent<HTMLFormElement>
   ) => void;
   populateForm: (data: Partial<SmsFormState>) => void;
   resetForm: () => void;
@@ -78,7 +78,7 @@ export const SmsFormProvider: React.FC<SmsFormProviderProps> = ({children}) => {
 
   
   const handleSmsFormSubmit = async (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
 
