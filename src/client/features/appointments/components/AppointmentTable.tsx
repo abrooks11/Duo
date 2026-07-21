@@ -7,10 +7,17 @@ import {
 import DropDown from '@client/components/ui/DropDown';
 import AppointmentActions from './AppointmentActions';
 import { updateCopay, updateAppointmentNote } from '../services/appointmentApi';
+import type { AppointmentData } from '@client/context/types/state';
 
-interface Props {
-  columns: any[];
-  data: any[];
+interface TableHeader {
+  key: string;
+  order: number;
+  displayName: string;
+  isVisible: boolean;
+}
+interface AppointmentTableProps {
+  columns: TableHeader[];
+  data: AppointmentData[];
   styling: string;
   dynamicHeight?: boolean;
 }
@@ -20,7 +27,8 @@ const AppointmentTable = ({
   data,
   styling,
   dynamicHeight = false,
-}: Props) => {
+}: AppointmentTableProps) => {
+  console.log(columns);
   const muiRows: GridRowsProp = data;
   const muiColumns: GridColDef[] = columns.map((column) => {
     // const { key, order, displayName, isVisible } = column;
@@ -34,7 +42,11 @@ const AppointmentTable = ({
       };
     }
     // COLUMNS NEEDING 150PX
-    if (key === 'patientCaseName' || key === 'primaryInsurancePolicyNumber' || key === 'appointmentReason') {
+    if (
+      key === 'patientCaseName' ||
+      key === 'primaryInsurancePolicyNumber' ||
+      key === 'appointmentReason'
+    ) {
       return {
         field: key,
         headerName: displayName,
@@ -96,7 +108,6 @@ const AppointmentTable = ({
       width: 110,
     };
   });
-
   const processRowUpdate = async (
     newRow: GridValidRowModel,
     oldRow: GridValidRowModel

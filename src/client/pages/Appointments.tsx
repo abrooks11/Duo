@@ -10,7 +10,6 @@ import { useAppointment } from '@client/features/appointments/hooks/useAppointme
 
 import InsuranceSelector from '../features/appointments/components/InsuranceSlector';
 import CopaySummary from '../features/appointments/components/CopaySummary';
-import { CreateNewFolder as NewFolderIcon } from '@mui/icons-material';
 
 import {
   Select,
@@ -189,7 +188,7 @@ const Appointments = () => {
     return result;
   }, [dateFilteredData, selectedInsurance, selectedReason, checkIns, checkRsn]);
 
-  console.log({ finalData });
+  // console.log({ finalData });
 
   const hasFilters = selectedInsurance.length > 0 || selectedReason.length > 0;
 
