@@ -5,7 +5,7 @@ import { sendSuccess } from '../../shared/errorHandlers.js';
 
 const smsRouter = express.Router();
 
-smsRouter.post('/', ensureRingAuth, sendSms, (req, res) => {
+smsRouter.post('/', ensureRingAuth, sendSms, (_req, res) => {
   return sendSuccess(res, null, 'sms sent successfully');
 });
 

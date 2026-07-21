@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { Request, Response, NextFunction } from 'express';
 import { AppError, handleControllerError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
 
@@ -11,7 +12,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export const generateResponse = async (req, res, next) => {
+export const generateResponse = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const completion = openai.chat.completions.create({
       model: 'gpt-4o-mini',

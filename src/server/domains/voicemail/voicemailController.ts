@@ -90,7 +90,7 @@ export const updateVoicemail = async (
 
 export const deleteVoicemail = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   try {

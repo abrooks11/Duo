@@ -4,7 +4,7 @@ import { sendSuccess } from '../../shared/errorHandlers.js';
 
 const openAiRouter = express.Router();
 
-openAiRouter.post('/', generateResponse, (req, res) => {
+openAiRouter.post('/', generateResponse, (_req, res) => {
   return sendSuccess(res, res.locals.aiResponse);
 });
 

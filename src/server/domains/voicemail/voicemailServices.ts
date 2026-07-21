@@ -1,5 +1,5 @@
 import { VoicemailSchema } from './voicemailTypes';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, CallerType, VoicemailReason } from '@prisma/client';
 import { createChildLogger } from '../../shared/logger.js';
 
 const prisma = new PrismaClient();
@@ -131,8 +131,8 @@ export const createVoicemail = async (voicemailObj: any): Promise<void> => {
       messageFolder: message_folder, // Folder classification from phone system
       status: status, // Message status (new, read, etc.)
       transcription: transcription || message || '', // Voice-to-text transcription, empty if unavailable
-      callerType: callDetails.callerType, // 'patient' or 'other' based on database lookup
-      reason: callDetails.reason, // Call category based on transcription analysis
+      callerType: callDetails.callerType as CallerType, // 'patient' or 'other' based on database lookup
+      reason: callDetails.reason as VoicemailReason, // Call category based on transcription analysis
     },
   });
 };
@@ -183,7 +183,7 @@ await prisma.voicemail.update({
       id: vmId,
     },
     data: {
-      reason: reason,
+      reason: reason as VoicemailReason,
     },
   })
 

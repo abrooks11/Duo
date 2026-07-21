@@ -1,10 +1,10 @@
-import { Response } from 'express';
+import { Response as ExpressResponse } from 'express';
 
 export const loginToRingRx = async (): Promise<string> => {
   // PREP LOGIN CREDENTIALS
   const loginParams = {
-    username: process.env.RING_USER_NAME,
-    password: process.env.RING_PASSWORD,
+    username: process.env.RING_USER_NAME ?? '',
+    password: process.env.RING_PASSWORD ?? '',
   };
 
   const params = new URLSearchParams(loginParams).toString();
@@ -26,7 +26,7 @@ export const loginToRingRx = async (): Promise<string> => {
   }
 
   // Parse the JSON response from RingRX
-  const loginData = await loginResponse.json();
+  const loginData = await loginResponse.json() as { access_token: string };
 
   // Extract the token from the response (adjust property name based on actual API response)
   const token = loginData.access_token;
@@ -35,7 +35,7 @@ export const loginToRingRx = async (): Promise<string> => {
   return token;
 };
 
-export const refreshRingToken = async (res: Response): Promise<string> => {
+export const refreshRingToken = async (res: ExpressResponse): Promise<string> => {
   // Call loginToRingRX() to get a fresh token
   const token = await loginToRingRx();
 
@@ -56,7 +56,7 @@ export const makeAuthenticatedRingRequest = async (
   url: string,
   ringToken: string,
   refreshTokenFunc: () => Promise<string>
-): Promise<Response> => {
+): Promise<globalThis.Response> => {
   // Make initial fetch request to the provided URL
   let response = await fetch(url, {
     headers: {
@@ -87,7 +87,7 @@ export const makeAuthenticatedRingDelete = async (
   url: string,
   ringToken: string,
   refreshTokenFunc: () => Promise<string>
-): Promise<Response> => {
+): Promise<globalThis.Response> => {
   let response = await fetch(url, {
     method: 'DELETE',
     headers: {
@@ -120,7 +120,7 @@ export const makeAuthenticatedRingPost = async (
   ringToken: string,
   refreshTokenFunc: () => Promise<string>,
   body?: any
-): Promise<Response> => {
+): Promise<globalThis.Response> => {
   // Prepare fetch options
   const fetchOptions: RequestInit = {
     method: 'POST',

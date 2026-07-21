@@ -18,54 +18,54 @@ import { sendSuccess } from '../../shared/errorHandlers.js';
 const reportRouter = express.Router();
 
 // ============ TEMPLATE ROUTES ============
-reportRouter.get('/templates', getReportTemplates, (req, res) => {
+reportRouter.get('/templates', getReportTemplates, (_req, res) => {
   return sendSuccess(res, res.locals.templates);
 });
 
 // ============ FOLDER ROUTES ============
-reportRouter.get('/folders', getFolders, (req, res) => {
+reportRouter.get('/folders', getFolders, (_req, res) => {
   return sendSuccess(res, res.locals.folders);
 });
 
-reportRouter.post('/folders', postFolder, (req, res) => {
+reportRouter.post('/folders', postFolder, (_req, res) => {
   return sendSuccess(res, res.locals.folder, undefined, 201);
 });
 
-reportRouter.patch('/folders/:id', patchFolder, (req, res) => {
+reportRouter.patch('/folders/:id', patchFolder, (_req, res) => {
   return sendSuccess(res, res.locals.folder);
 });
 
-reportRouter.delete('/folders/:id', removeFolder, (req, res) => {
+reportRouter.delete('/folders/:id', removeFolder, (_req, res) => {
   return sendSuccess(res, null, 'Folder deleted successfully');
 });
 
 // ============ REPORT ROUTES ============
-reportRouter.get('/', getReports, (req, res) => {
+reportRouter.get('/', getReports, (_req, res) => {
   return sendSuccess(res, res.locals.reports);
 });
 
-reportRouter.get('/:id', getReport, (req, res) => {
+reportRouter.get('/:id', getReport, (_req, res) => {
   return sendSuccess(res, res.locals.report);
 });
 
-reportRouter.post('/', postReport, (req, res) => {
+reportRouter.post('/', postReport, (_req, res) => {
   return sendSuccess(res, res.locals.report, undefined, 201);
 });
 
-reportRouter.patch('/:id', patchReport, (req, res) => {
+reportRouter.patch('/:id', patchReport, (_req, res) => {
   return sendSuccess(res, res.locals.report);
 });
 
-reportRouter.delete('/:id', removeReport, (req, res) => {
+reportRouter.delete('/:id', removeReport, (_req, res) => {
   return sendSuccess(res, null, 'Report deleted successfully');
 });
 
 // ============ REPORT ACTIONS ============
-reportRouter.post('/:id/run', refreshReport, (req, res) => {
+reportRouter.post('/:id/run', refreshReport, (_req, res) => {
   return sendSuccess(res, res.locals.report);
 });
 
-reportRouter.post('/:id/duplicate', cloneReport, (req, res) => {
+reportRouter.post('/:id/duplicate', cloneReport, (_req, res) => {
   return sendSuccess(res, res.locals.report, undefined, 201);
 });
 

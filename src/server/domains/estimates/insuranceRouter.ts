@@ -5,7 +5,7 @@ import { createChildLogger } from '../../shared/logger.js';
 const log = createChildLogger('insurance');
 const insuranceRouter = express.Router();
 
-insuranceRouter.get('/', asyncHandler(async (req, res) => {
+insuranceRouter.get('/', asyncHandler(async (_req, res) => {
   const getAvailityToken = async () => {
     const availityUrl = 'https://api.availity.com/availity/v1/token';
     const clientId = process.env.CLIENT_ID;
@@ -16,8 +16,8 @@ insuranceRouter.get('/', asyncHandler(async (req, res) => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: clientId ?? '',
+        client_secret: clientSecret ?? '',
         scope: 'hipaa',
       }),
     });
@@ -28,7 +28,7 @@ insuranceRouter.get('/', asyncHandler(async (req, res) => {
       throw new Error(`Token request failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { access_token: string };
     log.info('Availity token received successfully');
 
     const requestBody = {
@@ -76,7 +76,7 @@ insuranceRouter.get('/', asyncHandler(async (req, res) => {
       throw new Error(`Estimate request failed: ${estimateResponse.status}`);
     }
 
-    const estimateResult = await estimateResponse.json();
+    const estimateResult = await estimateResponse.json() as unknown;
     log.debug('Estimate result received');
 
     return {

@@ -18,7 +18,7 @@ import { AppError, handleControllerError } from '../../shared/errorHandlers.js';
 
 // ============ FOLDER CONTROLLERS ============
 
-export const getFolders = async (req: Request, res: Response, next: NextFunction) => {
+export const getFolders = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     await seedDefaultFolders();
     const folders = await getAllFolders();
@@ -57,7 +57,7 @@ export const patchFolder = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const removeFolder = async (req: Request, res: Response, next: NextFunction) => {
+export const removeFolder = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     await deleteFolder(id);
@@ -69,7 +69,7 @@ export const removeFolder = async (req: Request, res: Response, next: NextFuncti
 
 // ============ REPORT CONTROLLERS ============
 
-export const getReports = async (req: Request, res: Response, next: NextFunction) => {
+export const getReports = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const reports = await getAllReports();
     res.locals.reports = reports;
@@ -132,7 +132,7 @@ export const patchReport = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const removeReport = async (req: Request, res: Response, next: NextFunction) => {
+export const removeReport = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     await deleteReport(id);
@@ -174,7 +174,7 @@ export const cloneReport = async (req: Request, res: Response, next: NextFunctio
 
 // ============ TEMPLATE CONTROLLERS ============
 
-export const getReportTemplates = async (req: Request, res: Response, next: NextFunction) => {
+export const getReportTemplates = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const templates = getTemplates();
     res.locals.templates = templates;
