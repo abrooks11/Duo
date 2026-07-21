@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 
 import AppointmentTable from '../features/appointments/components/AppointmentTable';
 
@@ -10,6 +10,7 @@ import { useAppointment } from '@client/features/appointments/hooks/useAppointme
 
 import InsuranceSelector from '../features/appointments/components/InsuranceSlector';
 import CopaySummary from '../features/appointments/components/CopaySummary';
+import { CreateNewFolder as NewFolderIcon } from '@mui/icons-material';
 
 import {
   Select,
@@ -45,11 +46,14 @@ const Appointments = () => {
   const formattedDateData = appointments.map((row) => {
     const { createdDate, lastModifiedDate, startDate, dob } = row;
 
+    const startDateAdjusted = new Date(startDate);
+    startDateAdjusted.setUTCHours(startDateAdjusted.getUTCHours() - 3);
+
     return {
       ...row,
       createdDate: formatDate(createdDate),
       lastModifiedDate: formatDate(lastModifiedDate),
-      startDate: formatDate(startDate, true),
+      startDate: formatDate(startDateAdjusted, true),
       dob: formatDate(dob),
     };
   });
@@ -302,6 +306,12 @@ const Appointments = () => {
             )}
           </div>
 
+          <div>
+            APPOINTMENT CARD
+            <div className="patient-name">Test Female (id)</div>
+            <div className="DOB">11/07/1989</div>
+          </div>
+
           <AppointmentTable
             columns={allColumnHeaders}
             data={finalData}
@@ -314,3 +324,22 @@ const Appointments = () => {
 };
 
 export default Appointments;
+
+// {
+//     "id": 59864,
+//     "createdDate": "2026-03-26T14:48:07.000Z",
+//     "lastModifiedDate": "2026-05-04T13:12:37.000Z",
+//     "appointmentReason": "EST WELL WOMAN",
+//     "confirmationStatus": "Check-out",
+//     "patientCaseName": "BC/BS",
+//     "startDate": "2026-05-04T12:30:00.000Z",
+//     "notes": "Reason: Annual . &#xD;\nGroup ID: 238000&#xD;\nInsurance Company/Plan: BC/BS TEXAS&#xD;\nMember ID: Jea012954300&#xD;",
+//     "insEligibility": null,
+//     "patientCopay": null,
+//     "patientId": 14296,
+//     "patientFullName": "Tywanika Parks",
+//     "dob": "1973-11-21T06:00:00.000Z",
+//     "primaryInsurancePolicyNumber": "JEA012954300",
+//     "alertMessage": null,
+//     "patientBalance": "0"
+// }
