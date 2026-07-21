@@ -1,5 +1,10 @@
-import { DataGrid, GridRowsProp, GridColDef, GridValidRowModel } from '@mui/x-data-grid';
-import DropDown from '@client/components/ui/DropDown'
+import {
+  DataGrid,
+  GridRowsProp,
+  GridColDef,
+  GridValidRowModel,
+} from '@mui/x-data-grid';
+import DropDown from '@client/components/ui/DropDown';
 import AppointmentActions from './AppointmentActions';
 import { updateCopay, updateAppointmentNote } from '../services/appointmentApi';
 
@@ -16,16 +21,40 @@ const AppointmentTable = ({
   styling,
   dynamicHeight = false,
 }: Props) => {
-  
   const muiRows: GridRowsProp = data;
   const muiColumns: GridColDef[] = columns.map((column) => {
     // const { key, order, displayName, isVisible } = column;
     const { key, displayName } = column;
-    if (key === 'actions') {
+    // COLUMNS NEEDING 200PX
+    if (key === 'startDate' || key === 'patientFullName') {
       return {
         field: key,
         headerName: displayName,
         width: 200,
+      };
+    }
+    // COLUMNS NEEDING 150PX
+    if (key === 'patientCaseName' || key === 'primaryInsurancePolicyNumber' || key === 'appointmentReason') {
+      return {
+        field: key,
+        headerName: displayName,
+        width: 150,
+      };
+    }
+    if (key === 'patientCopay') {
+      return {
+        field: key,
+        headerName: displayName,
+        type: 'number',
+        width: 110,
+        editable: true,
+      };
+    }
+    if (key === 'actions') {
+      return {
+        field: key,
+        headerName: displayName,
+        width: 100,
         renderCell: (params) => {
           return <AppointmentActions patientId={params.row.patientId} />;
         },
@@ -38,7 +67,17 @@ const AppointmentTable = ({
         headerName: displayName,
         width: 200,
         renderCell: (params) => {
-          return <DropDown dropDownList={{pending: 'Pending', active: 'Active', termed:'Termed', oon:'Out of Network'}} value={params.row.insEligibility}/>;
+          return (
+            <DropDown
+              dropDownList={{
+                pending: 'Pending',
+                active: 'Active',
+                termed: 'Termed',
+                oon: 'Out of Network',
+              }}
+              value={params.row.insEligibility}
+            />
+          );
         },
       };
     }
@@ -50,19 +89,11 @@ const AppointmentTable = ({
         editable: true,
       };
     }
-    if (key === 'patientCopay') {
-      return {
-        field: key,
-        headerName: displayName,
-        width: 200,
-        type: 'number',
-        editable: true,
-      };
-    }
+
     return {
       field: key,
       headerName: displayName,
-      width: 200,
+      width: 110,
     };
   });
 
@@ -96,7 +127,7 @@ const AppointmentTable = ({
         columns={muiColumns}
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleProcessRowUpdateError}
-        getRowHeight={dynamicHeight? () => 'auto' : () => null}
+        getRowHeight={dynamicHeight ? () => 'auto' : () => null}
       />
     </div>
   );

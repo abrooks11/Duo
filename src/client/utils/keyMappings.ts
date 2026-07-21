@@ -37,6 +37,7 @@ export const appointmentRowDisplayNames: RowDisplayNames = {
 export const appointmentColumnOrder: string[] = [
   'startDate',
   'confirmationStatus',
+  'actions',
   'patientCopay',
   'patientBalance',
   'patientFullName',
@@ -46,8 +47,6 @@ export const appointmentColumnOrder: string[] = [
   'appointmentReason',
   'notes',
   'alertMessage',
-  'actions',
-  'insEligibility',
   'id',
   'createdDate',
   'lastModifiedDate',
