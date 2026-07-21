@@ -12,8 +12,6 @@ function ColumnFilterList() {
 // Map paths to their corresponding state properties
 const PATH_TO_STATE_MAP: Record<string, keyof GlobalState> = {
   appointments: 'appointments',
-  claims: 'claims',
-  patients: 'patients',
   voicemail: 'voicemail',
 };
 

@@ -4,8 +4,6 @@
 export interface GlobalState {
   ui: UIState;
   appointments: AppointmentState;
-  claims: ClaimState;
-  patients: PatientState;
   voicemail: VoicemailState;
   reports: ReportState;
 }
@@ -25,31 +23,14 @@ export interface BaseResourceState<T = any> {
   error: string | null;
   lastUpdated: Date | null;
 }
-
 export interface AppointmentState extends BaseResourceState<AppointmentData> {
   // Appointment-specific properties
   selectedFilters: string[];
 }
-
-export interface ClaimState extends BaseResourceState<ClaimData> {
-  // Claim-specific properties
-  selectedFilters: TableFilter[];
-  // filteredData: ClaimData[];
-  // allRowFilters: TableFilter[];
-}
-
-export interface PatientState extends BaseResourceState<PatientData> {
-  // Patient-specific properties
-  selectedFilters: TableFilter[];
-  // filteredData: PatientData[];
-  // allRowFilters: TableFilter[];
-}
-
 export interface VoicemailState extends BaseResourceState<VoicemailData> {
   // Voicemail-specific properties if needed
   selectedFilters: string[];
 }
-
 export interface ReportState {
   folders: ReportFolder[];
   selectedReportId: string | null;
@@ -78,9 +59,6 @@ export interface AppointmentData {
   alertMessage: string | null;
   patientBalance: number | null;
 }
-
-export interface ClaimData {}
-
 export interface PatientData {
   id: number;
   createdDate: Date;
@@ -126,7 +104,7 @@ export interface VoicemailData {
   transcription: string;
   callerType: string;
   reason: string;
-  notes: null;
+  notes: string | null;
   officeId: null;
   officeName: null;
 }
@@ -188,5 +166,5 @@ export interface TableFilter {
   key: string;
   label: string;
   isSelected: boolean;
-  data: any[];
+  data: AppointmentData[] | VoicemailData[];
 }
