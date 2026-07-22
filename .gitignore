@@ -27,3 +27,5 @@ PROMPTING
 .templates
 .env
 package_lock.json
+
+generated/
