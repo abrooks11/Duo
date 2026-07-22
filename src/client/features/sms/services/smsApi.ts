@@ -5,7 +5,6 @@ const baseURL = 'http://localhost:3000/api';
 export const sendSms = async (phoneNumber: string, message:string): Promise<number> => {
     
   console.log('sending sms to ', phoneNumber);
-  // try {
   const smsResponse = await fetch(`${baseURL}/sms`, {
     method: 'POST',
     headers: {
@@ -18,6 +17,6 @@ export const sendSms = async (phoneNumber: string, message:string): Promise<numb
     if (smsResponse.status === 200) {
       toast.success('Text message sent successfully');
     } 
-    return smsResponse.status;
 
+    return smsResponse.status;
 };

@@ -1,20 +1,42 @@
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
 import { syncAppointments } from '../tebra-api/tebraSync.js';
-import { handleControllerError, sendSuccess, sendError } from '../../shared/errorHandlers.js';
+import {
+  handleControllerError,
+  sendSuccess,
+  sendError,
+} from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';
-import prisma from '../../prisma.js';
+import prisma, { Prisma } from '../../prisma.js';
 const log = createChildLogger('appointments');
 
 function formatDateForTebra(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function getDefaultDateRange(): { firstDayOfMonth: Date; lastDayOfNextMonth: Date; fromDate: string; toDate: string } {
+function getDefaultDateRange(): {
+  firstDayOfMonth: Date;
+  lastDayOfNextMonth: Date;
+  fromDate: string;
+  toDate: string;
+} {
   const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-  const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+  const firstDayOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1,
+    0,
+    0,
+    0
+  );
+  const lastDayOfNextMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 2,
+    0,
+    23,
+    59,
+    59
+  );
   return {
     firstDayOfMonth,
     lastDayOfNextMonth,
@@ -26,12 +48,16 @@ function getDefaultDateRange(): { firstDayOfMonth: Date; lastDayOfNextMonth: Dat
 const appointmentController = {
   getAppointments: async (_req: Request, res: Response, next: NextFunction) => {
     try {
-      const { firstDayOfMonth, lastDayOfNextMonth, fromDate, toDate } = getDefaultDateRange();
+      const { firstDayOfMonth, lastDayOfNextMonth, fromDate, toDate } =
+        getDefaultDateRange();
 
       try {
         await syncAppointments(fromDate, toDate);
       } catch (syncErr) {
-        log.warn({ error: syncErr }, 'Tebra sync failed, returning cached data');
+        log.warn(
+          { error: syncErr },
+          'Tebra sync failed, returning cached data'
+        );
       }
 
       const appointments = await prisma.appointment.findMany({
@@ -59,15 +85,22 @@ const appointmentController = {
       });
       log.debug(`Total appointments: ${appointments.length}`);
 
-      const flattenedAppointments = appointments.map(({ patient, ...rest }) => ({
-        ...rest,
-        ...(patient ?? {}),
-      }));
+      const flattenedAppointments = appointments.map(
+        ({ patient, ...rest }) => ({
+          ...rest,
+          ...(patient ?? {}),
+        })
+      );
       res.locals.appointments = flattenedAppointments;
 
       return next();
     } catch (error) {
-      handleControllerError(error, 'getAppointments', next, 'Error fetching appointments');
+      handleControllerError(
+        error,
+        'getAppointments',
+        next,
+        'Error fetching appointments'
+      );
     }
   },
 
@@ -76,7 +109,9 @@ const appointmentController = {
       const id = Number(req.params.id);
       const { notes } = req.body;
 
-      const appointment = await prisma.appointment.findUnique({ where: { id } });
+      const appointment = await prisma.appointment.findUnique({
+        where: { id },
+      });
       if (!appointment) {
         return sendError(res, 'Appointment not found', 404);
       }
@@ -88,7 +123,12 @@ const appointmentController = {
 
       return sendSuccess(res, null, 'Note updated');
     } catch (error) {
-      handleControllerError(error, 'updateNote', next, 'Error updating appointment note');
+      handleControllerError(
+        error,
+        'updateNote',
+        next,
+        'Error updating appointment note'
+      );
     }
   },
 
@@ -112,7 +152,10 @@ const appointmentController = {
 
       next();
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         return sendError(res, 'Appointment not found', 404);
       }
       handleControllerError(error, 'updateCopay', next, 'Error updating copay');
@@ -124,7 +167,70 @@ const appointmentController = {
       await prisma.appointment.deleteMany({});
       return sendSuccess(res, null, 'Records deleted');
     } catch (error) {
-      handleControllerError(error, 'deleteAll', next, 'Error deleting appointments');
+      handleControllerError(
+        error,
+        'deleteAll',
+        next,
+        'Error deleting appointments'
+      );
+    }
+  },
+
+  getAppointmentSms: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { appointmentId } = req.params;
+
+      const sms = await prisma.appointmentSms.findUnique({
+        where: {
+          appointmentId: Number(appointmentId),
+        },
+      });
+      console.log({sms})
+      res.locals.appointmentSms = sms;
+
+      return next();
+    } catch (error) {
+      handleControllerError(
+        error,
+        'getAppointmentSms',
+        next,
+        'Error fetching appointments'
+      );
+    }
+  },
+
+  createAppointmentSms: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { appointmentId } = req.params;
+      const { phoneNumber, message, status } = req.body;
+
+      console.log('BODY', req.body);
+      const sms = await prisma.appointmentSms.create({
+        data: {
+          appointmentId: Number(appointmentId),
+          phoneNumber: phoneNumber,
+          message: message,
+          status: status,
+        },
+      });
+      res.locals.appointmentSms = sms;
+
+      return next();
+    } catch (error) {
+      handleControllerError(
+        error,
+        'getAppointmentSms',
+        next,
+        'Error fetching appointments'
+      );
     }
   },
 };

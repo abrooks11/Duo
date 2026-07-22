@@ -20,12 +20,27 @@ model Appointment {
   // CUSTOM FIELDS
   insEligibility     String?
   patientCopay       Int?
+
   // RELATED FIELDS
   patientId          Int
-  patient            Patient  @relation(fields: [patientId], references: [id])
+  patient            Patient          @relation(fields: [patientId], references: [id])
   charges            Charge[]
+  smsMessages        AppointmentSms[]
 
   @@index([patientId]) // Add an index on the foreign key  to optimize foreign key lookups
+}
+
+model AppointmentSms {
+  id            Int         @id @default(autoincrement())
+  createdDate   DateTime    @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  appointmentId Int
+  phoneNumber   String
+  message       String
+  status        String // e.g. "sent", "failed"
+
+  @@unique([appointmentId]) // enforce "send once" per appointment
+  @@index([appointmentId])
 }
 
 model Charge {

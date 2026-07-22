@@ -28,7 +28,6 @@ const AppointmentTable = ({
   styling,
   dynamicHeight = false,
 }: AppointmentTableProps) => {
-  console.log(columns);
   const muiRows: GridRowsProp = data;
   const muiColumns: GridColDef[] = columns.map((column) => {
     // const { key, order, displayName, isVisible } = column;
@@ -68,7 +67,7 @@ const AppointmentTable = ({
         headerName: displayName,
         width: 100,
         renderCell: (params) => {
-          return <AppointmentActions patientId={params.row.patientId} />;
+          return <AppointmentActions patientId={params.row.patientId} patientCopay={params.row.patientCopay} appointmentId={params.row.id} appointmentReason ={params.row.appointmentReason} />;
         },
       };
     }
@@ -130,7 +129,7 @@ const AppointmentTable = ({
   const handleProcessRowUpdateError = (error: any) => {
     console.error('Error saving row update:', error);
   };
-
+console.log(muiRows)
   return (
     <div className={styling}>
       <DataGrid

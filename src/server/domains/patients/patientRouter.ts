@@ -1,10 +1,9 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { sendSuccess, asyncHandler } from '../../shared/errorHandlers.js';
 import { syncPatientBalances, syncPatients } from '../tebra-api/tebraSync.js';
+import prisma from '../../prisma.js';
 
 const patientRouter = express.Router();
-const prisma = new PrismaClient();
 
 patientRouter.get('/', asyncHandler(async (_req, res) => {
   const newestPatients = await prisma.patient.findMany({
@@ -21,6 +20,17 @@ patientRouter.get('/', asyncHandler(async (_req, res) => {
     },
   });
   return sendSuccess(res, newestPatients);
+}));
+
+patientRouter.get('/:id', asyncHandler(async (req, res) => {
+  console.log(req.params)
+  const patient = await prisma.patient.findUnique({
+    where: {
+      id: Number(req.params.id)
+    },
+  });
+  console.log(patient)
+  return sendSuccess(res, patient);
 }));
 
 patientRouter.post('/sync', asyncHandler(async (_req, res) => {
