@@ -5,7 +5,7 @@ export interface GlobalState {
   ui: UIState;
   appointments: AppointmentState;
   voicemail: VoicemailState;
-  reports: ReportState;
+  // reports: ReportState;
 }
 
 export interface UIState {
@@ -14,7 +14,7 @@ export interface UIState {
 }
 
 // Base interface for all resource states
-export interface BaseResourceState<T = any> {
+export interface BaseResourceState<T> {
   data: T[];
   rowFilterDetails: RowFilterDetails;
   allColumnHeaders: TableColumn[];

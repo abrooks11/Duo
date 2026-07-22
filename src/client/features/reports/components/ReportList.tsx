@@ -1,6 +1,6 @@
-// This file is deprecated - use ReportsSidebar instead
-// Keeping for backwards compatibility
+// // This file is deprecated - use ReportsSidebar instead
+// // Keeping for backwards compatibility
 
-import ReportsSidebar from './ReportsSidebar';
+// import ReportsSidebar from './ReportsSidebar';
 
-export default ReportsSidebar;
+// export default ReportsSidebar;

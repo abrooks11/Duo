@@ -7,7 +7,7 @@ import Appointments from '../../pages/Appointments';
 import Voicemail from '../../pages/Voicemail';
 import Demo from '../../pages/Demo';
 import Payments from '../../pages/Payments';
-import Reports from '../../pages/Reports';
+// import Reports from '../../pages/Reports';
 
 function MainContent() {
   return (
@@ -19,7 +19,7 @@ function MainContent() {
         <Route path="/" element={<Home />} />
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/payments" element={<Payments />} />
-        <Route path="/reports" element={<Reports />} />
+        {/* <Route path="/reports" element={<Reports />} /> */}
         <Route path="/voicemail" element={<Voicemail />} />
         <Route path="/demo" element={<Demo />} />
       </Routes>

@@ -4,7 +4,7 @@ import type {
   AppAction,
   AppointmentAction,
   VoicemailAction,
-  ReportAction,
+  // ReportAction,
 } from '../types/actions';
 
 import type { GlobalState } from '../types/state';
@@ -16,14 +16,14 @@ import {
 
 import { voicemailReducer, initialVoicemailState } from './voicemailReducer';
 
-import { reportReducer, initialReportState } from './reportReducer';
+// import { reportReducer, initialReportState } from './reportReducer';
 
 // Combined initial state
 export const initialGlobalState: GlobalState = {
   ui: { uploadModal: false },
   appointments: initialAppointmentState,
   voicemail: initialVoicemailState,
-  reports: initialReportState,
+  // reports: initialReportState,
 };
 
 // Root reducer that delegates to domain reducers
@@ -65,12 +65,12 @@ export const rootReducer = (
     };
   }
 
-  if (action.type.startsWith('reports/')) {
-    return {
-      ...state,
-      reports: reportReducer(state.reports, action as ReportAction),
-    };
-  }
+  // if (action.type.startsWith('reports/')) {
+  //   return {
+  //     ...state,
+  //     reports: reportReducer(state.reports, action as ReportAction),
+  //   };
+  // }
 
   // Default case
   return state;
@@ -78,4 +78,4 @@ export const rootReducer = (
 
 export { appointmentActions } from './appointmentReducer';
 export { voicemailActions } from './voicemailReducer';
-export { reportActions } from './reportReducer';
+// export { reportActions } from './reportReducer';

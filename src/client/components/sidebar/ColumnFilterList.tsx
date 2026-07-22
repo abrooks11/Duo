@@ -20,7 +20,8 @@ useEffect(() => {
   const currentPath = location.pathname.slice(1);
   const stateProperty = PATH_TO_STATE_MAP[currentPath];
 
-  if (!stateProperty || stateProperty === 'ui' || stateProperty === 'reports') {
+  // if (!stateProperty || stateProperty === 'ui' || stateProperty === 'reports') {
+  if (!stateProperty || stateProperty === 'ui') {
     setAllColumnLabels([]);
     return;
   }
