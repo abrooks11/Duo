@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2022",
+    "target": "ES2023",
     "lib": ["ES2023"],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -21,7 +21,9 @@
     "skipLibCheck": true,
     "types": ["node"],
     "outDir": "./dist/",
-    "sourceMap": true
+    "sourceMap": true,
+    "ignoreDeprecations": "6.0"
+
   },
   "ts-node": {
     "esm": true,

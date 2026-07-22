@@ -1,14 +1,13 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider        = "prisma-client"
   previewFeatures = ["relationJoins"]
-  output          = "../node_modules/.prisma/client"
+  output          = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model Appointment {
   id                 Int      @id
   createdDate        DateTime @default(now())
