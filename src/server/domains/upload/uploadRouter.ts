@@ -4,8 +4,7 @@ const upload = multer();
 
 import excelServices from './excelServices.ts';
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from '../../prisma.js';
 
 import { sendSuccess, sendError } from '../../shared/errorHandlers.js';
 import { createChildLogger } from '../../shared/logger.js';

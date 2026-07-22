@@ -1,9 +1,7 @@
-import { PrismaClient, Prisma } from '@prisma/client';
 import OpenAI from 'openai';
 import { GeneratedQuery, CreateReportInput, UpdateReportInput, CreateFolderInput, UpdateFolderInput } from './reportTypes.ts';
 import { validateSelectOnly, ensureLimitClause } from './sqlValidator.ts';
-
-const prisma = new PrismaClient();
+import prisma, { Prisma } from '../../prisma.js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

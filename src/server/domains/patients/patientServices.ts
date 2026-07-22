@@ -1,5 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma, { Prisma } from '../../prisma.js';
 
 const patientServices = {
   createPatient: async (patient: Prisma.PatientCreateInput) => {

@@ -26,14 +26,10 @@ const mockPrisma = vi.hoisted(() => ({
   $queryRawUnsafe: vi.fn(),
 }));
 
-// Hoist the constructor mock itself so it's ready when vi.mock('@prisma/client') runs.
-// Must use `function` (not arrow fn) so vi.fn() can be called with `new`.
-const MockPrismaClient = vi.hoisted(() => vi.fn(function () { return mockPrisma; }));
-
 const mockChatCompletionsCreate = vi.hoisted(() => vi.fn());
 
-vi.mock('@prisma/client', () => ({
-  PrismaClient: MockPrismaClient,
+vi.mock('../../prisma.js', () => ({
+  default: mockPrisma,
   Prisma: { InputJsonValue: {} },
 }));
 

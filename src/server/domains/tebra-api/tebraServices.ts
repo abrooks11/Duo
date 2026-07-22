@@ -1,7 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client';
 import { createChildLogger } from '../../shared/logger.js';
+import prisma, { Prisma } from '../../prisma.js';
 
-const prisma = new PrismaClient();
 const log = createChildLogger('tebra-services');
 
 const appointmentServices = {

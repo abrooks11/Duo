@@ -1,8 +1,7 @@
 import { VoicemailSchema } from './voicemailTypes';
-import { PrismaClient, CallerType, VoicemailReason } from '@prisma/client';
 import { createChildLogger } from '../../shared/logger.js';
+import prisma, { CallerType, VoicemailReason } from '../../prisma.js';
 
-const prisma = new PrismaClient();
 const log = createChildLogger('voicemail-services');
 
 /** UPLOAD SINGLE VOICEMAIL TO DATABASE
