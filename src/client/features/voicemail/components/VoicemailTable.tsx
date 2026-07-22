@@ -38,7 +38,7 @@ const VoicemailTable = ({
   const muiColumns: GridColDef[] = columns.map((column) => {
     // const { key, order, displayName, isVisible } = column;
     const { key, displayName } = column;
-    // Special handling for the date column to include actions
+    // Special handling for the date column to format date
     if (key === 'createdDate') {
       return {
         field: key,
@@ -49,7 +49,7 @@ const VoicemailTable = ({
         },
       };
     }
-    // Special handling for the notes column to include editable text field
+    // Special handling for the actions column to render user actions
     if (key === 'actions') {
       return {
         field: key,
@@ -71,12 +71,12 @@ const VoicemailTable = ({
         editable: true,
       };
     }
-    // Special handling for the notes column to include editable text field
+    // Special handling for the reason column to render drop down
     if (key === 'reason') {
       return {
         field: key,
         headerName: displayName,
-        width: 200,
+        width: 150,
         // editable: true,
         renderCell: (params) => {
           return (
@@ -99,6 +99,14 @@ const VoicemailTable = ({
         field: key,
         headerName: displayName,
         width: 500, // updated width
+      };
+    }
+    // Special handling for the transcription column to show overflow
+    if (key === 'callerType' || key === "duration") {
+      return {
+        field: key,
+        headerName: displayName,
+        width: 90, // updated width
       };
     }
     return {

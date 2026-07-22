@@ -41,6 +41,13 @@ const VoicemailActionList = ({ vmId, rowData }: Props) => {
   return (
     <div className="flex gap-2 items-center justify-center">
       <button
+        onClick={handleReply}
+        className="p-1 rounded-full hover:bg-gray-100"
+        title="Reply"
+      >
+        <MessageSquareText />
+      </button>
+      <button
         onClick={handleDelete}
         disabled={isDeleting}
         className={`p-1 rounded-full ${
@@ -49,13 +56,6 @@ const VoicemailActionList = ({ vmId, rowData }: Props) => {
         title={isDeleting ? 'Deleting...' : 'Delete'}
       >
         <Trash2 />
-      </button>
-      <button
-        onClick={handleReply}
-        className="p-1 rounded-full hover:bg-gray-100"
-        title="Reply"
-      >
-        <MessageSquareText />
       </button>
     </div>
   );
